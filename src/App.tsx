@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -6,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "@/contexts/AuthContext"
 import Index from "./pages/Index"
 import Login from "./pages/Login"
-import Register from "./pages/Register"
+import RegisterPage from "./pages/register/RegisterPage"
 import ForFoundersPage from "./pages/ForFoundersPage"
 import ForProvidersPage from "./pages/ForProvidersPage"
 import NotFound from "./pages/NotFound"
@@ -30,7 +31,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
