@@ -1,6 +1,7 @@
 
 import Layout from "@/components/layout/Layout";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
+import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FounderDashboard = () => {
@@ -22,9 +23,7 @@ const FounderDashboard = () => {
           </TabsContent>
           
           <TabsContent value="providers">
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">Provider matching coming soon</p>
-            </div>
+            <ProvidersDirectory />
           </TabsContent>
           
           <TabsContent value="projects">
