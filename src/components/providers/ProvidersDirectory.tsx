@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ServiceProvider } from "@/types/provider";
 import ProvidersList from "./ProvidersList";
@@ -6,22 +5,26 @@ import ProvidersComparison from "./ProvidersComparison";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-// Sample data - in a real app, this would come from an API
+// Updated mock data with more relevant specialties
 const mockProviders: ServiceProvider[] = [
   {
     id: "1",
     name: "Sarah Johnson",
     avatar: "/placeholder.svg",
-    title: "Email Marketing Specialist",
+    title: "Email Marketing Strategist",
     specialties: ["Abandoned Cart Recovery", "Post-Purchase Sequences"],
     rating: 4.8,
     projectsCompleted: 124,
     averageOrderValue: 2500,
-    description: "Specialized in creating high-converting email sequences for eCommerce businesses.",
+    description: "Expert in creating high-converting email sequences for eCommerce businesses with focus on cart recovery and customer retention.",
     expertise: [
       {
         category: "Email Marketing",
-        skills: ["Klaviyo", "Mailchimp", "Email Design"]
+        skills: ["Klaviyo", "Mailchimp", "A/B Testing"]
+      },
+      {
+        category: "Analytics",
+        skills: ["Revenue Attribution", "Conversion Tracking"]
       }
     ]
   },
@@ -34,11 +37,36 @@ const mockProviders: ServiceProvider[] = [
     rating: 4.9,
     projectsCompleted: 98,
     averageOrderValue: 3000,
-    description: "Focus on data-driven email strategies that drive measurable results.",
+    description: "Specialized in data-driven email strategies and customer winback campaigns that drive measurable results.",
     expertise: [
       {
-        category: "Analytics",
-        skills: ["A/B Testing", "Segmentation", "Performance Analysis"]
+        category: "Email Marketing",
+        skills: ["Email Automation", "Segmentation", "Campaign Design"]
+      },
+      {
+        category: "Growth",
+        skills: ["List Building", "Popup Optimization"]
+      }
+    ]
+  },
+  {
+    id: "3",
+    name: "Emma Rodriguez",
+    avatar: "/placeholder.svg",
+    title: "Conversion Optimization Specialist",
+    specialties: ["Email List Growth", "Product Page Optimization"],
+    rating: 4.7,
+    projectsCompleted: 156,
+    averageOrderValue: 2800,
+    description: "Focus on optimizing the entire customer journey from email signup to purchase completion.",
+    expertise: [
+      {
+        category: "Conversion",
+        skills: ["CRO", "Landing Pages", "Email Forms"]
+      },
+      {
+        category: "Content",
+        skills: ["Email Copywriting", "Product Descriptions"]
       }
     ]
   }
