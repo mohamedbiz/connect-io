@@ -11,6 +11,12 @@ const RegisterFooter = () => {
           Sign in
         </Link>
       </div>
+      <div className="text-sm text-center text-gray-500">
+        Want to see what we offer?{" "}
+        <Link to="/founder-dashboard" className="text-primary hover:underline">
+          Try our diagnostic tool
+        </Link>
+      </div>
     </CardFooter>
   );
 };

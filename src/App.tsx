@@ -10,6 +10,7 @@ import Login from "./pages/Login"
 import RegisterPage from "./pages/register/RegisterPage"
 import ForFoundersPage from "./pages/ForFoundersPage"
 import ForProvidersPage from "./pages/ForProvidersPage"
+import FounderDashboard from "./pages/FounderDashboard"
 import NotFound from "./pages/NotFound"
 
 const queryClient = new QueryClient({
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
+            <Route path="/founder-dashboard" element={<FounderDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
