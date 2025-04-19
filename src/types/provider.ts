@@ -2,14 +2,14 @@
 export interface ServiceProvider {
   id: string;
   name: string;
-  avatar: string;
-  title: string;
-  specialties: string[];
+  email?: string;
+  avatar?: string;
+  title?: string;
+  description?: string;
   rating: number;
   projectsCompleted: number;
-  averageOrderValue: number;
-  description: string;
-  expertise: {
+  specialties: string[];
+  expertise?: {
     category: string;
     skills: string[];
   }[];

@@ -1,78 +1,15 @@
+
 import { useState } from "react";
 import { ServiceProvider } from "@/types/provider";
 import ProvidersList from "./ProvidersList";
 import ProvidersComparison from "./ProvidersComparison";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-
-// Updated mock data with more relevant specialties
-const mockProviders: ServiceProvider[] = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    avatar: "/placeholder.svg",
-    title: "Email Marketing Strategist",
-    specialties: ["Abandoned Cart Recovery", "Post-Purchase Sequences"],
-    rating: 4.8,
-    projectsCompleted: 124,
-    averageOrderValue: 2500,
-    description: "Expert in creating high-converting email sequences for eCommerce businesses with focus on cart recovery and customer retention.",
-    expertise: [
-      {
-        category: "Email Marketing",
-        skills: ["Klaviyo", "Mailchimp", "A/B Testing"]
-      },
-      {
-        category: "Analytics",
-        skills: ["Revenue Attribution", "Conversion Tracking"]
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    avatar: "/placeholder.svg",
-    title: "eCommerce Email Expert",
-    specialties: ["Customer Winback", "List Growth"],
-    rating: 4.9,
-    projectsCompleted: 98,
-    averageOrderValue: 3000,
-    description: "Specialized in data-driven email strategies and customer winback campaigns that drive measurable results.",
-    expertise: [
-      {
-        category: "Email Marketing",
-        skills: ["Email Automation", "Segmentation", "Campaign Design"]
-      },
-      {
-        category: "Growth",
-        skills: ["List Building", "Popup Optimization"]
-      }
-    ]
-  },
-  {
-    id: "3",
-    name: "Emma Rodriguez",
-    avatar: "/placeholder.svg",
-    title: "Conversion Optimization Specialist",
-    specialties: ["Email List Growth", "Product Page Optimization"],
-    rating: 4.7,
-    projectsCompleted: 156,
-    averageOrderValue: 2800,
-    description: "Focus on optimizing the entire customer journey from email signup to purchase completion.",
-    expertise: [
-      {
-        category: "Conversion",
-        skills: ["CRO", "Landing Pages", "Email Forms"]
-      },
-      {
-        category: "Content",
-        skills: ["Email Copywriting", "Product Descriptions"]
-      }
-    ]
-  }
-];
+import { useProviders } from "@/hooks/useProviders";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ProvidersDirectory = () => {
+  const { data: providers, isLoading, error } = useProviders();
   const [searchQuery, setSearchQuery] = useState("");
   const [compareProviders, setCompareProviders] = useState<ServiceProvider[]>([]);
 
@@ -86,10 +23,31 @@ const ProvidersDirectory = () => {
     setCompareProviders(compareProviders.filter(p => p.id !== providerId));
   };
 
-  const filteredProviders = mockProviders.filter(provider =>
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3].map((_, index) => (
+            <Skeleton key={index} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500">
+        Error loading providers: {error.message}
+      </div>
+    );
+  }
+
+  const filteredProviders = providers?.filter(provider =>
     provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     provider.specialties.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  ) || [];
 
   return (
     <div className="space-y-6">
