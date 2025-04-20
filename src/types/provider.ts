@@ -14,4 +14,10 @@ export interface ServiceProvider {
     category: string;
     skills: string[];
   }[];
+  successMetrics?: {
+    category: string;
+    value: string;
+    timeframe: string;
+  }[];
+  platformExperience?: string[];
 }

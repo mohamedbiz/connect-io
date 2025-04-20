@@ -2,6 +2,7 @@
 import Layout from "@/components/layout/Layout";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
+import AbandonedCartRecovery from "@/components/dashboard/AbandonedCartRecovery";
 import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -14,6 +15,7 @@ const FounderDashboard = () => {
         <Tabs defaultValue="diagnostic" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="diagnostic">Email Diagnostic</TabsTrigger>
+            <TabsTrigger value="cart-recovery">Cart Recovery</TabsTrigger>
             <TabsTrigger value="list-growth">List Growth</TabsTrigger>
             <TabsTrigger value="providers">Find Providers</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -22,6 +24,10 @@ const FounderDashboard = () => {
           
           <TabsContent value="diagnostic">
             <EmailMarketingDiagnostic />
+          </TabsContent>
+
+          <TabsContent value="cart-recovery">
+            <AbandonedCartRecovery />
           </TabsContent>
           
           <TabsContent value="list-growth">
