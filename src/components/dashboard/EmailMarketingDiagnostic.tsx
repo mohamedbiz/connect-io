@@ -1,9 +1,10 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { Chart } from "@/components/ui/chart";
+import { ChartContainer } from "@/components/ui/chart";
 
 const EmailMarketingDiagnostic = () => {
   // Mock diagnostic data
@@ -75,7 +76,7 @@ const EmailMarketingDiagnostic = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Chart 
+          <ChartContainer 
             config={chartConfig}
           >
             <div className="w-full aspect-[2/1]">
@@ -106,7 +107,7 @@ const EmailMarketingDiagnostic = () => {
                 </div>
               </div>
             </div>
-          </Chart>
+          </ChartContainer>
         </CardContent>
       </Card>
 

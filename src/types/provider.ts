@@ -9,6 +9,7 @@ export interface ServiceProvider {
   rating: number;
   projectsCompleted: number;
   specialties: string[];
+  averageOrderValue?: number;
   expertise?: {
     category: string;
     skills: string[];
