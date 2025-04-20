@@ -1,13 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PostPurchaseDiagnostic } from "@/types/post-purchase-diagnostics";
+import { type PostPurchaseDiagnostic as DiagnosticType } from "@/types/post-purchase-diagnostics";
 import SequenceAnalysis from "./SequenceAnalysis";
 import ImpactMetrics from "./ImpactMetrics";
 
 const PostPurchaseDiagnostic = () => {
-  const { data: diagnostic } = useQuery<PostPurchaseDiagnostic>({
+  const { data: diagnostic } = useQuery<DiagnosticType>({
     queryKey: ["postPurchaseDiagnostic"],
     queryFn: async () => ({
       overallScore: 45,
