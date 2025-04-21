@@ -1,85 +1,130 @@
 import Layout from "@/components/layout/Layout";
 import { ArrowRight, Users, Coins, CheckCircle, Folder, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
+// Unified, improved pain points for brand voice:
 const PAIN_POINTS = [
-  "Spending countless hours searching for quality clients",
-  "Constantly negotiating and justifying your rates",
-  "Getting paid less by clients who don’t understand the ROI of great email marketing",
-  "Struggling to stand out in a crowded market",
-  "Wasting energy on sales calls instead of doing expert work",
+  "Spending countless hours searching for quality clients.",
+  "Constantly negotiating and justifying your rates.",
+  "Getting paid less by clients who don’t understand the ROI of great email marketing.",
+  "Struggling to stand out in a crowded market.",
+  "Wasting energy on sales calls instead of doing expert work.",
 ];
 
 const BRIDGE_BENEFITS = [
   {
     icon: <Users className="h-6 w-6 text-primary" />,
     title: "Qualified Leads Delivered",
-    desc: "We connect you with eCommerce businesses already committed to investing in their growth, no cold outreach required."
+    desc: "We’ll connect you directly with eCommerce founders who are eager and ready to invest.",
   },
   {
     icon: <Coins className="h-6 w-6 text-primary" />,
     title: "Premium Rates",
-    desc: "Only serious founders looking for results; charge for value, not just time."
+    desc: "Work with serious clients who value results, so you can charge based on your impact.",
   },
   {
     icon: <Folder className="h-6 w-6 text-primary" />,
     title: "Portfolio Growth",
-    desc: "Showcase your verified results and boost your credibility with high-quality case studies."
+    desc: "Showcase real, verified outcomes to attract even more top-tier projects.",
   },
   {
     icon: <CheckCircle className="h-6 w-6 text-primary" />,
     title: "Unmatched Support",
-    desc: "Our team guides both you and clients through onboarding, making every collaboration seamless."
+    desc: "Our team ensures every collaboration is smooth, so you can focus on what you do best.",
   },
 ];
 
 const ForProvidersPage = () => (
   <Layout>
-    <div className="bg-gradient-to-br from-secondary to-white py-16 md:py-24">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto flex flex-col gap-8">
-          <Card className="bg-white shadow-lg border-l-4 border-orange-500 px-8 py-8 animate-fade-in">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="text-orange-500 h-7 w-7" />
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                The Reality for Most Email Marketing Service Providers
-              </h2>
+    {/* "The Reality for Most Service Providers" - replicated from home section */}
+    <section className="py-16 md:py-24 bg-white">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <Card className="relative bg-gradient-to-br from-secondary via-white to-white border-0 shadow-xl px-8 py-8 mb-20">
+          <CardHeader className="flex items-center gap-3 border-b-0 p-0 mb-6">
+            <div className="rounded-full bg-orange-100 p-3 border border-orange-200">
+              <AlertTriangle className="text-orange-500 h-8 w-8" />
             </div>
-            <ul className="list-disc pl-6 space-y-2 text-lg text-gray-700">
+            <CardTitle className="!text-3xl !font-extrabold text-gray-900 tracking-tight">
+              The Reality for Most Service Providers
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 pt-2">
+            <p className="text-lg text-gray-800 mb-6 font-semibold max-w-3xl leading-relaxed">
+              Doing great work used to be enough. Today, email marketing specialists face growing challenges:
+            </p>
+            <ul className="space-y-5 pl-4 max-w-xl text-base text-gray-700 font-medium leading-relaxed">
               {PAIN_POINTS.map((pain, idx) => (
-                <li key={idx} className="">{pain}</li>
+                <li key={idx} className="flex items-start gap-3 group transition">
+                  <CheckCircle className="mt-1 h-5 w-5 flex-shrink-0 text-orange-400 group-hover:text-orange-500 transition" />
+                  <span>{pain}</span>
+                </li>
               ))}
             </ul>
-          </Card>
-          <Card className="bg-primary/5 shadow-xl border-0 px-8 py-8 animate-fade-in">
-            <h3 className="text-xl md:text-2xl font-semibold mb-5 text-primary">What if you could focus on delivery and results—not chasing clients?</h3>
-            <p className="text-lg text-gray-700 mb-6">
-              Our platform is built to connect you—the expert—with pre-qualified eCommerce founders who value your work and are ready to invest.<br />
-              Here’s how we help you break through the noise:
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-              {BRIDGE_BENEFITS.map((b, idx) => (
-                <div key={idx} className="flex gap-3 items-start bg-white rounded-lg shadow p-4 border hover-scale transition-transform">
-                  <div>{b.icon}</div>
-                  <div>
-                    <div className="font-medium text-base mb-1">{b.title}</div>
-                    <div className="text-gray-600 text-sm">{b.desc}</div>
-                  </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+
+    {/* Improved "What if you could focus only on delivering results..." section */}
+    <section className="bg-gradient-to-br from-secondary to-white py-16 md:py-24">
+      <div className="container mx-auto px-4 max-w-5xl">
+        <div className="text-center mb-20 max-w-4xl mx-auto px-4">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <span className="block w-12 h-1 rounded-full bg-primary/80"></span>
+            <span className="text-primary font-semibold uppercase text-xs tracking-wide">
+              There’s a better way
+            </span>
+            <span className="block w-12 h-1 rounded-full bg-primary/80"></span>
+          </div>
+          <h3 className="text-3xl font-extrabold text-gray-900 leading-snug mb-4">
+            What if you could focus only on delivering results—<br className="hidden md:inline" />
+            not chasing clients?
+          </h3>
+          <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto">
+            Imagine a platform built for your success, where:</p>
+          <ul className="space-y-3 text-base text-gray-700 mb-6 font-medium max-w-xl mx-auto text-left">
+            <li className="flex items-start gap-2">
+              <CheckCircle className="h-5 w-5 text-primary mt-1" />
+              You connect effortlessly with pre-qualified eCommerce founders—no more cold outreach.
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="h-5 w-5 text-primary mt-1" />
+              You command premium rates with clients who value measurable results.
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="h-5 w-5 text-primary mt-1" />
+              You build a portfolio of verified case studies and outcomes.
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="h-5 w-5 text-primary mt-1" />
+              You spend your energy on the work that matters—delivering results.
+            </li>
+          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {BRIDGE_BENEFITS.map((b, idx) => (
+              <div key={idx} className="flex gap-4 items-start bg-secondary rounded-lg shadow p-5 border hover-scale transition-transform">
+                <div className="mt-1">{b.icon}</div>
+                <div>
+                  <div className="font-semibold text-base mb-1 text-gray-900">{b.title}</div>
+                  <div className="text-gray-600 text-sm">{b.desc}</div>
                 </div>
-              ))}
-            </div>
-            <Button size="lg" className="w-full mt-4 animate-scale-in" asChild>
-              <Link to="/provider-apply">
-                Apply as a Provider
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </Link>
-            </Button>
-          </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="text-center">
+          <Button size="lg" className="w-full md:w-auto" variant="default" asChild>
+            <Link to="/provider-apply">
+              Apply as a Provider
+              <ArrowRight className="ml-1 h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
-    </div>
+    </section>
+
     <section className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
