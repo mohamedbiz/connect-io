@@ -54,7 +54,8 @@ export default function AuthPage() {
         if (error) {
           toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "Account created! Please check your email to confirm." });
+          toast({ title: "Account created!", description: "Welcome to Connect." });
+          navigate("/"); // Redirect to home page after successful registration
         }
       } else {
         // Sign in
@@ -67,7 +68,7 @@ export default function AuthPage() {
           toast({ title: "Login failed", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "Login successful" });
-          navigate("/");
+          navigate("/"); // Redirect to home page after successful login
         }
       }
     } catch (error) {
@@ -85,7 +86,13 @@ export default function AuthPage() {
   const handleOAuth = async (provider: "google" | "github" | "twitter") => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({ provider });
+      const { error } = await supabase.auth.signInWithOAuth({ 
+        provider,
+        options: {
+          redirectTo: window.location.origin // Ensure proper redirect after OAuth flow
+        }
+      });
+      
       if (error) {
         toast({ title: `Sign in with ${provider} failed`, description: error.message, variant: "destructive" });
       }
