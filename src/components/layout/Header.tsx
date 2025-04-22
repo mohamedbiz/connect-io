@@ -1,11 +1,12 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Mail, MenuIcon, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, logout } = useAuth();
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -18,7 +19,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
+        <button
           className="lg:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
@@ -37,13 +38,26 @@ const Header = () => {
           <Link to="/results" className="text-gray-600 hover:text-primary">Success Stories</Link>
         </nav>
 
+        {/* Desktop Auth Buttons */}
         <div className="hidden lg:flex items-center gap-4">
-          <Button variant="ghost" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/register">Get Started</Link>
-          </Button>
+          {!user ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/auth">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/auth">Get Started</Link>
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2">
+                {profile?.first_name} {profile?.last_name}
+              </span>
+              {/* future: show avatar */}
+              <Button size="sm" variant="ghost" onClick={logout}>Logout</Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -51,51 +65,57 @@ const Header = () => {
       {isMenuOpen && (
         <div className="lg:hidden bg-white absolute top-16 left-0 right-0 z-50 shadow-md border-b">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            <Link 
-              to="/how-it-works" 
+            <Link
+              to="/how-it-works"
               className="text-gray-600 hover:text-primary py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               How it Works
             </Link>
-            <Link 
-              to="/for-founders" 
+            <Link
+              to="/for-founders"
               className="text-gray-600 hover:text-primary py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               For Founders
             </Link>
-            <Link 
-              to="/for-providers" 
+            <Link
+              to="/for-providers"
               className="text-gray-600 hover:text-primary py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               For Providers
             </Link>
-            <Link 
-              to="/results" 
+            <Link
+              to="/results"
               className="text-gray-600 hover:text-primary py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               Success Stories
             </Link>
             <hr />
-            <Link 
-              to="/login" 
-              className="text-gray-600 hover:text-primary py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Login
-            </Link>
-            <Button 
-              className="w-full"
-              onClick={() => setIsMenuOpen(false)}
-              asChild
-            >
-              <Link to="/register">
-                Get Started
-              </Link>
-            </Button>
+            {!user ? (
+              <>
+                <Link
+                  to="/auth"
+                  className="text-gray-600 hover:text-primary py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Button
+                  className="w-full"
+                  asChild
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Link to="/auth">Get Started</Link>
+                </Button>
+              </>
+            ) : (
+              <Button className="w-full" variant="ghost" onClick={logout}>
+                Logout
+              </Button>
+            )}
           </div>
         </div>
       )}

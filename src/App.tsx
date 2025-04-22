@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -12,6 +11,7 @@ import ForFoundersPage from "./pages/ForFoundersPage"
 import ForProvidersPage from "./pages/ForProvidersPage"
 import FounderDashboard from "./pages/FounderDashboard"
 import NotFound from "./pages/NotFound"
+import AuthPage from "./pages/AuthPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,8 +31,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
             <Route path="/founder-dashboard" element={<FounderDashboard />} />
