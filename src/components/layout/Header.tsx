@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Mail, MenuIcon, X } from "lucide-react";
@@ -7,6 +8,11 @@ import { useAuth } from "@/contexts/AuthContext";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, profile, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -51,11 +57,10 @@ const Header = () => {
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium px-2">
-                {profile?.first_name} {profile?.last_name}
+              <span className="text-sm font-medium">
+                {profile?.first_name || user.email}
               </span>
-              {/* future: show avatar */}
-              <Button size="sm" variant="ghost" onClick={logout}>Logout</Button>
+              <Button size="sm" variant="ghost" onClick={handleLogout}>Logout</Button>
             </div>
           )}
         </div>
@@ -112,7 +117,7 @@ const Header = () => {
                 </Button>
               </>
             ) : (
-              <Button className="w-full" variant="ghost" onClick={logout}>
+              <Button className="w-full" variant="ghost" onClick={handleLogout}>
                 Logout
               </Button>
             )}
