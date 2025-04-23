@@ -1,4 +1,8 @@
+
 import Layout from "@/components/layout/Layout";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
 import PostPurchaseDiagnostic from "@/components/dashboard/post-purchase/PostPurchaseDiagnostic";
@@ -7,6 +11,30 @@ import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FounderDashboard = () => {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Protect this route - redirect if not authenticated or not a founder
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        navigate("/auth");
+      } else if (profile && profile.role !== "founder") {
+        navigate("/");
+      }
+    }
+  }, [user, profile, loading, navigate]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 px-4">
+          <p className="text-center">Loading...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto py-10 px-4">

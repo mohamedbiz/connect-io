@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const initialForm = {
   email: "",
@@ -28,15 +29,46 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
+  // Redirect if user is already authenticated
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) navigate("/");
-    });
-  }, [navigate]);
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const handleRedirectBasedOnRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user role:", error);
+        navigate("/"); // Default redirect
+        return;
+      }
+
+      console.log("User role data:", data);
+      
+      if (data.role === "founder") {
+        navigate("/founder-dashboard");
+      } else if (data.role === "provider") {
+        navigate("/provider-dashboard");
+      } else {
+        navigate("/"); // Default redirect
+      }
+    } catch (err) {
+      console.error("Role check error:", err);
+      navigate("/"); // Default fallback
+    }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -52,15 +84,19 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
             data: {
               first_name: form.first_name,
               last_name: form.last_name,
+              role: "founder", // Default role, modify as needed
             },
           },
         });
 
         if (error) {
           toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-        } else {
+        } else if (data.user) {
           toast({ title: "Account created!", description: "Welcome to Connect." });
-          navigate("/");
+          // Wait briefly for auth state to update
+          setTimeout(() => {
+            handleRedirectBasedOnRole(data.user.id);
+          }, 500);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -70,9 +106,12 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
 
         if (error) {
           toast({ title: "Login failed", description: error.message, variant: "destructive" });
-        } else {
+        } else if (data.user) {
           toast({ title: "Login successful" });
-          navigate("/");
+          // Wait briefly for auth state to update
+          setTimeout(() => {
+            handleRedirectBasedOnRole(data.user.id);
+          }, 500);
         }
       }
     } catch (error) {

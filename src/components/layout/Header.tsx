@@ -14,6 +14,12 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
+  // Determine dashboard link based on user role
+  const getDashboardLink = () => {
+    if (!profile) return "/";
+    return profile.role === "provider" ? "/provider-dashboard" : "/founder-dashboard";
+  };
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -57,6 +63,9 @@ const Header = () => {
             </>
           ) : (
             <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" asChild>
+                <Link to={getDashboardLink()}>My Dashboard</Link>
+              </Button>
               <span className="text-sm font-medium">
                 {profile?.first_name || user.email}
               </span>
@@ -117,9 +126,18 @@ const Header = () => {
                 </Button>
               </>
             ) : (
-              <Button className="w-full" variant="ghost" onClick={handleLogout}>
-                Logout
-              </Button>
+              <>
+                <Link
+                  to={getDashboardLink()}
+                  className="text-gray-600 hover:text-primary py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Dashboard
+                </Link>
+                <Button className="w-full" variant="ghost" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </>
             )}
           </div>
         </div>
