@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 const initialForm = {
@@ -28,7 +29,7 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: toastNotification } = useToast();
   const { user } = useAuth();
 
   // Redirect if user is already authenticated
@@ -90,9 +91,9 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
         });
 
         if (error) {
-          toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+          toastNotification({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else if (data.user) {
-          toast({ title: "Account created!", description: "Welcome to Connect." });
+          toastNotification({ title: "Account created!", description: "Welcome to Connect." });
           // Wait briefly for auth state to update
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
@@ -105,9 +106,9 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
         });
 
         if (error) {
-          toast({ title: "Login failed", description: error.message, variant: "destructive" });
+          toastNotification({ title: "Login failed", description: error.message, variant: "destructive" });
         } else if (data.user) {
-          toast({ title: "Login successful" });
+          toastNotification({ title: "Login successful" });
           // Wait briefly for auth state to update
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
@@ -116,7 +117,7 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
       }
     } catch (error) {
       console.error("Auth error:", error);
-      toast({
+      toastNotification({
         title: "Authentication error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
@@ -129,22 +130,35 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
   const handleOAuth = async (provider: "google" | "github" | "twitter") => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log(`Attempting to sign in with ${provider}...`);
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: window.location.origin
         }
       });
+      
       if (error) {
-        toast({ title: `Sign in with ${provider} failed`, description: error.message, variant: "destructive" });
+        console.error(`OAuth error with ${provider}:`, error);
+        
+        // Show detailed error message
+        if (error.message.includes("not enabled")) {
+          toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled in your Supabase project.`, {
+            description: "Please check your Supabase configuration."
+          });
+        } else {
+          toast.error(`Sign in with ${provider} failed: ${error.message}`);
+        }
+        
+        return Promise.reject(error);
       }
+      
+      console.log(`OAuth ${provider} response:`, data);
+      return Promise.resolve();
     } catch (error) {
       console.error(`OAuth error with ${provider}:`, error);
-      toast({
-        title: "Authentication error",
-        description: "An unexpected error occurred with social login. Please try again.",
-        variant: "destructive"
-      });
+      toast.error(`Failed to connect to ${provider}. Please try again.`);
+      return Promise.reject(error);
     } finally {
       setLoading(false);
     }
