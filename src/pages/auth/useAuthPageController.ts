@@ -1,10 +1,9 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
 
 const initialForm = {
   email: "",
@@ -13,31 +12,13 @@ const initialForm = {
   last_name: "",
 };
 
-type UseAuthPageControllerReturn = {
-  isRegister: boolean;
-  setIsRegister: React.Dispatch<React.SetStateAction<boolean>>;
-  form: typeof initialForm;
-  setForm: React.Dispatch<React.SetStateAction<typeof initialForm>>;
-  loading: boolean;
-  handleInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleAuth: (e: React.FormEvent) => Promise<void> | void;
-  handleOAuth: (provider: "google" | "github" | "twitter") => Promise<void>;
-};
-
-export default function useAuthPageController(): UseAuthPageControllerReturn {
+export default function useAuthPageController() {
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<"founder" | "provider">("founder");
   const navigate = useNavigate();
   const { toast: toastNotification } = useToast();
-  const { user } = useAuth();
-
-  // Redirect if user is already authenticated
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -53,22 +34,20 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
 
       if (error) {
         console.error("Error fetching user role:", error);
-        navigate("/"); // Default redirect
+        navigate("/");
         return;
       }
 
-      console.log("User role data:", data);
-      
       if (data.role === "founder") {
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
         navigate("/provider-dashboard");
       } else {
-        navigate("/"); // Default redirect
+        navigate("/");
       }
     } catch (err) {
       console.error("Role check error:", err);
-      navigate("/"); // Default fallback
+      navigate("/");
     }
   };
 
@@ -85,7 +64,7 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
             data: {
               first_name: form.first_name,
               last_name: form.last_name,
-              role: "founder", // Default role, modify as needed
+              role: userType,
             },
           },
         });
@@ -94,7 +73,6 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
           toastNotification({ title: "Sign up failed", description: error.message, variant: "destructive" });
         } else if (data.user) {
           toastNotification({ title: "Account created!", description: "Welcome to Connect." });
-          // Wait briefly for auth state to update
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
           }, 500);
@@ -109,7 +87,6 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
           toastNotification({ title: "Login failed", description: error.message, variant: "destructive" });
         } else if (data.user) {
           toastNotification({ title: "Login successful" });
-          // Wait briefly for auth state to update
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
           }, 500);
@@ -134,14 +111,16 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin
+          redirectTo: window.location.origin,
+          data: {
+            role: userType, // Include the selected role for OAuth sign ups
+          }
         }
       });
       
       if (error) {
         console.error(`OAuth error with ${provider}:`, error);
         
-        // Show detailed error message
         if (error.message.includes("not enabled")) {
           toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled in your Supabase project.`, {
             description: "Please check your Supabase configuration."
@@ -172,6 +151,8 @@ export default function useAuthPageController(): UseAuthPageControllerReturn {
     loading,
     handleInput,
     handleAuth,
-    handleOAuth
+    handleOAuth,
+    userType,
+    setUserType
   };
 }

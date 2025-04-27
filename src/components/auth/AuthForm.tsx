@@ -9,6 +9,7 @@ type AuthFormProps = {
   loading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void> | void;
   toggleAuth: () => void;
+  userType: "founder" | "provider";
 };
 
 const AuthForm = ({
@@ -18,6 +19,7 @@ const AuthForm = ({
   loading,
   handleSubmit,
   toggleAuth,
+  userType,
 }: AuthFormProps) => (
   <form className="space-y-4" onSubmit={handleSubmit}>
     {isRegister && (
@@ -60,7 +62,11 @@ const AuthForm = ({
       />
     </div>
     <Button type="submit" className="w-full" disabled={loading}>
-      {loading ? (isRegister ? "Signing up..." : "Signing in...") : isRegister ? "Sign Up" : "Sign In"}
+      {loading 
+        ? (isRegister ? "Signing up..." : "Signing in...") 
+        : (isRegister 
+            ? `Sign Up as ${userType === 'founder' ? 'Founder' : 'Provider'}` 
+            : "Sign In")}
     </Button>
     <div className="mt-4 text-center">
       {isRegister ? (
