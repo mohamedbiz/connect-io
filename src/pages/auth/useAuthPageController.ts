@@ -112,8 +112,10 @@ export default function useAuthPageController() {
         provider,
         options: {
           redirectTo: window.location.origin,
-          data: {
-            role: userType, // Include the selected role for OAuth sign ups
+          queryParams: {
+            // This is the correct way to pass additional data for OAuth providers
+            // It will be available in the user's raw_user_meta_data after sign-in
+            role: userType,
           }
         }
       });
