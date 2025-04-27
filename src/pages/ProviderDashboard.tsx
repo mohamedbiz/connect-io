@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Users, Mail, BriefCase } from "lucide-react";
+import { BarChart, Users, Mail, Briefcase } from "lucide-react";
 
 const ProviderDashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -45,7 +45,7 @@ const ProviderDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">Provider Dashboard</h1>
             <p className="text-gray-600">
-              Welcome back, {profile?.business_name || profile?.first_name}
+              Welcome back, {profile?.first_name || user?.email?.split('@')[0]}
             </p>
           </div>
           <Button>View Profile</Button>
@@ -76,7 +76,7 @@ const ProviderDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Projects Completed</CardTitle>
-              <BriefCase className="h-4 w-4 text-muted-foreground" />
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.projectsCompleted}</div>

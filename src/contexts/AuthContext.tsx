@@ -11,6 +11,11 @@ export type Profile = {
   avatar_url: string | null;
   email: string;
   role: string;
+  business_name?: string | null;
+  expertise?: string | null;
+  portfolio_url?: string | null;
+  linkedin_url?: string | null;
+  about?: string | null;
   created_at?: string;
 };
 
