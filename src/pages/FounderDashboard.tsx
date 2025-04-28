@@ -2,13 +2,15 @@
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
 import PostPurchaseDiagnostic from "@/components/dashboard/post-purchase/PostPurchaseDiagnostic";
 import AbandonedCartRecovery from "@/components/dashboard/AbandonedCartRecovery";
 import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 const FounderDashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -46,6 +48,7 @@ const FounderDashboard = () => {
             <TabsTrigger value="cart-recovery">Cart Recovery</TabsTrigger>
             <TabsTrigger value="list-growth">List Growth</TabsTrigger>
             <TabsTrigger value="post-purchase">Post Purchase</TabsTrigger>
+            <TabsTrigger value="client-acquisition">Client Acquisition</TabsTrigger>
             <TabsTrigger value="providers">Find Providers</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="results">Results</TabsTrigger>
@@ -65,6 +68,23 @@ const FounderDashboard = () => {
           
           <TabsContent value="post-purchase">
             <PostPurchaseDiagnostic />
+          </TabsContent>
+          
+          <TabsContent value="client-acquisition">
+            <div className="text-center py-10">
+              <div className="max-w-md mx-auto">
+                <h2 className="text-2xl font-semibold mb-4">Generate Client Acquisition Materials</h2>
+                <p className="text-gray-600 mb-6">
+                  Create personalized outreach messages, discovery call scripts, and proposals to acquire new eCommerce clients.
+                </p>
+                <Button asChild className="flex items-center gap-2">
+                  <Link to="/client-acquisition">
+                    <Users className="h-4 w-4" />
+                    <span>Start Client Acquisition Process</span>
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="providers">

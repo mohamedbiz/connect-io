@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Mail, MenuIcon, X } from "lucide-react";
+import { Briefcase, Mail, MenuIcon, X, Users } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -47,6 +47,10 @@ const Header = () => {
           <Link to="/how-it-works" className="text-gray-600 hover:text-primary">How it Works</Link>
           <Link to="/for-founders" className="text-gray-600 hover:text-primary">For Founders</Link>
           <Link to="/for-providers" className="text-gray-600 hover:text-primary">For Providers</Link>
+          <Link to="/client-acquisition" className="text-gray-600 hover:text-primary flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            <span>Client Acquisition</span>
+          </Link>
           <Link to="/results" className="text-gray-600 hover:text-primary">Success Stories</Link>
         </nav>
 
@@ -99,6 +103,14 @@ const Header = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               For Providers
+            </Link>
+            <Link
+              to="/client-acquisition"
+              className="text-gray-600 hover:text-primary py-2 flex items-center gap-1"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Users className="h-4 w-4" />
+              <span>Client Acquisition</span>
             </Link>
             <Link
               to="/results"
