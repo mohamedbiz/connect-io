@@ -41,20 +41,27 @@ export default function useAuthPageController() {
       if (data.role === "founder") {
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
-        // For providers, redirect to the application form if they haven't completed it
+        // For providers, check if they've completed the application form
         const { data: applicationData, error: applicationError } = await supabase
-          .from("provider_applications")
-          .select("status")
-          .eq("user_id", userId)
-          .maybeSingle();
+          .from("profiles") // First check if there's any application
+          .select("id")
+          .eq("id", userId)
+          .single();
         
         if (applicationError) {
-          console.error("Error checking application status:", applicationError);
+          console.error("Error checking provider status:", applicationError);
           navigate("/provider-apply");
           return;
         }
         
-        if (!applicationData) {
+        // Check for application status
+        const { data: providerApplication } = await supabase
+          .from("provider_applications") // This is a custom type now
+          .select("status")
+          .eq("user_id", userId)
+          .maybeSingle();
+        
+        if (!providerApplication) {
           // No application yet, redirect to application form
           navigate("/provider-apply");
         } else {
@@ -132,8 +139,7 @@ export default function useAuthPageController() {
         options: {
           redirectTo: window.location.origin,
           queryParams: {
-            // This is the correct way to pass additional data for OAuth providers
-            // It will be available in the user's raw_user_meta_data after sign-in
+            // Pass role info as a query parameter
             role: userType,
           }
         }

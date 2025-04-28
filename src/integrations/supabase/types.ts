@@ -11,31 +11,88 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          about: string | null
           avatar_url: string | null
+          business_name: string | null
           created_at: string | null
           email: string
+          expertise: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          linkedin_url: string | null
+          portfolio_url: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
+          about?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string | null
           email: string
+          expertise?: string | null
           first_name?: string | null
           id: string
           last_name?: string | null
+          linkedin_url?: string | null
+          portfolio_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
+          about?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string | null
           email?: string
+          expertise?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          linkedin_url?: string | null
+          portfolio_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: []
+      }
+      provider_applications: {
+        Row: {
+          accepted: boolean | null
+          application_data: Json
+          created_at: string
+          id: string
+          interview_notes: string | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: string
+          submitted_at: string
+          technical_assessment_score: number | null
+          user_id: string
+        }
+        Insert: {
+          accepted?: boolean | null
+          application_data: Json
+          created_at?: string
+          id?: string
+          interview_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          technical_assessment_score?: number | null
+          user_id: string
+        }
+        Update: {
+          accepted?: boolean | null
+          application_data?: Json
+          created_at?: string
+          id?: string
+          interview_notes?: string | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          technical_assessment_score?: number | null
+          user_id?: string
         }
         Relationships: []
       }

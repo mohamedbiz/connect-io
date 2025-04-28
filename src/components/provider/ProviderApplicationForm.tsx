@@ -149,10 +149,9 @@ const ProviderApplicationForm = () => {
 
       if (error) throw error;
 
-      // Store the detailed application data in a separate table
-      // This would require a new table to be created in the database
+      // Store the detailed application data in the provider_applications table
       const { error: applicationError } = await supabase
-        .from("provider_applications")
+        .from('provider_applications')
         .insert({
           user_id: user.id,
           application_data: formData,
