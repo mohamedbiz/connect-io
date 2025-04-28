@@ -1,123 +1,74 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { PersonalInfoStep } from "./application-steps/PersonalInfoStep";
-import { ProfessionalExperienceStep } from "./application-steps/ProfessionalExperienceStep";
-import { ExpertiseSpecializationStep } from "./application-steps/ExpertiseSpecializationStep";
-import { CaseStudiesStep } from "./application-steps/CaseStudiesStep";
-import { WorkApproachStep } from "./application-steps/WorkApproachStep";
-import { FinalStepReview } from "./application-steps/FinalStepReview";
-import { AlertTriangle } from "lucide-react";
+import { ApplicationProvider, useApplicationContext } from "./application/ApplicationContext";
+import { ApplicationProgress } from "./application/ApplicationProgress";
+import { ApplicationStep } from "./application/ApplicationStep";
+import { ApplicationNavigation } from "./application/ApplicationNavigation";
+import { LoginAlert } from "./application/LoginAlert";
 
-// Define the steps of the application process
-const STEPS = [
-  "Personal Information",
-  "Professional Experience",
-  "Expertise & Specialization",
-  "Case Studies",
-  "Work Approach",
-  "Review & Submit"
-];
-
-// Initial form state with all fields needed across all steps
-const initialFormState = {
+// Define the application form data type for export
+export type ProviderApplicationFormData = {
   // Personal Information
-  full_name: "",
-  phone_number: "",
-  location: "",
-  linkedin_url: "",
-  portfolio_url: "",
+  full_name: string;
+  phone_number: string;
+  location: string;
+  linkedin_url: string;
+  portfolio_url: string;
   
   // Professional Experience
-  years_experience: "",
-  email_platforms: [] as string[],
-  email_platforms_other: "",
-  ecommerce_platforms: [] as string[],
-  ecommerce_platforms_other: "",
+  years_experience: string;
+  email_platforms: string[];
+  email_platforms_other: string;
+  ecommerce_platforms: string[];
+  ecommerce_platforms_other: string;
   
   // Expertise & Specialization
-  expertise_areas: [] as string[],
-  expertise_other: "",
-  industries: [] as string[],
-  industries_other: "",
-  average_revenue_increase: "",
-  average_conversion_increase: "",
-  average_churn_reduction: "",
+  expertise_areas: string[];
+  expertise_other: string;
+  industries: string[];
+  industries_other: string;
+  average_revenue_increase: string;
+  average_conversion_increase: string;
+  average_churn_reduction: string;
   
-  // Case Studies (array of objects)
-  case_studies: [
-    {
-      client_industry: "",
-      project_duration: "",
-      initial_situation: "",
-      implemented_solutions: "",
-      results_achieved: "",
-      reference_contact: ""
-    },
-    {
-      client_industry: "",
-      project_duration: "",
-      initial_situation: "",
-      implemented_solutions: "",
-      results_achieved: "",
-      reference_contact: ""
-    }
-  ],
+  // Case Studies
+  case_studies: {
+    client_industry: string;
+    project_duration: string;
+    initial_situation: string;
+    implemented_solutions: string;
+    results_achieved: string;
+    reference_contact: string;
+  }[];
   
   // Work Approach
-  availability: "",
-  typical_timeline: "",
-  communication_preferences: "",
-  project_management_tools: "",
-  performance_guarantee: "yes", // yes, no, conditional
-  performance_guarantee_conditions: "",
+  availability: string;
+  typical_timeline: string;
+  communication_preferences: string;
+  project_management_tools: string;
+  performance_guarantee: "yes" | "no" | "conditional";
+  performance_guarantee_conditions: string;
   
   // Sample Work
-  sample_work: ["", "", ""] as string[],
+  sample_work: string[];
   
   // Additional Information
-  technical_assessment: true,
-  additional_information: "",
-  referral_source: "",
-  referral_details: ""
+  technical_assessment: boolean;
+  additional_information: string;
+  referral_source: string;
+  referral_details: string;
 };
 
-export type ProviderApplicationFormData = typeof initialFormState;
-
-const ProviderApplicationForm = () => {
+// Inner component that uses the context
+const ApplicationFormContent = () => {
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<ProviderApplicationFormData>(initialFormState);
-  
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Update form data
-  const updateFormData = (newData: Partial<ProviderApplicationFormData>) => {
-    setFormData(prev => ({ ...prev, ...newData }));
-  };
-  
-  // Go to next step
-  const nextStep = () => {
-    if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1);
-      window.scrollTo(0, 0);
-    }
-  };
-  
-  // Go to previous step
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      window.scrollTo(0, 0);
-    }
-  };
+  const { formData, setIsSubmitting } = useApplicationContext();
   
   // Handle form submission
   const handleSubmit = async () => {
@@ -180,86 +131,31 @@ const ProviderApplicationForm = () => {
     }
   };
 
-  // Render the current step
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return <PersonalInfoStep formData={formData} updateFormData={updateFormData} />;
-      case 1:
-        return <ProfessionalExperienceStep formData={formData} updateFormData={updateFormData} />;
-      case 2:
-        return <ExpertiseSpecializationStep formData={formData} updateFormData={updateFormData} />;
-      case 3:
-        return <CaseStudiesStep formData={formData} updateFormData={updateFormData} />;
-      case 4:
-        return <WorkApproachStep formData={formData} updateFormData={updateFormData} />;
-      case 5:
-        return <FinalStepReview formData={formData} />;
-      default:
-        return <PersonalInfoStep formData={formData} updateFormData={updateFormData} />;
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto">
-      {!user && (
-        <Card className="mb-6 p-4 bg-amber-50 border-amber-200">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-amber-800">Login Required</h3>
-              <p className="text-amber-700 text-sm mt-1">
-                You need to be logged in to submit your provider application. Please{" "}
-                <a href="/auth" className="text-primary underline font-medium">
-                  sign in
-                </a>{" "}
-                or create an account first.
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* Display login warning if not authenticated */}
+      <LoginAlert isLoggedIn={!!user} />
 
       {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-500">
-            Step {currentStep + 1} of {STEPS.length}
-          </span>
-          <span className="text-sm font-medium text-gray-500">
-            {STEPS[currentStep]}
-          </span>
-        </div>
-        <div className="h-2 bg-gray-200 rounded-full">
-          <div
-            className="h-2 bg-primary rounded-full transition-all duration-300"
-            style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
-          ></div>
-        </div>
-      </div>
+      <ApplicationProgress />
 
       <Card className="p-6">
-        {renderStep()}
+        {/* Current step content */}
+        <ApplicationStep />
 
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 0}
-          >
-            Previous
-          </Button>
-
-          {currentStep < STEPS.length - 1 ? (
-            <Button onClick={nextStep}>Continue</Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting} className="min-w-[120px]">
-              {isSubmitting ? "Submitting..." : "Submit Application"}
-            </Button>
-          )}
-        </div>
+        {/* Navigation buttons */}
+        <ApplicationNavigation handleSubmit={handleSubmit} />
       </Card>
     </div>
+  );
+};
+
+// Main component that provides the context
+const ProviderApplicationForm = () => {
+  return (
+    <ApplicationProvider>
+      <ApplicationFormContent />
+    </ApplicationProvider>
   );
 };
 
