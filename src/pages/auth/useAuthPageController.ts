@@ -41,7 +41,26 @@ export default function useAuthPageController() {
       if (data.role === "founder") {
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
-        navigate("/provider-dashboard");
+        // For providers, redirect to the application form if they haven't completed it
+        const { data: applicationData, error: applicationError } = await supabase
+          .from("provider_applications")
+          .select("status")
+          .eq("user_id", userId)
+          .maybeSingle();
+        
+        if (applicationError) {
+          console.error("Error checking application status:", applicationError);
+          navigate("/provider-apply");
+          return;
+        }
+        
+        if (!applicationData) {
+          // No application yet, redirect to application form
+          navigate("/provider-apply");
+        } else {
+          // Has submitted an application already, go to dashboard
+          navigate("/provider-dashboard");
+        }
       } else {
         navigate("/");
       }
