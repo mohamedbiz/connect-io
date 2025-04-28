@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound"
 import AuthPage from "./pages/AuthPage"
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage"
 import ClientAcquisitionPage from "./pages/client/ClientAcquisitionPage"
+import ClientAcquisitionSuccessPage from "./pages/client/ClientAcquisitionSuccessPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/provider-apply" element={<ProviderApplicationPage />} />
             <Route path="/client-acquisition" element={<ClientAcquisitionPage />} />
+            <Route path="/client-acquisition/success" element={<ClientAcquisitionSuccessPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

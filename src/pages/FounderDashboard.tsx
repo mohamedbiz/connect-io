@@ -2,7 +2,7 @@
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
 import PostPurchaseDiagnostic from "@/components/dashboard/post-purchase/PostPurchaseDiagnostic";
@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
 const FounderDashboard = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, shouldRedirectToAcquisition } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Protect this route - redirect if not authenticated or not a founder
   useEffect(() => {
@@ -23,9 +24,11 @@ const FounderDashboard = () => {
         navigate("/auth");
       } else if (profile && profile.role !== "founder") {
         navigate("/");
+      } else if (shouldRedirectToAcquisition(location.pathname)) {
+        navigate("/client-acquisition");
       }
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, loading, navigate, location.pathname, shouldRedirectToAcquisition]);
 
   if (loading) {
     return (

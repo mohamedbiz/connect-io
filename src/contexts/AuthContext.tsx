@@ -17,6 +17,7 @@ export type Profile = {
   linkedin_url?: string | null;
   about?: string | null;
   created_at?: string;
+  acquisition_completed?: boolean;
 };
 
 type AuthContextType = {
@@ -25,6 +26,7 @@ type AuthContextType = {
   profile: Profile | null;
   loading: boolean;
   logout: () => Promise<void>;
+  shouldRedirectToAcquisition: (currentPath: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   logout: async () => {},
+  shouldRedirectToAcquisition: () => false,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -40,6 +43,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [acquisitionStatus, setAcquisitionStatus] = useState<{completed: boolean, checked: boolean}>({
+    completed: false,
+    checked: false
+  });
 
   useEffect(() => {
     // Set up auth listener FIRST
@@ -56,6 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setProfile(null);
         setLoading(false);
+        setAcquisitionStatus({completed: false, checked: true});
       }
     });
 
@@ -70,6 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setProfile(null);
         setLoading(false);
+        setAcquisitionStatus({completed: false, checked: true});
       }
     });
 
@@ -77,6 +86,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Check acquisition status whenever the user changes
+  useEffect(() => {
+    if (user && profile?.role === 'founder') {
+      checkAcquisitionStatus(user.id);
+    }
+  }, [user, profile]);
 
   async function fetchProfile(userId: string) {
     console.log("Fetching profile for:", userId);
@@ -105,19 +121,73 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  async function checkAcquisitionStatus(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from("founder_onboarding")
+        .select("acquisition_completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error checking acquisition status:", error);
+      } else {
+        setAcquisitionStatus({
+          completed: Boolean(data?.acquisition_completed),
+          checked: true
+        });
+      }
+    } catch (err) {
+      console.error("Error in acquisition status check:", err);
+    }
+  }
+
   async function logout() {
     try {
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setProfile(null);
+      setAcquisitionStatus({completed: false, checked: true});
     } catch (error) {
       console.error("Logout error:", error);
     }
   }
 
+  // Function to decide if we should redirect founders to the acquisition page
+  function shouldRedirectToAcquisition(currentPath: string) {
+    // Don't redirect if:
+    // - We're loading
+    // - We're not logged in
+    // - User is not a founder
+    // - We're already on client acquisition related paths
+    // - We haven't checked the status yet
+    
+    if (
+      loading || 
+      !user || 
+      !profile || 
+      profile.role !== 'founder' ||
+      currentPath.includes('/client-acquisition') || 
+      currentPath === '/auth' || 
+      !acquisitionStatus.checked
+    ) {
+      return false;
+    }
+    
+    // If we're headed to dashboard and haven't completed acquisition, redirect
+    return !acquisitionStatus.completed && currentPath === '/founder-dashboard';
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      profile, 
+      loading, 
+      logout,
+      shouldRedirectToAcquisition
+    }}>
       {children}
     </AuthContext.Provider>
   );
