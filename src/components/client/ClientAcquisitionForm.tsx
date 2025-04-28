@@ -8,7 +8,11 @@ import { AcquisitionNavigation } from "./acquisition/AcquisitionNavigation";
 import { LoginAlert } from "./acquisition/LoginAlert";
 import { useAuth } from "@/contexts/AuthContext";
 
-const ClientAcquisitionForm = () => {
+interface ClientAcquisitionFormProps {
+  onComplete: () => Promise<void>;
+}
+
+const ClientAcquisitionForm = ({ onComplete }: ClientAcquisitionFormProps) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [showLoginAlert, setShowLoginAlert] = useState(!user);
@@ -20,12 +24,8 @@ const ClientAcquisitionForm = () => {
     }
     
     try {
-      // Here you would handle the submission of the form data
-      // For now, we'll just show a success toast
-      toast({
-        title: "Success!",
-        description: "Your client acquisition package has been created.",
-      });
+      // Call the onComplete callback passed from parent
+      await onComplete();
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({

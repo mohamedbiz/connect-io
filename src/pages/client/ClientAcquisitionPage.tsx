@@ -28,12 +28,12 @@ const ClientAcquisitionPage = () => {
           .from("founder_onboarding")
           .select("acquisition_completed")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Error checking acquisition status:", error);
         } else if (data?.acquisition_completed) {
-          // If they've completed it before, redirect to dashboard
+          // If they've completed it before, set flag
           setIsSubmitted(true);
         }
       } catch (err) {
@@ -52,11 +52,13 @@ const ClientAcquisitionPage = () => {
     setIsLoading(true);
     try {
       // Save that this user has completed the process
-      const { error } = await supabase.from("founder_onboarding").upsert({
-        user_id: user.id,
-        acquisition_completed: true,
-        acquisition_completed_at: new Date().toISOString(),
-      });
+      const { error } = await supabase
+        .from("founder_onboarding")
+        .upsert({
+          user_id: user.id,
+          acquisition_completed: true,
+          acquisition_completed_at: new Date().toISOString(),
+        });
 
       if (error) {
         throw error;

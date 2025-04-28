@@ -17,7 +17,11 @@ export type Profile = {
   linkedin_url?: string | null;
   about?: string | null;
   created_at?: string;
-  acquisition_completed?: boolean;
+};
+
+type AcquisitionStatus = {
+  completed: boolean;
+  checked: boolean;
 };
 
 type AuthContextType = {
@@ -43,7 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [acquisitionStatus, setAcquisitionStatus] = useState<{completed: boolean, checked: boolean}>({
+  const [acquisitionStatus, setAcquisitionStatus] = useState<AcquisitionStatus>({
     completed: false,
     checked: false
   });
@@ -123,6 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function checkAcquisitionStatus(userId: string) {
     try {
+      // Use "founder_onboarding" table that we just created in the SQL migration
       const { data, error } = await supabase
         .from("founder_onboarding")
         .select("acquisition_completed")
@@ -131,6 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (error) {
         console.error("Error checking acquisition status:", error);
+        setAcquisitionStatus({completed: false, checked: true});
       } else {
         setAcquisitionStatus({
           completed: Boolean(data?.acquisition_completed),
@@ -139,6 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (err) {
       console.error("Error in acquisition status check:", err);
+      setAcquisitionStatus({completed: false, checked: true});
     }
   }
 
