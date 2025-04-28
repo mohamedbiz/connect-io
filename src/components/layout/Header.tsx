@@ -1,6 +1,7 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Mail, MenuIcon, X, Users, BookOpen } from "lucide-react";
+import { Briefcase, MenuIcon, X, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -49,19 +50,12 @@ const Header = () => {
           <Link to="/how-it-works" className="text-gray-600 hover:text-primary">How it Works</Link>
           <Link to="/for-founders" className="text-gray-600 hover:text-primary">For Founders</Link>
           <Link to="/for-providers" className="text-gray-600 hover:text-primary">For Providers</Link>
-          {!isProvider && (
-            <Link to="/client-acquisition" className="text-gray-600 hover:text-primary flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>Provider Matching</span>
-            </Link>
-          )}
           {isProvider && (
             <Link to="/provider-dashboard#resources" className="text-gray-600 hover:text-primary flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
               <span>Resources</span>
             </Link>
           )}
-          <Link to="/results" className="text-gray-600 hover:text-primary">Success Stories</Link>
         </nav>
 
         {/* Desktop Auth Buttons */}
@@ -114,16 +108,6 @@ const Header = () => {
             >
               For Providers
             </Link>
-            {!isProvider && (
-              <Link
-                to="/client-acquisition"
-                className="text-gray-600 hover:text-primary py-2 flex items-center gap-1"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                <Users className="h-4 w-4" />
-                <span>Provider Matching</span>
-              </Link>
-            )}
             {isProvider && (
               <Link
                 to="/provider-dashboard#resources"
@@ -134,13 +118,6 @@ const Header = () => {
                 <span>Resources</span>
               </Link>
             )}
-            <Link
-              to="/results"
-              className="text-gray-600 hover:text-primary py-2"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Success Stories
-            </Link>
             <hr />
             {!user ? (
               <>
