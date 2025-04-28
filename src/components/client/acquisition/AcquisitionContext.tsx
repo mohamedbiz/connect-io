@@ -2,14 +2,42 @@
 import { createContext, useContext, useState } from "react";
 
 export interface ClientAcquisitionFormData {
-  // Initial Outreach
-  outreach_type: "email" | "linkedin" | "cold_call" | "";
+  // Basic store information
   store_name: string;
   first_name: string;
-  specific_observation: string;
   niche: string;
   
-  // Discovery Call
+  // Business Information
+  business_info: {
+    industry: string;
+    other_industry?: string;
+    monthly_revenue: string;
+    ideal_customer: string;
+    goals: string;
+  };
+  
+  // Email Marketing Needs
+  email_needs: {
+    platform: string;
+    experience_level: string;
+    campaign_types: string[];
+    needed_flows: string[];
+    challenges: string;
+    revenue_percentage: string;
+  };
+  
+  // Provider Preferences
+  provider_preferences: {
+    budget_range: string;
+    communication_preference: string;
+    support_level: string;
+    industry_experience: string;
+    additional_notes: string;
+  };
+  
+  // Preserved for backwards compatibility
+  outreach_type: "email" | "linkedin" | "cold_call" | "";
+  specific_observation: string;
   business_background: {
     founding_story: string;
     best_selling_products: string;
@@ -18,8 +46,6 @@ export interface ClientAcquisitionFormData {
     acquisition_channels: string;
     business_goals: string;
   };
-  
-  // Email Marketing Assessment
   current_email: {
     platform: string;
     campaign_types: string[];
@@ -29,8 +55,6 @@ export interface ClientAcquisitionFormData {
     revenue_percentage: string;
     previous_experience: string;
   };
-  
-  // Store Analysis
   technical_assessment: {
     platform_evaluation: boolean;
     list_health: boolean;
@@ -38,8 +62,6 @@ export interface ClientAcquisitionFormData {
     campaign_assessment: boolean;
     performance_metrics: boolean;
   };
-  
-  // Opportunity Identification
   opportunities: {
     current_monthly_revenue: string;
     industry_benchmark: string;
@@ -52,8 +74,6 @@ export interface ClientAcquisitionFormData {
       priority_score: number;
     }>;
   };
-  
-  // Proposal
   proposal: {
     strengths: string[];
     opportunities: string[];
@@ -75,11 +95,35 @@ export interface ClientAcquisitionFormData {
 
 // Initial form state
 const initialFormState: ClientAcquisitionFormData = {
-  outreach_type: "",
   store_name: "",
   first_name: "",
   specific_observation: "",
   niche: "",
+  outreach_type: "",
+  
+  business_info: {
+    industry: "",
+    monthly_revenue: "",
+    ideal_customer: "",
+    goals: "",
+  },
+  
+  email_needs: {
+    platform: "",
+    experience_level: "",
+    campaign_types: [],
+    needed_flows: [],
+    challenges: "",
+    revenue_percentage: "",
+  },
+  
+  provider_preferences: {
+    budget_range: "",
+    communication_preference: "",
+    support_level: "",
+    industry_experience: "",
+    additional_notes: "",
+  },
   
   business_background: {
     founding_story: "",

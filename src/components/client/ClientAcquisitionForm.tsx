@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { AcquisitionProvider } from "./acquisition/AcquisitionContext";
-import { AcquisitionProgress } from "./acquisition/AcquisitionProgress";
-import { AcquisitionStep } from "./acquisition/AcquisitionStep";
-import { AcquisitionNavigation } from "./acquisition/AcquisitionNavigation";
+import { MatchingProgress } from "./matching/MatchingProgress";
+import { MatchingStep } from "./matching/MatchingStep";
+import { MatchingNavigation } from "./matching/MatchingNavigation";
 import { LoginAlert } from "./acquisition/LoginAlert";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -30,7 +30,7 @@ const ClientAcquisitionForm = ({ onComplete }: ClientAcquisitionFormProps) => {
       console.error("Error submitting form:", error);
       toast({
         title: "Error",
-        description: "There was a problem generating your client package. Please try again.",
+        description: "There was a problem processing your assessment. Please try again.",
         variant: "destructive",
       });
     }
@@ -40,9 +40,9 @@ const ClientAcquisitionForm = ({ onComplete }: ClientAcquisitionFormProps) => {
     <div className="bg-white p-6 shadow-sm rounded-lg border">
       <AcquisitionProvider>
         {showLoginAlert && <LoginAlert onClose={() => setShowLoginAlert(false)} />}
-        <AcquisitionProgress />
-        <AcquisitionStep />
-        <AcquisitionNavigation handleSubmit={handleSubmit} />
+        <MatchingProgress />
+        <MatchingStep />
+        <MatchingNavigation handleSubmit={handleSubmit} />
       </AcquisitionProvider>
     </div>
   );
