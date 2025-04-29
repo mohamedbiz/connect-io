@@ -2,7 +2,6 @@
 import { ArrowRight, LineChart, MessageSquare, Search, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
 
 const HowItWorks = () => {
   const steps = [
@@ -65,7 +64,7 @@ const HowItWorks = () => {
         </div>
 
         <div className="flex justify-center">
-          <div className="bg-white rounded-lg p-8 max-w-3xl w-full text-center border border-[#BFD7ED]">
+          <div className="bg-white rounded-lg p-8 max-w-3xl w-full text-center border border-[#BFD7ED] transition-all duration-300 hover:border-[#2D82B7]">
             <ShieldCheck className="h-12 w-12 text-[#2D82B7] mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-3 text-[#0A2342]">Guaranteed Results or You Don't Pay</h3>
             <p className="text-[#0E3366] mb-6">
@@ -73,7 +72,7 @@ const HowItWorks = () => {
             </p>
             <Button 
               asChild
-              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white"
+              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
             >
               <Link to="/register">
                 Get Started Now
