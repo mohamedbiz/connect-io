@@ -9,14 +9,14 @@ interface SequenceAnalysisProps {
 
 const SequenceAnalysis = ({ sequences }: SequenceAnalysisProps) => {
   return (
-    <Card>
+    <Card className="dashboard-card">
       <CardHeader>
         <CardTitle>Sequence Analysis</CardTitle>
         <CardDescription>
           Review and optimize your post-purchase email sequences
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="equal-height-body">
         <div className="space-y-6">
           {sequences.map((sequence) => (
             <SequenceItem key={sequence.id} sequence={sequence} />

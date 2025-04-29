@@ -10,14 +10,14 @@ interface ImprovementRecommendationsProps {
 
 const ImprovementRecommendations = ({ formName, tips }: ImprovementRecommendationsProps) => {
   return (
-    <Card>
+    <Card className="dashboard-card">
       <CardHeader>
         <CardTitle>Improvement Recommendations</CardTitle>
         <CardDescription>
           Actionable tips to improve your {formName.toLowerCase()} conversion rate
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="equal-height-body">
         <div className="space-y-4">
           <ul className="space-y-3">
             {tips.map((tip, index) => (

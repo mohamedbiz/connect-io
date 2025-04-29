@@ -22,14 +22,14 @@ const FormAnalysis = ({ forms, selectedForm, onFormChange }: FormAnalysisProps) 
   };
 
   return (
-    <Card>
+    <Card className="dashboard-card">
       <CardHeader>
         <CardTitle>Form-by-Form Analysis</CardTitle>
         <CardDescription>
           Detailed conversion metrics for each signup form on your site
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="equal-height-body">
         <Tabs defaultValue={selectedForm} onValueChange={onFormChange}>
           <TabsList className="mb-6">
             {forms.map(form => (
