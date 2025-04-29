@@ -1,7 +1,7 @@
 
 import { useAcquisitionContext } from "../acquisition/AcquisitionContext";
 import { BusinessInformationStep } from "../matching-steps/BusinessInformationStep";
-import { EmailMarketingNeedsStep } from "../matching-steps/EmailMarketingNeedsStep";
+import { EmailMarketingNeedsStep } from "../matching-steps/email-marketing";
 import { ProviderPreferencesStep } from "../matching-steps/ProviderPreferencesStep";
 
 export const MatchingStep = () => {
