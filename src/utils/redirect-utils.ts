@@ -11,11 +11,19 @@ export function shouldRedirectToAcquisition(
   profile: Profile | null, 
   acquisitionStatus: AcquisitionStatus
 ): boolean {
+  console.log("Checking redirect:", {
+    currentPath,
+    loading,
+    hasUser: !!user,
+    profile: profile?.role,
+    acquisitionStatus
+  });
+  
   // Don't redirect if:
   // - We're loading
   // - We're not logged in
   // - User is not a founder (providers should never be redirected to acquisition)
-  // - We're already on client acquisition related paths
+  // - We're already on client acquisition related paths or auth paths
   // - We haven't checked the status yet
   
   if (
@@ -25,7 +33,10 @@ export function shouldRedirectToAcquisition(
     profile.role !== 'founder' ||  // Explicitly check that user is a founder
     currentPath.includes('/client-acquisition') || 
     currentPath === '/auth' || 
+    currentPath === '/login' || 
+    currentPath === '/register' || 
     currentPath === '/provider-apply' ||  // Added provider application path to prevent redirects
+    currentPath === '/provider-dashboard' ||  // Never redirect from provider dashboard
     !acquisitionStatus.checked
   ) {
     return false;

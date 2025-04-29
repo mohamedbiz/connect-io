@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,22 +39,41 @@ export default function useAuthPageController() {
       }
 
       if (data.role === "founder") {
+        console.log("User is a founder, redirecting to founder dashboard");
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
-        // For providers, check if they've completed the application form
-        const { data: providerApplication } = await supabase
-          .from("provider_applications") 
-          .select("status")
-          .eq("user_id", userId)
-          .maybeSingle();
+        console.log("User is a provider, checking application status");
         
-        if (!providerApplication) {
-          // No application yet, redirect to application form
-          navigate("/provider-apply");
-        } else {
-          // Has submitted an application already, go to dashboard
-          navigate("/provider-dashboard");
-        }
+        // Add a small delay to ensure all state is properly updated
+        setTimeout(async () => {
+          try {
+            const { data: providerApplication, error: appError } = await supabase
+              .from("provider_applications") 
+              .select("status")
+              .eq("user_id", userId)
+              .maybeSingle();
+            
+            if (appError) {
+              console.error("Error checking provider application:", appError);
+            }
+            
+            console.log("Provider application status:", providerApplication);
+            
+            if (!providerApplication) {
+              // No application yet, redirect to application form
+              console.log("No application found, redirecting to provider application page");
+              navigate("/provider-apply");
+            } else {
+              // Has submitted an application already, go to dashboard
+              console.log("Application found, redirecting to provider dashboard");
+              navigate("/provider-dashboard");
+            }
+          } catch (err) {
+            console.error("Error in provider redirection:", err);
+            // Default to provider dashboard in case of errors
+            navigate("/provider-dashboard");
+          }
+        }, 300);
       } else {
         navigate("/");
       }

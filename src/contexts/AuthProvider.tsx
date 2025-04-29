@@ -18,6 +18,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { acquisitionStatus } = useAcquisitionStatus(user?.id);
 
   useEffect(() => {
+    console.log("Setting up auth listener");
+    
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
@@ -55,9 +57,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   async function fetchProfileAndSetState(userId: string) {
-    const profileData = await fetchProfile(userId);
-    setProfile(profileData);
-    setLoading(false);
+    try {
+      console.log("Fetching profile for user:", userId);
+      const profileData = await fetchProfile(userId);
+      console.log("Profile data retrieved:", profileData);
+      setProfile(profileData);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function logout() {

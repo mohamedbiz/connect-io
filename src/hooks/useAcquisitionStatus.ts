@@ -23,8 +23,15 @@ export function useAcquisitionStatus(userId: string | undefined) {
   }, [userId]);
 
   async function checkAcquisitionStatusAndSetState(userId: string) {
-    const status = await checkAcquisitionStatus(userId);
-    setAcquisitionStatus(status);
+    try {
+      const status = await checkAcquisitionStatus(userId);
+      console.log("Acquisition status retrieved:", status);
+      setAcquisitionStatus(status);
+    } catch (err) {
+      console.error("Error checking acquisition status:", err);
+      // Set checked to true to prevent infinite redirects in case of errors
+      setAcquisitionStatus({completed: false, checked: true});
+    }
   }
 
   async function checkAcquisitionStatus(userId: string): Promise<AcquisitionStatus> {
@@ -39,12 +46,29 @@ export function useAcquisitionStatus(userId: string | undefined) {
       if (error) {
         console.error("Error checking acquisition status:", error);
         return {completed: false, checked: true};
-      } else {
-        return {
-          completed: Boolean(data?.acquisition_completed),
-          checked: true
-        };
       }
+      
+      // If no onboarding record exists yet, create one
+      if (!data) {
+        console.log("No onboarding record found, creating one");
+        const { error: insertError } = await supabase
+          .from("founder_onboarding")
+          .insert({
+            user_id: userId,
+            acquisition_completed: false
+          });
+          
+        if (insertError) {
+          console.error("Error creating onboarding record:", insertError);
+        }
+        
+        return {completed: false, checked: true};
+      }
+      
+      return {
+        completed: Boolean(data?.acquisition_completed),
+        checked: true
+      };
     } catch (err) {
       console.error("Error in acquisition status check:", err);
       return {completed: false, checked: true};

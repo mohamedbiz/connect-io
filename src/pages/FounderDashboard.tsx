@@ -2,31 +2,54 @@
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
 import PostPurchaseDiagnostic from "@/components/dashboard/post-purchase/PostPurchaseDiagnostic";
 import AbandonedCartRecovery from "@/components/dashboard/AbandonedCartRecovery";
 import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { toast } from "sonner";
 
 const FounderDashboard = () => {
   const { user, profile, loading, shouldRedirectToAcquisition } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Log states for debugging
+  console.log("FounderDashboard:", { 
+    user: !!user, 
+    profile: profile?.role,
+    loading,
+    path: location.pathname,
+    shouldRedirect: shouldRedirectToAcquisition(location.pathname)
+  });
+
   // Protect this route - redirect if not authenticated or not a founder
   useEffect(() => {
     if (!loading) {
+      console.log("Auth loading completed, checking access");
+      
       if (!user) {
+        console.log("No user found, redirecting to auth");
         navigate("/auth");
-      } else if (profile && profile.role !== "founder") {
+        return;
+      } 
+      
+      if (profile && profile.role !== "founder") {
+        console.log("User is not a founder, redirecting to home");
+        toast.error("Access denied. This dashboard is for founders only.");
         navigate("/");
-      } else if (shouldRedirectToAcquisition(location.pathname)) {
-        navigate("/client-acquisition");
+        return;
       }
+      
+      if (shouldRedirectToAcquisition(location.pathname)) {
+        console.log("Founder needs to complete acquisition, redirecting");
+        navigate("/client-acquisition");
+        return;
+      }
+      
+      console.log("Access check passed, showing founder dashboard");
     }
   }, [user, profile, loading, navigate, location.pathname, shouldRedirectToAcquisition]);
 
@@ -34,7 +57,21 @@ const FounderDashboard = () => {
     return (
       <Layout>
         <div className="container mx-auto py-10 px-4">
-          <p className="text-center">Loading...</p>
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <p className="text-center text-lg">Loading your dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user || !profile) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 px-4">
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <p className="text-center text-lg">Please log in to access your dashboard</p>
+          </div>
         </div>
       </Layout>
     );

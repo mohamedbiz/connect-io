@@ -14,6 +14,18 @@ const ClientAcquisitionPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // First check if this user should have access to this page
+  useEffect(() => {
+    if (profile && profile.role === "provider") {
+      console.log("Provider detected on acquisition page, redirecting to provider dashboard");
+      toast({
+        title: "Access Restricted",
+        description: "Providers don't need to complete this step. Redirecting you to the provider dashboard."
+      });
+      navigate("/provider-dashboard");
+    }
+  }, [profile, navigate]);
+
   // Check if the user has already completed the assessment process
   useEffect(() => {
     const checkAcquisitionStatus = async () => {
@@ -70,8 +82,8 @@ const ClientAcquisitionPage = () => {
         description: "Your provider matching assessment is complete.",
       });
 
-      // Redirect to success page
-      navigate("/client-acquisition/success");
+      // Redirect to founder dashboard
+      navigate("/founder-dashboard");
     } catch (err: any) {
       toast({
         variant: "destructive",
