@@ -6,9 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const CTASection = () => {
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-br from-secondary/80 to-background">
+    <section className="py-16 md:py-20 bg-primary">
       <div className="container mx-auto px-4">
-        <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-r from-primary/90 to-primary-foreground">
+        <Card className="border-0 shadow-lg overflow-hidden bg-primary">
           <CardContent className="p-8 md:p-12 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
               Ready to Grow Your eCommerce Business?
