@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,21 +41,8 @@ export default function useAuthPageController() {
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
         // For providers, check if they've completed the application form
-        const { data: applicationData, error: applicationError } = await supabase
-          .from("profiles") // First check if there's any application
-          .select("id")
-          .eq("id", userId)
-          .single();
-        
-        if (applicationError) {
-          console.error("Error checking provider status:", applicationError);
-          navigate("/provider-apply");
-          return;
-        }
-        
-        // Check for application status
         const { data: providerApplication } = await supabase
-          .from("provider_applications") // This is a custom type now
+          .from("provider_applications") 
           .select("status")
           .eq("user_id", userId)
           .maybeSingle();
