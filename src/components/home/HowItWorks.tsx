@@ -1,72 +1,80 @@
 
-import {
-  ArrowRight,
-  LineChart,
-  MessageSquare,
-  Search,
-  ShieldCheck,
-  Users
-} from "lucide-react";
+import { ArrowRight, LineChart, MessageSquare, Search, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
 
 const HowItWorks = () => {
   const steps = [
     {
-      icon: <Search className="h-8 w-8 text-primary" />,
+      icon: <Search className="h-8 w-8 text-[#2D82B7]" />,
       title: "Discover Specialists",
-      description: "Browse our pre-vetted email marketing specialists with proven track records."
+      description: "Browse pre-vetted email marketing experts with proven results."
     },
     {
-      icon: <MessageSquare className="h-8 w-8 text-primary" />,
+      icon: <MessageSquare className="h-8 w-8 text-[#2D82B7]" />,
       title: "Connect & Plan",
-      description: "Schedule discovery calls and define your project scope with clear deliverables."
+      description: "Define your project scope with clear deliverables."
     },
     {
-      icon: <Users className="h-8 w-8 text-primary" />,
+      icon: <Users className="h-8 w-8 text-[#2D82B7]" />,
       title: "Collaborate",
-      description: "Work together through our project management system with milestone tracking."
+      description: "Work together with milestone tracking."
     },
     {
-      icon: <LineChart className="h-8 w-8 text-primary" />,
+      icon: <LineChart className="h-8 w-8 text-[#2D82B7]" />,
       title: "Measure Results",
-      description: "Track your growth metrics and see the guaranteed improvement in real-time."
+      description: "Track your improvement metrics in real-time."
     }
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-white" id="how-it-works">
+    <section className="py-16 md:py-24 bg-[#F5F9FF]" id="how-it-works">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">How Connect Works</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">How Connect Works</h2>
+          <p className="text-lg text-[#0E3366] max-w-2xl mx-auto">
             Our streamlined process connects you with specialized service providers
-            and ensures you get the guaranteed results you need.
+            for guaranteed results.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-2 mb-16">
           {steps.map((step, index) => (
-            <div key={index} className="bg-white rounded-lg p-6 shadow-sm border relative flex flex-col h-full hover:shadow-md transition-shadow duration-300">
-              <div className="absolute -top-4 -left-4 bg-primary text-white h-8 w-8 rounded-full flex items-center justify-center font-bold">
-                {index + 1}
+            <div key={index} className="flex-1 relative group">
+              {/* Step content */}
+              <div className="flex flex-col items-center text-center transition-all duration-300 group-hover:translate-y-[-5px]">
+                <div className="flex items-center justify-center h-16 w-16 mb-4 rounded-full bg-[#BFD7ED] text-[#0A2342] font-bold text-xl">
+                  {index + 1}
+                </div>
+                <div className="mb-3">{step.icon}</div>
+                <h3 className="text-xl font-semibold mb-2 text-[#0A2342]">{step.title}</h3>
+                <p className="text-[#0E3366]">{step.description}</p>
               </div>
-              <div className="mb-4">{step.icon}</div>
-              <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-              <p className="text-gray-600 flex-grow">{step.description}</p>
+              
+              {/* Connector line (except for last item) */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-[#BFD7ED] -translate-x-1/2 transform">
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 -translate-x-1/2">
+                    <div className="h-3 w-3 rotate-45 border-t-2 border-r-2 border-[#2D82B7]"></div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        <div className="mt-16 flex flex-col items-center">
-          <div className="bg-secondary rounded-lg p-6 md:p-8 max-w-3xl w-full text-center shadow-sm hover:shadow-md transition-shadow duration-300">
-            <ShieldCheck className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-4">Guaranteed Results or You Don't Pay</h3>
-            <p className="text-gray-700 mb-6">
-              Every service provider on Connect guarantees specific, measurable results 
-              within 30 days. If they don't deliver, you don't pay - it's that simple.
+        <div className="flex justify-center">
+          <div className="bg-white rounded-lg p-8 max-w-3xl w-full text-center border border-[#BFD7ED]">
+            <ShieldCheck className="h-12 w-12 text-[#2D82B7] mx-auto mb-4" />
+            <h3 className="text-2xl font-bold mb-3 text-[#0A2342]">Guaranteed Results or You Don't Pay</h3>
+            <p className="text-[#0E3366] mb-6">
+              Every service provider guarantees specific, measurable results within 30 days or you don't pay.
             </p>
-            <Button asChild>
+            <Button 
+              asChild
+              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white"
+            >
               <Link to="/register">
                 Get Started Now
                 <ArrowRight className="ml-1 h-5 w-5" />
