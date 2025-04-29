@@ -75,8 +75,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Logout error:", error);
     }
   }
+  
+  function login() {
+    // Placeholder function for login to satisfy TypeScript
+    console.log("Login method called but not implemented");
+  }
+  
+  function register() {
+    // Placeholder function for register to satisfy TypeScript
+    console.log("Register method called but not implemented");
+  }
 
-  // Function to decide if we should redirect founders (always returns false now)
+  // Function to decide if we should redirect founders
   function handleShouldRedirectToAcquisition(currentPath: string) {
     return shouldRedirectToAcquisition(currentPath, loading, user, profile);
   }
@@ -88,7 +98,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       profile, 
       loading, 
       logout,
-      shouldRedirectToAcquisition: handleShouldRedirectToAcquisition
+      shouldRedirectToAcquisition: handleShouldRedirectToAcquisition,
+      login,
+      register
     }}>
       {children}
     </AuthContext.Provider>
