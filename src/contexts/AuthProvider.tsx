@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "./AuthContext";
 import { fetchProfile } from "@/utils/auth-utils";
 import { Profile } from "@/types/auth";
-import { useAcquisitionStatus } from "@/hooks/useAcquisitionStatus";
 import { shouldRedirectToAcquisition } from "@/utils/redirect-utils";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -13,9 +12,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Use our custom hook for acquisition status
-  const { acquisitionStatus } = useAcquisitionStatus(user?.id);
 
   useEffect(() => {
     console.log("Setting up auth listener");
@@ -80,9 +76,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  // Function to decide if we should redirect founders to the acquisition page
+  // Function to decide if we should redirect founders (always returns false now)
   function handleShouldRedirectToAcquisition(currentPath: string) {
-    return shouldRedirectToAcquisition(currentPath, loading, user, profile, acquisitionStatus);
+    return shouldRedirectToAcquisition(currentPath, loading, user, profile);
   }
 
   return (

@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const FounderDashboard = () => {
-  const { user, profile, loading, shouldRedirectToAcquisition } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,8 +21,7 @@ const FounderDashboard = () => {
     user: !!user, 
     profile: profile?.role,
     loading,
-    path: location.pathname,
-    shouldRedirect: shouldRedirectToAcquisition(location.pathname)
+    path: location.pathname
   });
 
   // Protect this route - redirect if not authenticated or not a founder
@@ -43,15 +42,9 @@ const FounderDashboard = () => {
         return;
       }
       
-      if (shouldRedirectToAcquisition(location.pathname)) {
-        console.log("Founder needs to complete acquisition, redirecting");
-        navigate("/client-acquisition");
-        return;
-      }
-      
       console.log("Access check passed, showing founder dashboard");
     }
-  }, [user, profile, loading, navigate, location.pathname, shouldRedirectToAcquisition]);
+  }, [user, profile, loading, navigate, location.pathname]);
 
   if (loading) {
     return (
