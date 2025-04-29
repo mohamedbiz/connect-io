@@ -70,3 +70,14 @@
 .hover-scale:hover {
   transform: scale(1.025);
 }
+
+/* Equal height cards */
+.equal-height {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.equal-height-body {
+  flex: 1 1 auto;
+}

@@ -51,7 +51,7 @@ const ForFounders = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
               {benefits.map((benefit, index) => (
-                <Card key={index} className="bg-white border shadow-sm">
+                <Card key={index} className="bg-white border shadow-sm h-full hover:shadow-md transition-shadow duration-300">
                   <CardHeader className="pb-2">
                     <div className="mb-2">{benefit.icon}</div>
                     <CardTitle className="text-lg">{benefit.title}</CardTitle>
@@ -72,12 +72,12 @@ const ForFounders = () => {
           </div>
 
           <div className="md:w-1/2">
-            <div className="bg-white rounded-lg shadow-xl p-8 border">
+            <div className="bg-white rounded-lg shadow-xl p-8 border hover:shadow-2xl transition-shadow duration-300">
               <h3 className="text-2xl font-bold mb-6 text-primary">What Founders Get</h3>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent mt-1" />
+                  <CheckCircle className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Comprehensive Email Audit</h4>
                     <p className="text-gray-600 text-sm">
@@ -87,7 +87,7 @@ const ForFounders = () => {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent mt-1" />
+                  <CheckCircle className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Strategic Email Sequences</h4>
                     <p className="text-gray-600 text-sm">
@@ -97,7 +97,7 @@ const ForFounders = () => {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent mt-1" />
+                  <CheckCircle className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Segmentation Strategy</h4>
                     <p className="text-gray-600 text-sm">
@@ -107,7 +107,7 @@ const ForFounders = () => {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent mt-1" />
+                  <CheckCircle className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Results Dashboard</h4>
                     <p className="text-gray-600 text-sm">
@@ -117,7 +117,7 @@ const ForFounders = () => {
                 </div>
                 
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-accent mt-1" />
+                  <CheckCircle className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium">Risk-Free Guarantee</h4>
                     <p className="text-gray-600 text-sm">

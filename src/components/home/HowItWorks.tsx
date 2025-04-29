@@ -47,19 +47,19 @@ const HowItWorks = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
-            <div key={index} className="bg-white rounded-lg p-6 shadow-sm border relative">
+            <div key={index} className="bg-white rounded-lg p-6 shadow-sm border relative flex flex-col h-full hover:shadow-md transition-shadow duration-300">
               <div className="absolute -top-4 -left-4 bg-primary text-white h-8 w-8 rounded-full flex items-center justify-center font-bold">
                 {index + 1}
               </div>
               <div className="mb-4">{step.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-gray-600">{step.description}</p>
+              <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+              <p className="text-gray-600 flex-grow">{step.description}</p>
             </div>
           ))}
         </div>
 
         <div className="mt-16 flex flex-col items-center">
-          <div className="bg-secondary rounded-lg p-6 md:p-8 max-w-3xl w-full text-center">
+          <div className="bg-secondary rounded-lg p-6 md:p-8 max-w-3xl w-full text-center shadow-sm hover:shadow-md transition-shadow duration-300">
             <ShieldCheck className="h-12 w-12 text-primary mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-4">Guaranteed Results or You Don't Pay</h3>
             <p className="text-gray-700 mb-6">
