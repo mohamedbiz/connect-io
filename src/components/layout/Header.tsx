@@ -24,18 +24,18 @@ const Header = () => {
   const isProvider = profile?.role === "provider";
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-[#0A2342] border-b border-[#2D82B7]/30">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <Briefcase className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold text-primary">Connect</span>
+            <Briefcase className="h-6 w-6 text-[#2D82B7]" />
+            <span className="text-xl font-bold text-white">Connect</span>
           </Link>
         </div>
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden"
+          className="lg:hidden text-white"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           {isMenuOpen ? (
@@ -47,11 +47,17 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-8">
-          <Link to="/how-it-works" className="text-gray-600 hover:text-primary">How it Works</Link>
-          <Link to="/for-founders" className="text-gray-600 hover:text-primary">For Founders</Link>
-          <Link to="/for-providers" className="text-gray-600 hover:text-primary">For Providers</Link>
+          <Link to="/how-it-works" className="text-[#BFD7ED] hover:text-white transition-colors">
+            How it Works
+          </Link>
+          <Link to="/for-founders" className="text-[#BFD7ED] hover:text-white transition-colors">
+            For Founders
+          </Link>
+          <Link to="/for-providers" className="text-[#BFD7ED] hover:text-white transition-colors">
+            For Providers
+          </Link>
           {isProvider && (
-            <Link to="/provider-dashboard#resources" className="text-gray-600 hover:text-primary flex items-center gap-1">
+            <Link to="/provider-dashboard#resources" className="text-[#BFD7ED] hover:text-white transition-colors flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
               <span>Resources</span>
             </Link>
@@ -62,22 +68,41 @@ const Header = () => {
         <div className="hidden lg:flex items-center gap-4">
           {!user ? (
             <>
-              <Button variant="ghost" asChild>
+              <Button 
+                variant="ghost" 
+                className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white"
+                asChild
+              >
                 <Link to="/auth">Login</Link>
               </Button>
-              <Button asChild>
+              <Button 
+                className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none"
+                asChild
+              >
                 <Link to="/auth">Get Started</Link>
               </Button>
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" asChild>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white"
+                asChild
+              >
                 <Link to={getDashboardLink()}>My Dashboard</Link>
               </Button>
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-[#BFD7ED]">
                 {profile?.first_name || user.email}
               </span>
-              <Button size="sm" variant="ghost" onClick={handleLogout}>Logout</Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white"
+                onClick={handleLogout}
+              >
+                Logout
+              </Button>
             </div>
           )}
         </div>
@@ -85,25 +110,25 @@ const Header = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-white absolute top-16 left-0 right-0 z-50 shadow-md border-b">
+        <div className="lg:hidden bg-[#0E3366] absolute top-16 left-0 right-0 z-50 shadow-md border-b border-[#2D82B7]/30">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
             <Link
               to="/how-it-works"
-              className="text-gray-600 hover:text-primary py-2"
+              className="text-[#BFD7ED] hover:text-white transition-colors py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               How it Works
             </Link>
             <Link
               to="/for-founders"
-              className="text-gray-600 hover:text-primary py-2"
+              className="text-[#BFD7ED] hover:text-white transition-colors py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               For Founders
             </Link>
             <Link
               to="/for-providers"
-              className="text-gray-600 hover:text-primary py-2"
+              className="text-[#BFD7ED] hover:text-white transition-colors py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               For Providers
@@ -111,25 +136,25 @@ const Header = () => {
             {isProvider && (
               <Link
                 to="/provider-dashboard#resources"
-                className="text-gray-600 hover:text-primary py-2 flex items-center gap-1"
+                className="text-[#BFD7ED] hover:text-white transition-colors py-2 flex items-center gap-1"
                 onClick={() => setIsMenuOpen(false)}
               >
                 <BookOpen className="h-4 w-4" />
                 <span>Resources</span>
               </Link>
             )}
-            <hr />
+            <hr className="border-[#2D82B7]/30" />
             {!user ? (
               <>
                 <Link
                   to="/auth"
-                  className="text-gray-600 hover:text-primary py-2"
+                  className="text-[#BFD7ED] hover:text-white transition-colors py-2"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Login
                 </Link>
                 <Button
-                  className="w-full"
+                  className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none"
                   asChild
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -140,12 +165,15 @@ const Header = () => {
               <>
                 <Link
                   to={getDashboardLink()}
-                  className="text-gray-600 hover:text-primary py-2"
+                  className="text-[#BFD7ED] hover:text-white transition-colors py-2"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   My Dashboard
                 </Link>
-                <Button className="w-full" variant="ghost" onClick={handleLogout}>
+                <Button 
+                  className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" 
+                  onClick={handleLogout}
+                >
                   Logout
                 </Button>
               </>

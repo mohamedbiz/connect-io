@@ -30,6 +30,7 @@ const AuthForm = ({
           value={form.first_name}
           onChange={handleInput}
           required
+          className="border-[#2D82B7]/50 focus-visible:ring-[#2D82B7]"
         />
         <Input
           name="last_name"
@@ -37,6 +38,7 @@ const AuthForm = ({
           value={form.last_name}
           onChange={handleInput}
           required
+          className="border-[#2D82B7]/50 focus-visible:ring-[#2D82B7]"
         />
       </div>
     )}
@@ -48,6 +50,7 @@ const AuthForm = ({
         value={form.email}
         onChange={handleInput}
         required
+        className="border-[#2D82B7]/50 focus-visible:ring-[#2D82B7]"
       />
     </div>
     <div>
@@ -59,9 +62,14 @@ const AuthForm = ({
         value={form.password}
         onChange={handleInput}
         required
+        className="border-[#2D82B7]/50 focus-visible:ring-[#2D82B7]"
       />
     </div>
-    <Button type="submit" className="w-full" disabled={loading}>
+    <Button 
+      type="submit" 
+      className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
+      disabled={loading}
+    >
       {loading 
         ? (isRegister ? "Signing up..." : "Signing in...") 
         : (isRegister 
@@ -72,14 +80,14 @@ const AuthForm = ({
       {isRegister ? (
         <span>
           Already have an account?{" "}
-          <button className="text-primary hover:underline" onClick={toggleAuth} type="button">
+          <button className="text-[#2D82B7] hover:text-[#3D9AD1] transition-colors hover:underline" onClick={toggleAuth} type="button">
             Sign In
           </button>
         </span>
       ) : (
         <span>
           Need an account?{" "}
-          <button className="text-primary hover:underline" onClick={toggleAuth} type="button">
+          <button className="text-[#2D82B7] hover:text-[#3D9AD1] transition-colors hover:underline" onClick={toggleAuth} type="button">
             Sign Up
           </button>
         </span>

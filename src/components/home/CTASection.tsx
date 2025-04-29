@@ -7,7 +7,7 @@ const CTASection = () => {
   return (
     <section className="py-16 md:py-20 bg-[#0A2342]">
       <div className="container mx-auto px-4">
-        <div className="bg-[#0E3366] rounded-lg border border-[#2D82B7] p-8 md:p-12 text-center transition-all duration-300 hover:border-[#BFD7ED]">
+        <div className="bg-[#0E3366] rounded-lg border border-[#2D82B7]/50 p-8 md:p-12 text-center transition-all duration-300 hover:border-[#2D82B7]">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
             Ready to Grow Your eCommerce Business?
           </h2>

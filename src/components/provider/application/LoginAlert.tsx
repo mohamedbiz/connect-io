@@ -1,28 +1,18 @@
 
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
-interface LoginAlertProps {
-  isLoggedIn: boolean;
-}
-
-export const LoginAlert = ({ isLoggedIn }: LoginAlertProps) => {
+export const LoginAlert = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
   if (isLoggedIn) return null;
-  
+
   return (
-    <Card className="mb-6 p-4 bg-amber-50 border-amber-200">
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
-        <div>
-          <h3 className="font-semibold text-amber-800">Login Required</h3>
-          <p className="text-amber-700 text-sm mt-1">
-            You need to be logged in to submit your provider application. Please{" "}
-            <a href="/auth" className="text-primary underline font-medium">
-              sign in
-            </a>{" "}
-            or create an account first.
-          </p>
-        </div>
+    <Card className="p-4 mb-6 flex items-center gap-3 bg-[#0E3366] border-[#2D82B7] text-white">
+      <AlertTriangle className="h-5 w-5 text-[#BFD7ED]" />
+      <div className="flex-1">
+        <p className="text-[#BFD7ED]">
+          Please <Link to="/auth" className="font-medium underline text-white hover:text-[#2D82B7] transition-colors">sign in</Link> to submit your application. Your progress will be saved.
+        </p>
       </div>
     </Card>
   );
