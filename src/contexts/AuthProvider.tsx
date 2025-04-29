@@ -3,18 +3,19 @@ import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "./AuthContext";
-import { fetchProfile, checkAcquisitionStatus, shouldRedirectToAcquisition } from "@/utils/auth-utils";
-import { Profile, AcquisitionStatus } from "@/types/auth";
+import { fetchProfile } from "@/utils/auth-utils";
+import { Profile } from "@/types/auth";
+import { useAcquisitionStatus } from "@/hooks/useAcquisitionStatus";
+import { shouldRedirectToAcquisition } from "@/utils/redirect-utils";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [acquisitionStatus, setAcquisitionStatus] = useState<AcquisitionStatus>({
-    completed: false,
-    checked: false
-  });
+  
+  // Use our custom hook for acquisition status
+  const { acquisitionStatus } = useAcquisitionStatus(user?.id);
 
   useEffect(() => {
     // Set up auth listener FIRST
@@ -31,7 +32,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setProfile(null);
         setLoading(false);
-        setAcquisitionStatus({completed: false, checked: true});
       }
     });
 
@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setProfile(null);
         setLoading(false);
-        setAcquisitionStatus({completed: false, checked: true});
       }
     });
 
@@ -55,22 +54,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Check acquisition status whenever the user changes
-  useEffect(() => {
-    if (user && profile?.role === 'founder') {
-      checkAcquisitionStatusAndSetState(user.id);
-    }
-  }, [user, profile]);
-
   async function fetchProfileAndSetState(userId: string) {
     const profileData = await fetchProfile(userId);
     setProfile(profileData);
     setLoading(false);
-  }
-
-  async function checkAcquisitionStatusAndSetState(userId: string) {
-    const status = await checkAcquisitionStatus(userId);
-    setAcquisitionStatus(status);
   }
 
   async function logout() {
@@ -79,7 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setSession(null);
       setProfile(null);
-      setAcquisitionStatus({completed: false, checked: true});
     } catch (error) {
       console.error("Logout error:", error);
     }
