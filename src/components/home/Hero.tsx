@@ -33,7 +33,7 @@ const Hero = () => {
                 <span className="text-[#BFD7ED]">200% improvement in customer lifetime value</span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div>
               <Button 
                 size="lg" 
                 className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
@@ -42,16 +42,6 @@ const Hero = () => {
                 <Link to="/register">
                   Get Started Now
                   <ArrowRight className="ml-1 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:text-white transition-colors" 
-                asChild
-              >
-                <Link to="/how-it-works">
-                  How It Works
                 </Link>
               </Button>
             </div>
