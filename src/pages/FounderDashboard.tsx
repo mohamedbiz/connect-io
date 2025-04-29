@@ -51,10 +51,8 @@ const FounderDashboard = () => {
             <TabsTrigger value="cart-recovery">Cart Recovery</TabsTrigger>
             <TabsTrigger value="list-growth">List Growth</TabsTrigger>
             <TabsTrigger value="post-purchase">Post Purchase</TabsTrigger>
-            <TabsTrigger value="provider-matching">Provider Matching</TabsTrigger>
             <TabsTrigger value="providers">Find Providers</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="results">Results</TabsTrigger>
           </TabsList>
           
           <TabsContent value="diagnostic">
@@ -73,23 +71,6 @@ const FounderDashboard = () => {
             <PostPurchaseDiagnostic />
           </TabsContent>
           
-          <TabsContent value="provider-matching">
-            <div className="text-center py-10">
-              <div className="max-w-md mx-auto">
-                <h2 className="text-2xl font-semibold mb-4">Find Your Perfect Email Marketing Match</h2>
-                <p className="text-gray-600 mb-6">
-                  Complete our quick assessment to help us match you with the right email marketing specialist for your specific business needs.
-                </p>
-                <Button asChild className="flex items-center gap-2">
-                  <Link to="/client-acquisition">
-                    <Users className="h-4 w-4" />
-                    <span>Start Provider Matching</span>
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-          
           <TabsContent value="providers">
             <ProvidersDirectory />
           </TabsContent>
@@ -97,12 +78,6 @@ const FounderDashboard = () => {
           <TabsContent value="projects">
             <div className="text-center py-10">
               <p className="text-muted-foreground">Project management coming soon</p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="results">
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">Results tracking coming soon</p>
             </div>
           </TabsContent>
         </Tabs>
