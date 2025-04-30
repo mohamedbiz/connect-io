@@ -5,8 +5,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Users, Mail, Briefcase, BookOpen } from "lucide-react";
+import { BarChart, Users, Mail, Briefcase, BookOpen, Inbox } from "lucide-react";
 import { ProviderResources } from "@/components/provider/resources/ProviderResources";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useProviderApplications } from "@/hooks/useProviderApplications";
+import { useMatches } from "@/hooks/useMatches";
+import MatchesList from "@/components/matches/MatchesList";
 import { toast } from "sonner";
 
 const ProviderDashboard = () => {
@@ -19,6 +23,20 @@ const ProviderDashboard = () => {
     averageRating: 0,
   });
   const [showResources, setShowResources] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  
+  const { matches } = useMatches();
+  const { myApplication } = useProviderApplications();
+
+  // Compute some real stats from matches
+  useEffect(() => {
+    if (matches) {
+      setStats(prev => ({
+        ...prev,
+        activeClients: matches.filter(m => m.status === 'accepted').length
+      }));
+    }
+  }, [matches]);
 
   // Protect this route
   useEffect(() => {
@@ -34,6 +52,15 @@ const ProviderDashboard = () => {
       }
     }
   }, [user, profile, loading, navigate]);
+
+  // Show notification if application is pending
+  useEffect(() => {
+    if (myApplication && myApplication.status === 'submitted') {
+      toast.info("Your provider application is under review", {
+        duration: 5000,
+      });
+    }
+  }, [myApplication]);
 
   if (loading) {
     return (
@@ -66,7 +93,7 @@ const ProviderDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold text-[#0A2342]">Provider Dashboard</h1>
             <p className="text-[#0E3366]">
-              Welcome back, {profile?.first_name || user?.email?.split('@')[0]}
+              Welcome back, {profile?.first_name || profile?.email?.split('@')[0]}
             </p>
           </div>
           <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors">
@@ -116,66 +143,152 @@ const ProviderDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
-            <CardHeader>
-              <CardTitle className="text-[#0A2342]">Recent Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[#0E3366]">No active projects at the moment.</p>
-              <Button 
-                variant="link" 
-                className="mt-4 px-0 text-[#2D82B7] hover:text-[#3D9AD1] transition-colors"
-              >
-                Browse Available Projects
-              </Button>
-            </CardContent>
-          </Card>
+        {/* Tabs */}
+        <Tabs 
+          defaultValue="overview" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="mb-8"
+        >
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="matches">Client Matches</TabsTrigger>
+            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="application">Application Status</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
+              <CardHeader>
+                <CardTitle className="text-[#0A2342]">Recent Projects</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[#0E3366]">No active projects at the moment.</p>
+                <Button 
+                  variant="link" 
+                  className="mt-4 px-0 text-[#2D82B7] hover:text-[#3D9AD1] transition-colors"
+                  onClick={() => setActiveTab("matches")}
+                >
+                  Check Client Matches
+                </Button>
+              </CardContent>
+            </Card>
 
-          <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
-            <CardHeader>
-              <CardTitle className="text-[#0A2342]">Client Messages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[#0E3366]">No new messages.</p>
-              <Button 
-                variant="link" 
-                className="mt-4 px-0 text-[#2D82B7] hover:text-[#3D9AD1] transition-colors"
-              >
-                Open Inbox
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Resources Section */}
-        <Card className="mb-8 border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-bold text-[#0A2342]">Client Acquisition Resources</CardTitle>
-              <p className="text-sm text-[#0E3366] mt-1">
-                Access templates and guides to help you acquire and onboard clients
-              </p>
-            </div>
-            <Button 
-              variant="ghost" 
-              onClick={() => setShowResources(!showResources)}
-              className="flex items-center gap-2 text-[#2D82B7] hover:bg-[#BFD7ED]/20 hover:text-[#3D9AD1] transition-colors"
-            >
-              <BookOpen className="h-5 w-5" />
-              {showResources ? "Hide Resources" : "View Resources"}
-            </Button>
-          </CardHeader>
-          {showResources && (
-            <CardContent>
-              <ProviderResources />
-            </CardContent>
-          )}
-        </Card>
+            <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
+              <CardHeader>
+                <CardTitle className="text-[#0A2342]">Client Messages</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-[#0E3366]">No new messages.</p>
+                <Button 
+                  variant="link" 
+                  className="mt-4 px-0 text-[#2D82B7] hover:text-[#3D9AD1] transition-colors"
+                >
+                  <Inbox className="h-4 w-4 mr-1" />
+                  Open Inbox
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="matches">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-[#0A2342]">Client Connection Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MatchesList />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="resources">
+            <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl font-bold text-[#0A2342]">Client Acquisition Resources</CardTitle>
+                  <p className="text-sm text-[#0E3366] mt-1">
+                    Access templates and guides to help you acquire and onboard clients
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ProviderResources />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="application">
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {myApplication ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium">Status:</div>
+                      <ApplicationStatusBadge status={myApplication.status} />
+                    </div>
+                    
+                    <div>
+                      <div className="font-medium mb-2">Submission Date:</div>
+                      <div>{new Date(myApplication.submitted_at).toLocaleDateString()}</div>
+                    </div>
+                    
+                    {myApplication.reviewed_at && (
+                      <div>
+                        <div className="font-medium mb-2">Reviewed Date:</div>
+                        <div>{new Date(myApplication.reviewed_at).toLocaleDateString()}</div>
+                      </div>
+                    )}
+                    
+                    {myApplication.reviewer_notes && (
+                      <div>
+                        <div className="font-medium mb-2">Reviewer Notes:</div>
+                        <div className="bg-slate-50 p-3 rounded-md">{myApplication.reviewer_notes}</div>
+                      </div>
+                    )}
+                    
+                    {myApplication.technical_assessment_score !== null && (
+                      <div>
+                        <div className="font-medium mb-2">Technical Assessment Score:</div>
+                        <div>{myApplication.technical_assessment_score}/100</div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-4">
+                      You haven't submitted a provider application yet.
+                    </p>
+                    <Button onClick={() => navigate("/provider-apply")}>
+                      Apply as Provider
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
+};
+
+const ApplicationStatusBadge = ({ status }: { status: string }) => {
+  switch (status) {
+    case 'submitted':
+      return <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Under Review</span>;
+    case 'in_review':
+      return <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">In Review</span>;
+    case 'approved':
+      return <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Approved</span>;
+    case 'rejected':
+      return <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">Rejected</span>;
+    default:
+      return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-medium">{status}</span>;
+  }
 };
 
 export default ProviderDashboard;

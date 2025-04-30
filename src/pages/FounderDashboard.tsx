@@ -9,6 +9,7 @@ import PostPurchaseDiagnostic from "@/components/dashboard/post-purchase/PostPur
 import AbandonedCartRecovery from "@/components/dashboard/AbandonedCartRecovery";
 import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MatchesList from "@/components/matches/MatchesList";
 import { toast } from "sonner";
 
 const FounderDashboard = () => {
@@ -108,6 +109,12 @@ const FounderDashboard = () => {
               Find Providers
             </TabsTrigger>
             <TabsTrigger 
+              value="matches"
+              className="data-[state=active]:bg-[#2D82B7] data-[state=active]:text-white"
+            >
+              My Matches
+            </TabsTrigger>
+            <TabsTrigger 
               value="projects"
               className="data-[state=active]:bg-[#2D82B7] data-[state=active]:text-white"
             >
@@ -133,6 +140,13 @@ const FounderDashboard = () => {
           
           <TabsContent value="providers">
             <ProvidersDirectory />
+          </TabsContent>
+          
+          <TabsContent value="matches">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h2 className="text-2xl font-bold mb-6">My Provider Matches</h2>
+              <MatchesList />
+            </div>
           </TabsContent>
           
           <TabsContent value="projects">

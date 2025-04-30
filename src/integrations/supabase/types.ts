@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      email_diagnostics: {
+        Row: {
+          created_at: string | null
+          current_conversion_rate: number | null
+          estimated_list_growth: number | null
+          forms: Json | null
+          id: string
+          industry_average: number | null
+          overall_score: number
+          potential_conversion_rate: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_conversion_rate?: number | null
+          estimated_list_growth?: number | null
+          forms?: Json | null
+          id?: string
+          industry_average?: number | null
+          overall_score: number
+          potential_conversion_rate?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_conversion_rate?: number | null
+          estimated_list_growth?: number | null
+          forms?: Json | null
+          id?: string
+          industry_average?: number | null
+          overall_score?: number
+          potential_conversion_rate?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       founder_onboarding: {
         Row: {
           acquisition_completed: boolean | null
@@ -31,6 +70,75 @@ export type Database = {
           acquisition_completed_at?: string | null
           created_at?: string | null
           id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      matches: {
+        Row: {
+          created_at: string | null
+          founder_id: string
+          id: string
+          message: string | null
+          provider_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          founder_id: string
+          id?: string
+          message?: string | null
+          provider_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          founder_id?: string
+          id?: string
+          message?: string | null
+          provider_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      post_purchase_diagnostics: {
+        Row: {
+          created_at: string | null
+          current_repeat_rate: number | null
+          estimated_revenue_lift: number | null
+          id: string
+          industry_average: number | null
+          overall_score: number
+          potential_repeat_rate: number | null
+          sequences: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_repeat_rate?: number | null
+          estimated_revenue_lift?: number | null
+          id?: string
+          industry_average?: number | null
+          overall_score: number
+          potential_repeat_rate?: number | null
+          sequences?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_repeat_rate?: number | null
+          estimated_revenue_lift?: number | null
+          id?: string
+          industry_average?: number | null
+          overall_score?: number
+          potential_repeat_rate?: number | null
+          sequences?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -119,6 +227,66 @@ export type Database = {
           status?: string
           submitted_at?: string
           technical_assessment_score?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      providers: {
+        Row: {
+          avatar: string | null
+          average_order_value: number | null
+          created_at: string | null
+          description: string | null
+          email: string
+          expertise: Json | null
+          id: string
+          is_featured: boolean | null
+          name: string
+          platform_experience: string[] | null
+          projects_completed: number | null
+          rating: number | null
+          specialties: string[] | null
+          success_metrics: Json | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar?: string | null
+          average_order_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          expertise?: Json | null
+          id?: string
+          is_featured?: boolean | null
+          name: string
+          platform_experience?: string[] | null
+          projects_completed?: number | null
+          rating?: number | null
+          specialties?: string[] | null
+          success_metrics?: Json | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar?: string | null
+          average_order_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          expertise?: Json | null
+          id?: string
+          is_featured?: boolean | null
+          name?: string
+          platform_experience?: string[] | null
+          projects_completed?: number | null
+          rating?: number | null
+          specialties?: string[] | null
+          success_metrics?: Json | null
+          title?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

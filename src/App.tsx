@@ -13,6 +13,7 @@ import ProviderDashboard from "./pages/ProviderDashboard"
 import NotFound from "./pages/NotFound"
 import AuthPage from "./pages/AuthPage"
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage"
+import ProviderApplicationsPage from "./pages/admin/ProviderApplicationsPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/founder-dashboard" element={<FounderDashboard />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/provider-apply" element={<ProviderApplicationPage />} />
+            <Route path="/admin/provider-applications" element={<ProviderApplicationsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
