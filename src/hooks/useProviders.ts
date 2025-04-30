@@ -17,22 +17,41 @@ export const useProviders = () => {
         throw error;
       }
       
-      // Transform Supabase data to match the ServiceProvider type
-      const providers: ServiceProvider[] = data?.map(p => ({
-        id: p.id,
-        name: p.name,
-        email: p.email,
-        avatar: p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.name) + '&background=0D8ABC&color=fff',
-        title: p.title || 'Email Marketing Specialist',
-        description: p.description || 'Experienced email marketing specialist focused on improving conversion rates and customer retention.',
-        rating: p.rating || 4.5,
-        projectsCompleted: p.projects_completed || 0,
-        specialties: p.specialties || ['Email Marketing'],
-        averageOrderValue: p.average_order_value || 2000,
-        expertise: p.expertise || [],
-        successMetrics: p.success_metrics || [],
-        platformExperience: p.platform_experience || []
-      })) || [];
+      // Transform Supabase data to match the ServiceProvider type with proper type checking
+      const providers: ServiceProvider[] = data?.map(p => {
+        // Handle expertise array - ensure it matches the expected format
+        const expertiseArray = Array.isArray(p.expertise) 
+          ? p.expertise.map((item: any) => ({
+              category: item.category || '',
+              skills: Array.isArray(item.skills) ? item.skills : []
+            }))
+          : [];
+
+        // Handle success metrics array - ensure it matches the expected format
+        const successMetricsArray = Array.isArray(p.success_metrics) 
+          ? p.success_metrics.map((item: any) => ({
+              category: item.category || '',
+              value: item.value || '',
+              timeframe: item.timeframe || ''
+            }))
+          : [];
+
+        return {
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          avatar: p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.name) + '&background=0D8ABC&color=fff',
+          title: p.title || 'Email Marketing Specialist',
+          description: p.description || 'Experienced email marketing specialist focused on improving conversion rates and customer retention.',
+          rating: p.rating || 4.5,
+          projectsCompleted: p.projects_completed || 0,
+          specialties: p.specialties || ['Email Marketing'],
+          averageOrderValue: p.average_order_value || 2000,
+          expertise: expertiseArray,
+          successMetrics: successMetricsArray,
+          platformExperience: p.platform_experience || []
+        };
+      }) || [];
       
       return providers;
     }

@@ -1,8 +1,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { EmailListGrowthData } from '@/types/email-diagnostics';
-import { PostPurchaseDiagnostic } from '@/types/post-purchase-diagnostics';
+import { EmailListGrowthData, SignupFormMetric } from '@/types/email-diagnostics';
+import { PostPurchaseDiagnostic, SequenceStep } from '@/types/post-purchase-diagnostics';
 import { toast } from 'sonner';
 
 // Hook to fetch email marketing diagnostics
@@ -27,18 +27,35 @@ export const useEmailDiagnostics = (userId?: string) => {
 
     if (!data) return null;
 
+    // Properly type-cast the forms field from JSON data to our typed model
+    const typedForms: SignupFormMetric[] = Array.isArray(data.forms) 
+      ? data.forms.map((form: any) => ({
+          id: form.id || '',
+          name: form.name || '',
+          score: form.score || 0,
+          currentRate: form.currentRate || 0,
+          industryAverage: form.industryAverage || 0,
+          potentialRate: form.potentialRate || 0,
+          description: form.description || '',
+          improvementTips: Array.isArray(form.improvementTips) ? form.improvementTips : []
+        }))
+      : [];
+
     return {
       overallScore: data.overall_score,
       currentConversionRate: data.current_conversion_rate || 0,
       industryAverage: data.industry_average || 0,
       potentialConversionRate: data.potential_conversion_rate || 0,
       estimatedListGrowth: data.estimated_list_growth || 0,
-      forms: data.forms || []
+      forms: typedForms
     };
   };
 
   const saveEmailDiagnostics = async (diagnosticData: Partial<EmailListGrowthData>) => {
     if (!userId) throw new Error('User not authenticated');
+
+    // Convert the strongly typed forms to a JSON structure for Supabase
+    const jsonForms = diagnosticData.forms ? JSON.parse(JSON.stringify(diagnosticData.forms)) : [];
 
     const { data, error } = await supabase
       .from('email_diagnostics')
@@ -49,7 +66,7 @@ export const useEmailDiagnostics = (userId?: string) => {
         industry_average: diagnosticData.industryAverage || 0,
         potential_conversion_rate: diagnosticData.potentialConversionRate || 0,
         estimated_list_growth: diagnosticData.estimatedListGrowth || 0,
-        forms: diagnosticData.forms || []
+        forms: jsonForms
       })
       .select()
       .single();
@@ -108,18 +125,34 @@ export const usePostPurchaseDiagnostics = (userId?: string) => {
 
     if (!data) return null;
 
+    // Properly type-cast the sequences field from JSON data to our typed model
+    const typedSequences: SequenceStep[] = Array.isArray(data.sequences) 
+      ? data.sequences.map((sequence: any) => ({
+          id: sequence.id || '',
+          name: sequence.name || '',
+          status: sequence.status || 'missing',
+          impact: sequence.impact || 'medium',
+          description: sequence.description || '',
+          expectedLift: sequence.expectedLift || '',
+          recommendations: Array.isArray(sequence.recommendations) ? sequence.recommendations : []
+        }))
+      : [];
+
     return {
       overallScore: data.overall_score,
       currentRepeatRate: data.current_repeat_rate || 0,
       industryAverage: data.industry_average || 0,
       potentialRepeatRate: data.potential_repeat_rate || 0,
       estimatedRevenueLift: data.estimated_revenue_lift || 0,
-      sequences: data.sequences || []
+      sequences: typedSequences
     };
   };
 
   const savePostPurchaseDiagnostics = async (diagnosticData: Partial<PostPurchaseDiagnostic>) => {
     if (!userId) throw new Error('User not authenticated');
+
+    // Convert the strongly typed sequences to a JSON structure for Supabase
+    const jsonSequences = diagnosticData.sequences ? JSON.parse(JSON.stringify(diagnosticData.sequences)) : [];
 
     const { data, error } = await supabase
       .from('post_purchase_diagnostics')
@@ -130,7 +163,7 @@ export const usePostPurchaseDiagnostics = (userId?: string) => {
         industry_average: diagnosticData.industryAverage || 0,
         potential_repeat_rate: diagnosticData.potentialRepeatRate || 0,
         estimated_revenue_lift: diagnosticData.estimatedRevenueLift || 0,
-        sequences: diagnosticData.sequences || []
+        sequences: jsonSequences
       })
       .select()
       .single();
