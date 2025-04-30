@@ -25,7 +25,12 @@ export const useProviders = () => {
               category: item.category || '',
               skills: Array.isArray(item.skills) ? item.skills : []
             }))
-          : [];
+          : typeof p.expertise === 'object' && p.expertise !== null 
+            ? Object.values(p.expertise).map((item: any) => ({
+                category: item.category || '',
+                skills: Array.isArray(item.skills) ? item.skills : []
+              }))
+            : [];
 
         // Handle success metrics array - ensure it matches the expected format
         const successMetricsArray = Array.isArray(p.success_metrics) 
@@ -34,7 +39,13 @@ export const useProviders = () => {
               value: item.value || '',
               timeframe: item.timeframe || ''
             }))
-          : [];
+          : typeof p.success_metrics === 'object' && p.success_metrics !== null
+            ? Object.values(p.success_metrics).map((item: any) => ({
+                category: item.category || '',
+                value: item.value || '',
+                timeframe: item.timeframe || ''
+              }))
+            : [];
 
         return {
           id: p.id,
