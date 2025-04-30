@@ -76,14 +76,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
   
-  function login() {
-    // Placeholder function for login to satisfy TypeScript
-    console.log("Login method called but not implemented");
+  async function login(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    
+    if (error) {
+      throw error;
+    }
   }
   
-  function register() {
-    // Placeholder function for register to satisfy TypeScript
-    console.log("Register method called but not implemented");
+  async function register(email: string, password: string, metadata?: { 
+    first_name?: string; 
+    last_name?: string; 
+    role?: string;
+  }) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata
+      }
+    });
+    
+    if (error) {
+      throw error;
+    }
   }
 
   // Function to decide if we should redirect founders

@@ -10,8 +10,12 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   shouldRedirectToAcquisition: (currentPath: string) => boolean;
-  login: () => void;  // No arguments required
-  register: () => void;  // No arguments required
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, metadata?: { 
+    first_name?: string; 
+    last_name?: string; 
+    role?: string;
+  }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
