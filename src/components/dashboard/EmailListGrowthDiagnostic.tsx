@@ -5,7 +5,7 @@ import { EmailListGrowthData } from "@/types/email-diagnostics";
 import ScoreOverview from "./email-growth/ScoreOverview";
 import FormAnalysis from "./email-growth/FormAnalysis";
 import ImprovementRecommendations from "./email-growth/ImprovementRecommendations";
-import { useEmailDiagnostics } from "@/hooks/useDiagnostics";
+import { useEmailDiagnostics } from "@/hooks/useEmailDiagnostics";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Check, RefreshCw } from "lucide-react";

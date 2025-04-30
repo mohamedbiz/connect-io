@@ -8,7 +8,7 @@ import { Check, RefreshCw } from "lucide-react";
 import { type PostPurchaseDiagnostic as DiagnosticType } from "@/types/post-purchase-diagnostics";
 import SequenceAnalysis from "./SequenceAnalysis";
 import ImpactMetrics from "./ImpactMetrics";
-import { usePostPurchaseDiagnostics } from "@/hooks/useDiagnostics";
+import { usePostPurchaseDiagnostics } from "@/hooks/usePostPurchaseDiagnostics";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PostPurchaseDiagnostic = () => {
