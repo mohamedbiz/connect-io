@@ -4,12 +4,10 @@ import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useProviderApplications } from "@/hooks/useProviderApplications";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import ApplicationsTable from "@/components/admin/provider-applications/ApplicationsTable";
 import ReviewDialog from "@/components/admin/provider-applications/ReviewDialog";
+import ApplicationTabs from "@/components/admin/provider-applications/ApplicationTabs";
 
 const ProviderApplicationsPage = () => {
   const { user, profile, loading } = useAuth();
@@ -93,50 +91,15 @@ const ProviderApplicationsPage = () => {
       <div className="container mx-auto py-10">
         <h1 className="text-3xl font-bold mb-6">Provider Applications</h1>
         
-        <Tabs defaultValue="submitted" value={currentTab} onValueChange={(v) => setCurrentTab(v as any)}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="submitted">
-              New <Badge variant="outline" className="ml-2">{pendingApplications.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="in_review">
-              In Review <Badge variant="outline" className="ml-2">{inReviewApplications.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="approved">
-              Approved <Badge variant="outline" className="ml-2">{approvedApplications.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="rejected">
-              Rejected <Badge variant="outline" className="ml-2">{rejectedApplications.length}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="submitted" className="space-y-4">
-            <ApplicationsTable 
-              applications={pendingApplications} 
-              onReviewClick={handleReviewClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="in_review" className="space-y-4">
-            <ApplicationsTable 
-              applications={inReviewApplications} 
-              onReviewClick={handleReviewClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="approved" className="space-y-4">
-            <ApplicationsTable 
-              applications={approvedApplications} 
-              onReviewClick={handleReviewClick}
-            />
-          </TabsContent>
-          
-          <TabsContent value="rejected" className="space-y-4">
-            <ApplicationsTable 
-              applications={rejectedApplications} 
-              onReviewClick={handleReviewClick}
-            />
-          </TabsContent>
-        </Tabs>
+        <ApplicationTabs
+          pendingApplications={pendingApplications}
+          inReviewApplications={inReviewApplications}
+          approvedApplications={approvedApplications}
+          rejectedApplications={rejectedApplications}
+          onReviewClick={handleReviewClick}
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+        />
       </div>
       
       <ReviewDialog 
