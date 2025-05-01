@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, AuthResponse } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "./AuthContext";
 import { fetchProfile } from "@/utils/auth-utils";
@@ -88,37 +88,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
   
-  async function login(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+  async function login(email: string, password: string): Promise<AuthResponse> {
+    return await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data;
   }
   
   async function register(email: string, password: string, metadata?: { 
     first_name?: string; 
     last_name?: string; 
     role?: string;
-  }) {
-    const { data, error } = await supabase.auth.signUp({
+  }): Promise<AuthResponse> {
+    return await supabase.auth.signUp({
       email,
       password,
       options: {
         data: metadata
       }
     });
-    
-    if (error) {
-      throw error;
-    }
-    
-    return data;
   }
 
   // Function to decide if we should redirect founders

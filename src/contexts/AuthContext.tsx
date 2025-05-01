@@ -1,6 +1,6 @@
 
 import { createContext, useContext } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { Session, User, AuthResponse } from "@supabase/supabase-js";
 import { Profile } from "@/types/auth";
 
 interface AuthContextType {
@@ -10,12 +10,12 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   shouldRedirectToAcquisition: (currentPath: string) => boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
   register: (email: string, password: string, metadata?: { 
     first_name?: string; 
     last_name?: string; 
     role?: string;
-  }) => Promise<void>;
+  }) => Promise<AuthResponse>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthForm from "@/components/auth/AuthForm";
 import { Briefcase } from "lucide-react";
 import useAuthPageController from "@/pages/auth/useAuthPageController";
-import { Button } from "@/components/ui/button";
+import SocialAuthButtons from "@/components/auth/SocialAuthButtons";
+import AuthSocialDivider from "@/pages/auth/AuthSocialDivider";
 
 const AuthPage = () => {
   const {
@@ -79,18 +80,12 @@ const AuthPage = () => {
               userType={userType}
             />
 
-            <div className="mt-6 pt-6 border-t border-[#2D82B7]/30 text-center">
-              <p className="text-[#0E3366] mb-4">Or continue with</p>
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant="outline"
-                  className="border-[#2D82B7]/30 hover:bg-[#BFD7ED]/10 hover:border-[#2D82B7] transition-colors"
-                  disabled={loading}
-                  onClick={() => handleOAuth('google')}
-                >
-                  Google
-                </Button>
-              </div>
+            <div className="mt-6 pt-6 border-t border-[#2D82B7]/30">
+              <AuthSocialDivider />
+              <SocialAuthButtons 
+                handleOAuth={handleOAuth}
+                loading={loading}
+              />
             </div>
           </div>
         </div>

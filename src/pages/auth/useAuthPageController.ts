@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const initialForm = {
   email: "",
@@ -19,6 +20,7 @@ export default function useAuthPageController() {
   const [userType, setUserType] = useState<"founder" | "provider">("founder");
   const navigate = useNavigate();
   const { toast: toastNotification } = useToast();
+  const { login, register } = useAuth();
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -129,17 +131,15 @@ export default function useAuthPageController() {
       if (isRegister) {
         console.log("Attempting to register user with role:", userType);
         
-        const { data, error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            data: {
-              first_name: form.first_name,
-              last_name: form.last_name,
-              role: userType,
-            },
-          },
-        });
+        const { data, error } = await register(
+          form.email,
+          form.password,
+          {
+            first_name: form.first_name,
+            last_name: form.last_name,
+            role: userType,
+          }
+        );
 
         if (error) {
           console.error("Registration error:", error);
@@ -161,10 +161,10 @@ export default function useAuthPageController() {
       } else {
         console.log("Attempting to log in user");
         
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
+        const { data, error } = await login(
+          form.email,
+          form.password
+        );
 
         if (error) {
           console.error("Login error:", error);
@@ -199,12 +199,14 @@ export default function useAuthPageController() {
     setLoading(true);
     try {
       console.log(`Attempting to sign in with ${provider}...`);
+      console.log("Current user type:", userType);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/auth`,
           queryParams: {
-            // Pass role info as a query parameter
+            // Pass role info as a query parameter (will be stored in user metadata)
             role: userType,
           }
         }
@@ -226,6 +228,7 @@ export default function useAuthPageController() {
       }
       
       console.log(`OAuth ${provider} response:`, data);
+      // The OAuth flow will redirect the user, so we don't need to do anything else here
       return Promise.resolve();
     } catch (error) {
       console.error(`OAuth error with ${provider}:`, error);
