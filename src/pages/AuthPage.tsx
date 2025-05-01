@@ -1,56 +1,27 @@
 
 import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthForm from "@/components/auth/AuthForm";
-import { useAuth } from "@/contexts/AuthContext";
 import { Briefcase } from "lucide-react";
+import useAuthPageController from "@/pages/auth/useAuthPageController";
+import { Button } from "@/components/ui/button";
 
 const AuthPage = () => {
-  const [isRegister, setIsRegister] = useState(true);
-  const [userType, setUserType] = useState<"founder" | "provider">("founder");
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-  });
-  const { login, register } = useAuth();
-  const navigate = useNavigate();
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const {
+    isRegister,
+    setIsRegister,
+    form,
+    loading,
+    handleInput,
+    handleAuth,
+    handleOAuth,
+    userType,
+    setUserType
+  } = useAuthPageController();
 
   const toggleAuth = () => {
     setIsRegister(!isRegister);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isRegister) {
-        await register(form.email, form.password, {
-          first_name: form.first_name,
-          last_name: form.last_name,
-          role: userType,
-        });
-        navigate(userType === "provider" ? "/provider-dashboard" : "/founder-dashboard");
-      } else {
-        await login(form.email, form.password);
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Authentication error:", error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -103,7 +74,7 @@ const AuthPage = () => {
               form={form}
               handleInput={handleInput}
               loading={loading}
-              handleSubmit={handleSubmit}
+              handleSubmit={handleAuth}
               toggleAuth={toggleAuth}
               userType={userType}
             />
@@ -115,6 +86,7 @@ const AuthPage = () => {
                   variant="outline"
                   className="border-[#2D82B7]/30 hover:bg-[#BFD7ED]/10 hover:border-[#2D82B7] transition-colors"
                   disabled={loading}
+                  onClick={() => handleOAuth('google')}
                 >
                   Google
                 </Button>

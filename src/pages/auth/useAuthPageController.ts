@@ -25,70 +25,110 @@ export default function useAuthPageController() {
   };
 
   const handleRedirectBasedOnRole = async (userId: string) => {
+    console.log("Handling redirect based on role for user ID:", userId);
+    
     try {
+      setLoading(true);
+      
+      // Add a small delay to ensure Supabase has time to update
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching user role:", error);
+        toastNotification({ 
+          title: "Error",
+          description: "Failed to fetch user profile. Please try again.",
+          variant: "destructive" 
+        });
         navigate("/");
         return;
       }
 
+      if (!data || !data.role) {
+        console.error("No role found for user:", userId);
+        toastNotification({ 
+          title: "Profile Error", 
+          description: "User profile not found or role not specified." 
+        });
+        navigate("/");
+        return;
+      }
+
+      console.log("User role found:", data.role);
+      
       if (data.role === "founder") {
-        console.log("User is a founder, redirecting to founder dashboard");
+        console.log("Redirecting to founder dashboard");
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
         console.log("User is a provider, checking application status");
         
-        // Add a small delay to ensure all state is properly updated
-        setTimeout(async () => {
-          try {
-            const { data: providerApplication, error: appError } = await supabase
-              .from("provider_applications") 
-              .select("status")
-              .eq("user_id", userId)
-              .maybeSingle();
-            
-            if (appError) {
-              console.error("Error checking provider application:", appError);
-            }
-            
-            console.log("Provider application status:", providerApplication);
-            
-            if (!providerApplication) {
-              // No application yet, redirect to application form
-              console.log("No application found, redirecting to provider application page");
-              navigate("/provider-apply");
-            } else {
-              // Has submitted an application already, go to dashboard
-              console.log("Application found, redirecting to provider dashboard");
-              navigate("/provider-dashboard");
-            }
-          } catch (err) {
-            console.error("Error in provider redirection:", err);
-            // Default to provider dashboard in case of errors
+        try {
+          const { data: providerApplication, error: appError } = await supabase
+            .from("provider_applications") 
+            .select("status")
+            .eq("user_id", userId)
+            .maybeSingle();
+          
+          if (appError) {
+            console.error("Error checking provider application:", appError);
+          }
+          
+          console.log("Provider application status:", providerApplication);
+          
+          if (!providerApplication) {
+            // No application yet, redirect to application form
+            console.log("No application found, redirecting to provider application page");
+            navigate("/provider-apply");
+          } else {
+            // Has submitted an application already, go to dashboard
+            console.log("Application found, redirecting to provider dashboard");
             navigate("/provider-dashboard");
           }
-        }, 300);
+        } catch (err) {
+          console.error("Error in provider redirection:", err);
+          toastNotification({ 
+            title: "Error", 
+            description: "Failed to check provider status. Redirecting to dashboard.",
+            variant: "destructive"
+          });
+          // Default to provider dashboard in case of errors
+          navigate("/provider-dashboard");
+        }
+      } else if (data.role === "admin") {
+        console.log("Redirecting to admin dashboard");
+        navigate("/admin/provider-applications");
       } else {
+        console.log("Unknown role, redirecting to home");
         navigate("/");
       }
     } catch (err) {
       console.error("Role check error:", err);
+      toastNotification({ 
+        title: "Error", 
+        description: "An error occurred during login. Please try again.",
+        variant: "destructive"
+      });
       navigate("/");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Starting authentication process");
 
     try {
       if (isRegister) {
+        console.log("Attempting to register user with role:", userType);
+        
         const { data, error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
@@ -102,26 +142,46 @@ export default function useAuthPageController() {
         });
 
         if (error) {
-          toastNotification({ title: "Sign up failed", description: error.message, variant: "destructive" });
+          console.error("Registration error:", error);
+          toastNotification({ 
+            title: "Sign up failed", 
+            description: error.message, 
+            variant: "destructive" 
+          });
+          setLoading(false);
         } else if (data.user) {
+          console.log("Registration successful for user:", data.user.id);
           toastNotification({ title: "Account created!", description: "Welcome to Connect." });
+          
+          // Add delay for better user experience and to ensure profile is created
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
-          }, 500);
+          }, 1000);
         }
       } else {
+        console.log("Attempting to log in user");
+        
         const { data, error } = await supabase.auth.signInWithPassword({
           email: form.email,
           password: form.password,
         });
 
         if (error) {
-          toastNotification({ title: "Login failed", description: error.message, variant: "destructive" });
+          console.error("Login error:", error);
+          toastNotification({ 
+            title: "Login failed", 
+            description: error.message, 
+            variant: "destructive" 
+          });
+          setLoading(false);
         } else if (data.user) {
+          console.log("Login successful for user:", data.user.id);
           toastNotification({ title: "Login successful" });
+          
+          // Add delay for better user experience and to ensure profile is loaded
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
-          }, 500);
+          }, 1000);
         }
       }
     } catch (error) {
@@ -131,7 +191,6 @@ export default function useAuthPageController() {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -162,6 +221,7 @@ export default function useAuthPageController() {
           toast.error(`Sign in with ${provider} failed: ${error.message}`);
         }
         
+        setLoading(false);
         return Promise.reject(error);
       }
       
@@ -170,9 +230,8 @@ export default function useAuthPageController() {
     } catch (error) {
       console.error(`OAuth error with ${provider}:`, error);
       toast.error(`Failed to connect to ${provider}. Please try again.`);
-      return Promise.reject(error);
-    } finally {
       setLoading(false);
+      return Promise.reject(error);
     }
   };
 

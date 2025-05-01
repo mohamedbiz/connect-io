@@ -6,12 +6,14 @@ import { AuthContext } from "./AuthContext";
 import { fetchProfile } from "@/utils/auth-utils";
 import { Profile } from "@/types/auth";
 import { shouldRedirectToAcquisition } from "@/utils/redirect-utils";
+import { toast } from "sonner";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     console.log("Setting up auth listener");
@@ -53,14 +55,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   async function fetchProfileAndSetState(userId: string) {
+    setProfileLoading(true);
     try {
       console.log("Fetching profile for user:", userId);
       const profileData = await fetchProfile(userId);
       console.log("Profile data retrieved:", profileData);
+      
+      if (!profileData) {
+        console.warn("No profile found for user:", userId);
+        toast.error("Failed to load your profile. Please contact support.");
+      }
+      
       setProfile(profileData);
     } catch (err) {
       console.error("Error fetching profile:", err);
+      toast.error("Error loading profile data");
     } finally {
+      setProfileLoading(false);
       setLoading(false);
     }
   }
@@ -73,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
     } catch (error) {
       console.error("Logout error:", error);
+      toast.error("Failed to log out. Please try again.");
     }
   }
   
@@ -85,6 +97,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       throw error;
     }
+    
+    return data;
   }
   
   async function register(email: string, password: string, metadata?: { 
@@ -103,11 +117,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       throw error;
     }
+    
+    return data;
   }
 
   // Function to decide if we should redirect founders
   function handleShouldRedirectToAcquisition(currentPath: string) {
-    return shouldRedirectToAcquisition(currentPath, loading, user, profile);
+    return shouldRedirectToAcquisition(currentPath, loading || profileLoading, user, profile);
   }
 
   return (
@@ -115,7 +131,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       user, 
       session, 
       profile, 
-      loading, 
+      loading: loading || profileLoading,
       logout,
       shouldRedirectToAcquisition: handleShouldRedirectToAcquisition,
       login,
