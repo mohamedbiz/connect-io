@@ -5,13 +5,16 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BarChart, Users, Mail, Briefcase, BookOpen, Inbox } from "lucide-react";
+import { BarChart, Users, Mail, Briefcase, BookOpen, Inbox, DollarSign } from "lucide-react";
 import { ProviderResources } from "@/components/provider/resources/ProviderResources";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProviderApplications } from "@/hooks/useProviderApplications";
 import { useMatches } from "@/hooks/useMatches";
 import MatchesList from "@/components/matches/MatchesList";
 import { toast } from "sonner";
+import PaymentAnalytics from "@/components/payment/PaymentAnalytics";
+import PayoutRequestForm from "@/components/payment/PayoutRequestForm";
+import PayoutRequestsList from "@/components/payment/PayoutRequestsList";
 
 const ProviderDashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -96,9 +99,18 @@ const ProviderDashboard = () => {
               Welcome back, {profile?.first_name || profile?.email?.split('@')[0]}
             </p>
           </div>
-          <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors">
-            View Profile
-          </Button>
+          <div className="space-x-2">
+            <Button 
+              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
+              onClick={() => navigate("/payments")}
+            >
+              <DollarSign className="h-4 w-4 mr-1" />
+              Payments
+            </Button>
+            <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors">
+              View Profile
+            </Button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -153,6 +165,7 @@ const ProviderDashboard = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="matches">Client Matches</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
             <TabsTrigger value="application">Application Status</TabsTrigger>
           </TabsList>
@@ -200,6 +213,25 @@ const ProviderDashboard = () => {
                 <MatchesList />
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          <TabsContent value="payments">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-[#2D82B7]/30">
+                <h3 className="text-xl font-semibold mb-4 text-[#0A2342]">Request Payout</h3>
+                <PayoutRequestForm />
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-[#2D82B7]/30">
+                <h3 className="text-xl font-semibold mb-4 text-[#0A2342]">Payment Analytics</h3>
+                <PaymentAnalytics />
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-[#2D82B7]/30 lg:col-span-2">
+                <h3 className="text-xl font-semibold mb-4 text-[#0A2342]">Your Payout Requests</h3>
+                <PayoutRequestsList />
+              </div>
+            </div>
           </TabsContent>
           
           <TabsContent value="resources">

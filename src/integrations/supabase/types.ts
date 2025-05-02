@@ -105,6 +105,111 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_analytics: {
+        Row: {
+          id: string
+          period_end: string
+          period_start: string
+          total_fees: number
+          total_revenue: number
+          transaction_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          period_end: string
+          period_start: string
+          total_fees?: number
+          total_revenue?: number
+          transaction_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          period_end?: string
+          period_start?: string
+          total_fees?: number
+          total_revenue?: number
+          transaction_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          fee_amount: number
+          id: string
+          metadata: Json | null
+          payment_intent_id: string | null
+          payment_method: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          fee_amount: number
+          id?: string
+          metadata?: Json | null
+          payment_intent_id?: string | null
+          payment_method?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          fee_amount?: number
+          id?: string
+          metadata?: Json | null
+          payment_intent_id?: string | null
+          payment_method?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payout_requests: {
+        Row: {
+          amount: number
+          id: string
+          notes: string | null
+          processed_at: string | null
+          provider_id: string
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          provider_id: string
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          provider_id?: string
+          requested_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       post_purchase_diagnostics: {
         Row: {
           created_at: string | null
@@ -296,7 +401,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_fee: {
+        Args: { payment_amount: number }
+        Returns: number
+      }
     }
     Enums: {
       user_role: "founder" | "provider" | "admin"

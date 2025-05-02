@@ -14,6 +14,9 @@ import NotFound from "./pages/NotFound"
 import AuthPage from "./pages/AuthPage"
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage"
 import ProviderApplicationsPage from "./pages/admin/ProviderApplicationsPage"
+import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage"
+import PaymentCanceledPage from "./pages/payment/PaymentCanceledPage"
+import PaymentsDashboardPage from "./pages/payment/PaymentsDashboardPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +45,9 @@ const App = () => (
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/provider-apply" element={<ProviderApplicationPage />} />
             <Route path="/admin/provider-applications" element={<ProviderApplicationsPage />} />
+            <Route path="/payment-success" element={<PaymentSuccessPage />} />
+            <Route path="/payment-canceled" element={<PaymentCanceledPage />} />
+            <Route path="/payments" element={<PaymentsDashboardPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

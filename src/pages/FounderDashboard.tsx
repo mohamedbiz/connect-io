@@ -11,6 +11,10 @@ import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MatchesList from "@/components/matches/MatchesList";
 import { toast } from "sonner";
+import ProvidersPaymentSection from "@/components/founder/ProvidersPaymentSection";
+import PaymentAnalytics from "@/components/payment/PaymentAnalytics";
+import { Button } from "@/components/ui/button";
+import { DollarSign } from "lucide-react";
 
 const FounderDashboard = () => {
   const { user, profile, loading } = useAuth();
@@ -74,7 +78,16 @@ const FounderDashboard = () => {
   return (
     <Layout>
       <div className="container mx-auto py-10 px-4">
-        <h1 className="text-3xl font-bold mb-6 text-[#0A2342]">Founder Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-[#0A2342]">Founder Dashboard</h1>
+          <Button 
+            className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
+            onClick={() => navigate("/payments")}
+          >
+            <DollarSign className="h-4 w-4 mr-1" />
+            Payments Dashboard
+          </Button>
+        </div>
         
         <Tabs defaultValue="diagnostic" className="w-full">
           <TabsList className="mb-6 bg-[#BFD7ED]/30">
@@ -115,6 +128,12 @@ const FounderDashboard = () => {
               My Matches
             </TabsTrigger>
             <TabsTrigger 
+              value="payments"
+              className="data-[state=active]:bg-[#2D82B7] data-[state=active]:text-white"
+            >
+              Payments
+            </TabsTrigger>
+            <TabsTrigger 
               value="projects"
               className="data-[state=active]:bg-[#2D82B7] data-[state=active]:text-white"
             >
@@ -146,6 +165,23 @@ const FounderDashboard = () => {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-bold mb-6">My Provider Matches</h2>
               <MatchesList />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="payments">
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-2xl font-bold mb-6">Payment Analytics</h2>
+                <PaymentAnalytics />
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <h2 className="text-2xl font-bold mb-6">Quick Payment</h2>
+                <p className="mb-4 text-[#0E3366]">
+                  Make a payment to one of our featured providers:
+                </p>
+                <ProvidersPaymentSection />
+              </div>
             </div>
           </TabsContent>
           
