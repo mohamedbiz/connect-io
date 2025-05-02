@@ -1,275 +1,162 @@
 
-import { useState } from "react";
-import { Match, useMatches } from "@/hooks/useMatches";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useMatches, Match } from "@/hooks/useMatches";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter 
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, CheckCircle, Clock, MessageCircle, X, XCircle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { Check, X, MessageCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
-const MatchesList = () => {
-  const { user, profile } = useAuth();
+interface MatchesListProps {
+  onMessageClick?: (match: Match) => void;
+}
+
+const MatchesList = ({ onMessageClick }: MatchesListProps) => {
   const { matches, isLoading, updateMatchStatus } = useMatches();
-  const [currentTab, setCurrentTab] = useState<'pending' | 'accepted' | 'declined'>('pending');
-  const [showMessageDialog, setShowMessageDialog] = useState(false);
-  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-  
-  const isProvider = profile?.role === 'provider';
-  
-  const pendingMatches = matches.filter(m => m.status === 'pending');
-  const acceptedMatches = matches.filter(m => m.status === 'accepted');
-  const declinedMatches = matches.filter(m => m.status === 'declined');
+  const { user, profile } = useAuth();
 
-  const handleViewMessage = (match: Match) => {
-    setSelectedMatch(match);
-    setShowMessageDialog(true);
+  const isProvider = profile?.role === "provider";
+
+  const handleAccept = (matchId: string) => {
+    updateMatchStatus({ matchId, status: "accepted" });
+    toast.success("Match request accepted");
   };
-  
-  const handleUpdateStatus = (matchId: string, status: 'accepted' | 'declined') => {
-    updateMatchStatus({ matchId, status });
+
+  const handleDecline = (matchId: string) => {
+    updateMatchStatus({ matchId, status: "declined" });
+    toast.success("Match request declined");
   };
-  
+
+  const handleMessageClick = (match: Match) => {
+    if (onMessageClick) {
+      onMessageClick(match);
+    }
+  };
+
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map(i => (
-          <Skeleton key={i} className="h-32 w-full" />
-        ))}
-      </div>
-    );
+    return <div className="text-center py-8">Loading matches...</div>;
   }
-  
+
   if (matches.length === 0) {
     return (
-      <Card className="text-center py-12">
-        <CardContent>
-          <p className="text-muted-foreground">
-            {isProvider 
-              ? "You haven't received any connection requests yet." 
-              : "You haven't sent any connection requests to providers yet."
-            }
-          </p>
+      <Card>
+        <CardContent className="text-center py-8">
+          <p className="text-muted-foreground">No matches found</p>
+          {isProvider ? (
+            <p className="text-sm text-muted-foreground mt-1">
+              When founders request to work with you, they'll appear here
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">
+              Start connecting with providers to get matches
+            </p>
+          )}
         </CardContent>
       </Card>
     );
   }
-  
-  return (
-    <>
-      <Tabs defaultValue="pending" value={currentTab} onValueChange={(v) => setCurrentTab(v as any)}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="pending">
-            Pending <Badge variant="outline" className="ml-2">{pendingMatches.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="accepted">
-            Accepted <Badge variant="outline" className="ml-2">{acceptedMatches.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="declined">
-            Declined <Badge variant="outline" className="ml-2">{declinedMatches.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="pending" className="space-y-4">
-          {pendingMatches.length === 0 ? (
-            <Card className="text-center py-6">
-              <CardContent>
-                <p className="text-muted-foreground">No pending requests</p>
-              </CardContent>
-            </Card>
-          ) : (
-            pendingMatches.map(match => (
-              <MatchCard 
-                key={match.id} 
-                match={match}
-                isProvider={isProvider}
-                onViewMessage={handleViewMessage}
-                onUpdateStatus={handleUpdateStatus}
-              />
-            ))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="accepted" className="space-y-4">
-          {acceptedMatches.length === 0 ? (
-            <Card className="text-center py-6">
-              <CardContent>
-                <p className="text-muted-foreground">No accepted connections</p>
-              </CardContent>
-            </Card>
-          ) : (
-            acceptedMatches.map(match => (
-              <MatchCard 
-                key={match.id} 
-                match={match}
-                isProvider={isProvider}
-                onViewMessage={handleViewMessage}
-                onUpdateStatus={handleUpdateStatus}
-              />
-            ))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="declined" className="space-y-4">
-          {declinedMatches.length === 0 ? (
-            <Card className="text-center py-6">
-              <CardContent>
-                <p className="text-muted-foreground">No declined connections</p>
-              </CardContent>
-            </Card>
-          ) : (
-            declinedMatches.map(match => (
-              <MatchCard 
-                key={match.id} 
-                match={match}
-                isProvider={isProvider}
-                onViewMessage={handleViewMessage}
-                onUpdateStatus={handleUpdateStatus}
-              />
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
-      
-      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Message</DialogTitle>
-            <DialogDescription>
-              {isProvider ? "Message from founder" : "Your message to the provider"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4 border rounded-md p-4 bg-slate-50">
-            {selectedMatch?.message || <em className="text-muted-foreground">No message included</em>}
-          </div>
-          
-          <DialogFooter>
-            <Button onClick={() => setShowMessageDialog(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-};
 
-interface MatchCardProps {
-  match: Match;
-  isProvider: boolean;
-  onViewMessage: (match: Match) => void;
-  onUpdateStatus: (matchId: string, status: 'accepted' | 'declined') => void;
-}
-
-const MatchCard = ({ match, isProvider, onViewMessage, onUpdateStatus }: MatchCardProps) => {
-  // Determine who to display based on user role
-  const displayName = isProvider 
-    ? match.founder?.name || "Unknown Founder"
-    : match.provider?.name || "Unknown Provider";
-    
-  const isPending = match.status === 'pending';
-  
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <img 
-                src={isProvider 
-                  ? match.founder?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}`
-                  : match.provider?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}`
-                } 
-                alt={displayName} 
-              />
-            </Avatar>
-            <div>
-              <CardTitle className="text-base">{displayName}</CardTitle>
-              <CardDescription>
-                {isProvider 
-                  ? (match.founder?.business_name || "Founder") 
-                  : (match.provider?.expertise || "Provider")}
-              </CardDescription>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {match.status === 'pending' && (
-              <Badge variant="outline" className="flex gap-1 items-center">
-                <Clock className="h-3 w-3" />
-                Pending
-              </Badge>
-            )}
-            {match.status === 'accepted' && (
-              <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex gap-1 items-center">
-                <CheckCircle className="h-3 w-3" />
-                Accepted
-              </Badge>
-            )}
-            {match.status === 'declined' && (
-              <Badge variant="destructive" className="flex gap-1 items-center">
-                <XCircle className="h-3 w-3" />
-                Declined
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center text-sm text-muted-foreground mb-3">
-          <CalendarIcon className="mr-1 h-3 w-3" />
-          <span>Request sent {formatDistanceToNow(new Date(match.created_at), { addSuffix: true })}</span>
-        </div>
-        
-        <div className="flex items-center justify-between mt-2">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="flex gap-1 items-center"
-            onClick={() => onViewMessage(match)} 
-          >
-            <MessageCircle className="h-4 w-4" />
-            {match.message ? "View Message" : "No Message"}
-          </Button>
-          
-          {isPending && isProvider && (
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex gap-1 items-center"
-                onClick={() => onUpdateStatus(match.id, 'declined')} 
-              >
-                <X className="h-4 w-4" />
-                Decline
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm"
-                className="flex gap-1 items-center"
-                onClick={() => onUpdateStatus(match.id, 'accepted')} 
-              >
-                <CheckCircle className="h-4 w-4" />
-                Accept
-              </Button>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {matches.map((match) => {
+        // Get other party info based on user role
+        const otherParty = isProvider ? match.founder : match.provider;
+        const isPending = match.status === "pending";
+        const isAccepted = match.status === "accepted";
+        const isDeclined = match.status === "declined";
+        const canMessage = isAccepted;
+
+        if (!otherParty) return null;
+
+        return (
+          <Card key={match.id} className="overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-4">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-12 w-12 border">
+                    <AvatarImage
+                      src={otherParty?.avatar_url || ""}
+                      alt={otherParty?.name || "User"}
+                    />
+                    <AvatarFallback>
+                      {(otherParty?.name || "").substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium">{otherParty?.name}</h3>
+                      <Badge
+                        variant={
+                          isPending
+                            ? "outline"
+                            : isAccepted
+                            ? "success"
+                            : "destructive"
+                        }
+                        className="capitalize"
+                      >
+                        {match.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {otherParty?.business_name || otherParty?.expertise || ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Matched: {format(new Date(match.created_at || ""), "MMM d, yyyy")}
+                    </p>
+                  </div>
+                </div>
+
+                {match.message && (
+                  <div className="mt-3 bg-muted/50 p-3 rounded-md">
+                    <p className="text-sm italic">"{match.message}"</p>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="p-3 bg-muted/30 flex justify-end space-x-2">
+                {isProvider && isPending && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecline(match.id)}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Decline
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleAccept(match.id)}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Accept
+                    </Button>
+                  </>
+                )}
+
+                {canMessage && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleMessageClick(match)}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Message
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
   );
 };
 

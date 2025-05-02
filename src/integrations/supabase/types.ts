@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          match_id: string
+          read: boolean
+          receiver_id: string
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          match_id: string
+          read?: boolean
+          receiver_id: string
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          match_id?: string
+          read?: boolean
+          receiver_id?: string
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_diagnostics: {
         Row: {
           created_at: string | null
@@ -403,6 +444,10 @@ export type Database = {
     Functions: {
       calculate_fee: {
         Args: { payment_amount: number }
+        Returns: number
+      }
+      get_unread_messages_count: {
+        Args: { user_id: string }
         Returns: number
       }
     }

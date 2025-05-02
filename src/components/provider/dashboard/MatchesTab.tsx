@@ -1,10 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MatchesList from "@/components/matches/MatchesList";
 import { Bell } from "lucide-react";
+import { useMessages } from '@/hooks/useMessages';
+import UnreadBadge from '@/components/messaging/UnreadBadge';
+import MessageDialog from '@/components/messaging/MessageDialog';
+import { Match } from '@/hooks/useMatches';
 
 const MatchesTab = () => {
+  const { unreadCount } = useMessages();
+  const [activeMatch, setActiveMatch] = useState<Match | null>(null);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+
+  const handleOpenMessageDialog = (match: Match) => {
+    setActiveMatch(match);
+    setMessageDialogOpen(true);
+  };
+
   return (
     <Card className="border border-[#2D82B7]/30 transition-all duration-300 hover:border-[#2D82B7]">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -16,13 +29,16 @@ const MatchesTab = () => {
         </div>
         <div className="relative">
           <Bell className="h-6 w-6 text-[#2D82B7]" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            3
-          </span>
+          <UnreadBadge count={unreadCount} />
         </div>
       </CardHeader>
       <CardContent>
-        <MatchesList />
+        <MatchesList onMessageClick={handleOpenMessageDialog} />
+        <MessageDialog 
+          match={activeMatch} 
+          open={messageDialogOpen} 
+          onOpenChange={setMessageDialogOpen} 
+        />
       </CardContent>
     </Card>
   );
