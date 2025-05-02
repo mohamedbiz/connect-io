@@ -102,10 +102,10 @@ const MatchesList = ({ onMessageClick }: MatchesListProps) => {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {/* Use optional chaining with type narrowing for conditional rendering */}
+                      {/* Fix the type issue by using type guards */}
                       {isProvider 
-                        ? otherParty?.business_name || "" 
-                        : (otherParty as any)?.expertise || ""}
+                        ? (otherParty as any).business_name || "" 
+                        : (otherParty as any).expertise || ""}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Matched: {format(new Date(match.created_at || ""), "MMM d, yyyy")}
