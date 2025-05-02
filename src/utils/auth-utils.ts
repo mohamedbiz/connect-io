@@ -22,7 +22,7 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
     
     if (error) {
       console.error("Error fetching profile:", error);
-      return null;
+      throw error;
     }
     
     if (data) {
@@ -30,30 +30,10 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
       return data as Profile;
     } else {
       console.log("No profile found for user:", userId);
-      
-      // Try once more after a delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const { data: retryData, error: retryError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-      
-      if (retryError) {
-        console.error("Error on retry fetch profile:", retryError);
-        return null;
-      }
-      
-      if (retryData) {
-        console.log("Profile loaded on retry:", retryData);
-        return retryData as Profile;
-      }
-      
       return null;
     }
   } catch (err) {
     console.error("Profile fetch exception:", err);
-    return null;
+    throw err;
   }
 }

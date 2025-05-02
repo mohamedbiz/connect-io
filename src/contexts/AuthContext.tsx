@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  error: string | null;
   logout: () => Promise<void>;
   shouldRedirectToAcquisition: (currentPath: string) => boolean;
   login: (email: string, password: string) => Promise<AuthResponse>;

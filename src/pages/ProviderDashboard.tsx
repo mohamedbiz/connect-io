@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProviderApplications } from "@/hooks/useProviderApplications";
 import { useMatches } from "@/hooks/useMatches";
 import { toast } from "sonner";
+import ErrorFallback from "@/components/ErrorFallback";
 
 // Import refactored components
 import StatsOverview from "@/components/provider/dashboard/StatsOverview";
@@ -19,7 +20,7 @@ import ResourcesTab from "@/components/provider/dashboard/ResourcesTab";
 import ApplicationStatusTab from "@/components/provider/dashboard/ApplicationStatusTab";
 
 const ProviderDashboard = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     activeClients: 0,
@@ -66,6 +67,21 @@ const ProviderDashboard = () => {
     }
   }, [myApplication]);
 
+  // Authentication error case
+  if (error) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 px-4">
+          <ErrorFallback 
+            error={new Error(error)}
+            message="There was a problem with authentication. Please try refreshing the page."
+            resetErrorBoundary={() => window.location.reload()}
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -84,6 +100,13 @@ const ProviderDashboard = () => {
         <div className="container mx-auto py-10 px-4">
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <p className="text-center text-lg text-[#0E3366]">Please log in to access your dashboard</p>
+            <Button 
+              variant="default"
+              onClick={() => navigate("/auth")}
+              className="mt-4"
+            >
+              Go to Login
+            </Button>
           </div>
         </div>
       </Layout>

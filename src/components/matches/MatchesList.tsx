@@ -1,5 +1,5 @@
 
-import { useMatches, Match } from "@/hooks/useMatches";
+import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { Check, X, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { Match } from "@/types/matches";
 
 interface MatchesListProps {
   onMessageClick?: (match: Match) => void;
@@ -102,10 +103,11 @@ const MatchesList = ({ onMessageClick }: MatchesListProps) => {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {/* Fix the type issue by using type guards */}
-                      {isProvider 
-                        ? (otherParty as any).business_name || "" 
-                        : (otherParty as any).expertise || ""}
+                      {isProvider && match.founder 
+                        ? match.founder.business_name || ""
+                        : !isProvider && match.provider 
+                        ? match.provider.expertise || ""
+                        : ""}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Matched: {format(new Date(match.created_at || ""), "MMM d, yyyy")}

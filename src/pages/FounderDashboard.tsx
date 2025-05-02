@@ -15,9 +15,10 @@ import ProvidersPaymentSection from "@/components/founder/ProvidersPaymentSectio
 import PaymentAnalytics from "@/components/payment/PaymentAnalytics";
 import { Button } from "@/components/ui/button";
 import { DollarSign } from "lucide-react";
+import ErrorFallback from "@/components/ErrorFallback";
 
 const FounderDashboard = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,6 +27,7 @@ const FounderDashboard = () => {
     user: !!user, 
     profile: profile?.role,
     loading,
+    error: error || 'none',
     path: location.pathname
   });
 
@@ -51,6 +53,21 @@ const FounderDashboard = () => {
     }
   }, [user, profile, loading, navigate, location.pathname]);
 
+  // Authentication error case
+  if (error) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 px-4">
+          <ErrorFallback 
+            error={new Error(error)}
+            message="There was a problem with authentication. Please try refreshing the page."
+            resetErrorBoundary={() => window.location.reload()}
+          />
+        </div>
+      </Layout>
+    );
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -69,6 +86,13 @@ const FounderDashboard = () => {
         <div className="container mx-auto py-10 px-4">
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <p className="text-center text-lg text-[#0E3366]">Please log in to access your dashboard</p>
+            <Button 
+              variant="default"
+              onClick={() => navigate("/auth")}
+              className="mt-4"
+            >
+              Go to Login
+            </Button>
           </div>
         </div>
       </Layout>
