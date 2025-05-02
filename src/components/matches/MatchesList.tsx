@@ -102,7 +102,10 @@ const MatchesList = ({ onMessageClick }: MatchesListProps) => {
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {otherParty?.business_name || otherParty?.expertise || ""}
+                      {/* Use optional chaining with type narrowing for conditional rendering */}
+                      {isProvider 
+                        ? otherParty?.business_name || "" 
+                        : (otherParty as any)?.expertise || ""}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Matched: {format(new Date(match.created_at || ""), "MMM d, yyyy")}

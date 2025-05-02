@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import ConversationView from './ConversationView';
 import { useMessages } from '@/hooks/useMessages';
 import { Match } from '@/hooks/useMatches';
 import { useAuth } from '@/contexts/AuthContext';
+import { X } from 'lucide-react';
 
 interface MessageDialogProps {
   match: Match | null;
@@ -24,7 +25,15 @@ const MessageDialog = ({ match, open, onOpenChange }: MessageDialogProps) => {
     isLoading,
     sendMessage,
     isSending,
+    refetch
   } = useMessages(match?.id);
+
+  // Refresh messages when dialog opens
+  useEffect(() => {
+    if (open && match) {
+      refetch();
+    }
+  }, [open, match, refetch]);
 
   const handleSendMessage = (content: string) => {
     if (!match || !user) return;
@@ -36,11 +45,28 @@ const MessageDialog = ({ match, open, onOpenChange }: MessageDialogProps) => {
     sendMessage({ receiverId, content });
   };
 
+  // Get other party name for the dialog title
+  const getDialogTitle = () => {
+    if (!match || !user) return 'Conversation';
+    
+    const otherParty = user.id === match.founder_id 
+      ? match.provider 
+      : match.founder;
+    
+    return `Chat with ${otherParty?.name || 'User'}`;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] p-0">
-        <DialogHeader className="sr-only">
-          <DialogTitle>Conversation</DialogTitle>
+        <DialogHeader className="bg-[#2D82B7]/10 p-4 border-b flex items-center justify-between">
+          <DialogTitle>{getDialogTitle()}</DialogTitle>
+          <button 
+            onClick={() => onOpenChange(false)} 
+            className="rounded-full p-1 hover:bg-gray-200 transition-colors"
+          >
+            <X className="h-4 w-4 text-gray-500" />
+          </button>
         </DialogHeader>
         
         {match && (
