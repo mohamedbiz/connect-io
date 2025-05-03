@@ -91,26 +91,62 @@ export type Database = {
       }
       founder_onboarding: {
         Row: {
+          accepts_performance_based: boolean | null
+          accepts_timeframe: boolean | null
           acquisition_completed: boolean | null
           acquisition_completed_at: string | null
+          allows_portfolio_use: boolean | null
           created_at: string | null
+          ecommerce_platform: string | null
+          growth_mindset: boolean | null
           id: string
+          is_decision_maker: boolean | null
+          monthly_traffic: number | null
+          product_margins: string | null
+          project_scope: string | null
+          qualification_completed: boolean | null
+          qualification_completed_at: string | null
+          revenue_threshold: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          accepts_performance_based?: boolean | null
+          accepts_timeframe?: boolean | null
           acquisition_completed?: boolean | null
           acquisition_completed_at?: string | null
+          allows_portfolio_use?: boolean | null
           created_at?: string | null
+          ecommerce_platform?: string | null
+          growth_mindset?: boolean | null
           id?: string
+          is_decision_maker?: boolean | null
+          monthly_traffic?: number | null
+          product_margins?: string | null
+          project_scope?: string | null
+          qualification_completed?: boolean | null
+          qualification_completed_at?: string | null
+          revenue_threshold?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          accepts_performance_based?: boolean | null
+          accepts_timeframe?: boolean | null
           acquisition_completed?: boolean | null
           acquisition_completed_at?: string | null
+          allows_portfolio_use?: boolean | null
           created_at?: string | null
+          ecommerce_platform?: string | null
+          growth_mindset?: boolean | null
           id?: string
+          is_decision_maker?: boolean | null
+          monthly_traffic?: number | null
+          product_margins?: string | null
+          project_scope?: string | null
+          qualification_completed?: boolean | null
+          qualification_completed_at?: string | null
+          revenue_threshold?: number | null
           updated_at?: string | null
           user_id?: string
         }

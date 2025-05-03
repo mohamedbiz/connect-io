@@ -17,6 +17,7 @@ import ProviderApplicationsPage from "./pages/admin/ProviderApplicationsPage"
 import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage"
 import PaymentCanceledPage from "./pages/payment/PaymentCanceledPage"
 import PaymentsDashboardPage from "./pages/payment/PaymentsDashboardPage"
+import FounderQualificationPage from "./pages/FounderQualificationPage"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
             <Route path="/founder-dashboard" element={<FounderDashboard />} />
+            <Route path="/founder-qualification" element={<FounderQualificationPage />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/provider-apply" element={<ProviderApplicationPage />} />
             <Route path="/admin/provider-applications" element={<ProviderApplicationsPage />} />

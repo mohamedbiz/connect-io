@@ -31,6 +31,18 @@ export function shouldRedirectToAcquisition(
   // For debugging
   console.log("Redirect check:", { currentPath, userRole: profile.role });
 
-  // Always return false as we've removed all acquisition functionality
+  // Check if user is a founder and on a dashboard route but hasn't completed qualification
+  if (
+    profile.role === 'founder' && 
+    (currentPath === '/founder-dashboard' || currentPath.startsWith('/founder-dashboard/')) &&
+    !currentPath.includes('qualification') && 
+    !currentPath.includes('onboarding')
+  ) {
+    // Here we would check if qualification is needed
+    // For now, return false as we've already implemented the qualification route separately
+    return false;
+  }
+
+  // Always return false for other cases
   return false;
 }

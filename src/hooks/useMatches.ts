@@ -77,6 +77,25 @@ export const useMatches = () => {
     }
 
     try {
+      // First, check if the founder is qualified
+      const { data: founderQualification, error: qualificationError } = await supabase
+        .from('founder_onboarding')
+        .select('qualification_completed')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (qualificationError) {
+        console.error('Error checking qualification:', qualificationError);
+      }
+
+      // Show a warning if not qualified, but still allow match
+      if (!founderQualification?.qualification_completed) {
+        toast({
+          title: 'Qualification recommended',
+          description: 'Completing qualification helps you get better provider matches.',
+        });
+      }
+
       const { data, error } = await supabase
         .from('matches')
         .insert({

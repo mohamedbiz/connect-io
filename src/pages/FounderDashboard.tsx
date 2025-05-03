@@ -16,11 +16,14 @@ import PaymentAnalytics from "@/components/payment/PaymentAnalytics";
 import { Button } from "@/components/ui/button";
 import { DollarSign } from "lucide-react";
 import ErrorFallback from "@/components/ErrorFallback";
+import { useQualificationStatus } from "@/hooks/useQualificationStatus";
+import QualificationBanner from "@/components/dashboard/QualificationBanner";
 
 const FounderDashboard = () => {
   const { user, profile, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isQualified, isLoading: qualificationLoading } = useQualificationStatus();
 
   // Log states for debugging
   console.log("FounderDashboard:", { 
@@ -28,7 +31,8 @@ const FounderDashboard = () => {
     profile: profile?.role,
     loading,
     error: error || 'none',
-    path: location.pathname
+    path: location.pathname,
+    isQualified
   });
 
   // Protect this route - redirect if not authenticated or not a founder
@@ -112,6 +116,8 @@ const FounderDashboard = () => {
             Payments Dashboard
           </Button>
         </div>
+
+        <QualificationBanner isQualified={isQualified} isLoading={qualificationLoading} />
         
         <Tabs defaultValue="diagnostic" className="w-full">
           <TabsList className="mb-6 bg-[#BFD7ED]/30">
