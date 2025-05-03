@@ -8,7 +8,6 @@ type AuthFormProps = {
   handleInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
   loading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void> | void;
-  toggleAuth: () => void;
   userType: "founder" | "provider";
 };
 
@@ -18,7 +17,6 @@ const AuthForm = ({
   handleInput,
   loading,
   handleSubmit,
-  toggleAuth,
   userType,
 }: AuthFormProps) => (
   <form className="space-y-4" onSubmit={handleSubmit}>
@@ -76,23 +74,6 @@ const AuthForm = ({
             ? `Sign Up as ${userType === 'founder' ? 'Founder' : 'Provider'}` 
             : "Sign In")}
     </Button>
-    <div className="mt-4 text-center">
-      {isRegister ? (
-        <span>
-          Already have an account?{" "}
-          <button className="text-[#2D82B7] hover:text-[#3D9AD1] transition-colors hover:underline" onClick={toggleAuth} type="button">
-            Sign In
-          </button>
-        </span>
-      ) : (
-        <span>
-          Need an account?{" "}
-          <button className="text-[#2D82B7] hover:text-[#3D9AD1] transition-colors hover:underline" onClick={toggleAuth} type="button">
-            Sign Up
-          </button>
-        </span>
-      )}
-    </div>
   </form>
 );
 
