@@ -1,5 +1,27 @@
 
 import { Profile } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Determines if a user should be redirected based on qualification status
+ */
+export async function checkQualificationStatus(userId: string): Promise<boolean> {
+  if (!userId) return false;
+
+  try {
+    const { data, error } = await supabase
+      .from('founder_onboarding')
+      .select('qualification_completed')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.qualification_completed || false;
+  } catch (error) {
+    console.error("Error checking qualification status:", error);
+    return false;
+  }
+}
 
 /**
  * Determines if a user should be redirected based on role and authentication
@@ -45,4 +67,61 @@ export function shouldRedirectToAcquisition(
 
   // Always return false for other cases
   return false;
+}
+
+/**
+ * Checks if the user should be redirected to qualification page
+ */
+export function shouldRedirectToQualification(
+  currentPath: string,
+  loading: boolean,
+  user: any,
+  profile: Profile | null,
+  isQualified: boolean
+): boolean {
+  // Don't redirect while loading
+  if (loading) {
+    console.log("Not redirecting to qualification: still loading");
+    return false;
+  }
+
+  // Not logged in - don't redirect
+  if (!user) {
+    console.log("Not redirecting to qualification: no user");
+    return false;
+  }
+
+  // Profile doesn't exist - don't redirect
+  if (!profile) {
+    console.log("Not redirecting to qualification: no profile");
+    return false;
+  }
+
+  // Only founders need to go through qualification
+  if (profile.role !== 'founder') {
+    console.log("Not redirecting to qualification: not a founder");
+    return false;
+  }
+
+  // If user is already on qualification page, don't redirect
+  if (currentPath === '/founder-qualification') {
+    console.log("Already on qualification page");
+    return false;
+  }
+
+  // If user is qualified, don't redirect
+  if (isQualified) {
+    console.log("Not redirecting to qualification: already qualified");
+    return false;
+  }
+
+  // If user is on a path that doesn't need qualification
+  if (!currentPath.includes('founder-dashboard')) {
+    console.log("Not redirecting to qualification: not accessing protected route");
+    return false;
+  }
+
+  // Else redirect to qualification
+  console.log("Should redirect to qualification");
+  return true;
 }

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { checkQualificationStatus } from "@/utils/redirect-utils";
 
 const initialForm = {
   email: "",
@@ -65,7 +66,18 @@ export default function useAuthPageController() {
       console.log("User role found:", data.role);
       
       if (data.role === "founder") {
-        console.log("Redirecting to founder dashboard");
+        console.log("User is a founder, checking qualification status");
+        
+        // Check qualification status
+        const isQualified = await checkQualificationStatus(userId);
+        
+        if (!isQualified) {
+          console.log("Founder not qualified, redirecting to qualification page");
+          navigate("/founder-qualification");
+          return;
+        }
+        
+        console.log("Founder is qualified, redirecting to dashboard");
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
         console.log("User is a provider, checking application status");

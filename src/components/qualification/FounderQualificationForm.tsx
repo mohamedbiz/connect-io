@@ -9,8 +9,13 @@ import { useQualification } from "@/hooks/useQualification";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
-const FounderQualificationForm = () => {
+interface FounderQualificationFormProps {
+  isNewUser?: boolean;
+}
+
+const FounderQualificationForm = ({ isNewUser = false }: FounderQualificationFormProps) => {
   const navigate = useNavigate();
   const { formData, updateFormData, loading, submitQualification } = useQualification();
   const [currentStep, setCurrentStep] = useState(0);
@@ -30,7 +35,15 @@ const FounderQualificationForm = () => {
   };
 
   const handleSkip = () => {
-    navigate("/founder-dashboard");
+    if (isNewUser) {
+      // For new users, show a confirmation alert
+      if (window.confirm("Are you sure you want to skip qualification? Your provider matches will be less accurate.")) {
+        navigate("/founder-dashboard");
+      }
+    } else {
+      // For returning users, just navigate
+      navigate("/founder-dashboard");
+    }
   };
 
   const renderStepContent = () => {
@@ -49,19 +62,32 @@ const FounderQualificationForm = () => {
   return (
     <div className="max-w-3xl mx-auto px-4">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#0A2342]">Founder Qualification</h2>
+        <h2 className="text-2xl font-bold text-[#0A2342]">Business Qualification</h2>
         <p className="text-[#0E3366]">
           Help us find the right email marketing providers for your business by completing this qualification form.
         </p>
       </div>
 
-      <Alert className="mb-6">
-        <AlertTitle>Important</AlertTitle>
-        <AlertDescription>
-          This qualification helps us match you with the most suitable providers. While recommended, 
-          you can skip this step and complete it later.
-        </AlertDescription>
-      </Alert>
+      {!isNewUser && (
+        <Alert className="mb-6">
+          <AlertTitle>Important</AlertTitle>
+          <AlertDescription>
+            This qualification helps us match you with the most suitable providers. While recommended, 
+            you can skip this step and complete it later.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isNewUser && (
+        <Alert className="mb-6" variant="default">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Required Step</AlertTitle>
+          <AlertDescription>
+            This qualification is required to access your dashboard. It helps us understand your business 
+            needs and provide you with the best possible service.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card className="border border-[#2D82B7]/30">
         <CardContent className="pt-6">
@@ -105,14 +131,18 @@ const FounderQualificationForm = () => {
                   <ChevronLeft className="w-4 h-4" /> Back
                 </Button>
               ) : (
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={handleSkip}
-                  className="text-[#0E3366]/80"
-                >
-                  Skip for now
-                </Button>
+                isNewUser ? (
+                  <div></div> // Empty div to maintain layout
+                ) : (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={handleSkip}
+                    className="text-[#0E3366]/80"
+                  >
+                    Skip for now
+                  </Button>
+                )
               )}
             </div>
             <div>
@@ -131,7 +161,7 @@ const FounderQualificationForm = () => {
                   disabled={loading}
                   className="bg-[#2D82B7] hover:bg-[#3D9AD1]"
                 >
-                  {loading ? "Submitting..." : "Submit Qualification"}
+                  {loading ? "Submitting..." : "Complete Qualification"}
                 </Button>
               )}
             </div>

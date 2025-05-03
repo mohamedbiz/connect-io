@@ -91,7 +91,11 @@ export const useQualification = () => {
       }
 
       toast.success("Qualification complete! Redirecting to your dashboard...");
-      navigate("/founder-dashboard");
+      
+      // Add a small delay for the toast to be visible
+      setTimeout(() => {
+        navigate("/founder-dashboard");
+      }, 1000);
       
     } catch (error: any) {
       console.error("Error submitting qualification:", error);

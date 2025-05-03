@@ -38,9 +38,9 @@ const QualificationBanner = ({ isQualified, isLoading }: QualificationBannerProp
       <AlertCircle className="h-5 w-5 text-amber-500" />
       <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
         <div>
-          <AlertTitle className="text-amber-800">Qualification Recommended</AlertTitle>
+          <AlertTitle className="text-amber-800">Qualification Required</AlertTitle>
           <AlertDescription className="text-amber-700">
-            Complete your business qualification to get matched with the most suitable providers.
+            Please complete your business qualification to fully access your dashboard and get matched with suitable providers.
           </AlertDescription>
         </div>
         <Button 
