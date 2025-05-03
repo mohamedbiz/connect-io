@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Match } from '@/types/matches';
+import type { Match } from '@/types/matches';
 
-export { Match };
+// Re-export the type using the proper syntax for isolatedModules
+export type { Match };
 
 interface CreateMatchParams {
   providerId: string;
