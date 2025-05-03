@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const DashboardAccessControl = ({
   children 
 }: DashboardAccessControlProps) => {
   const navigate = useNavigate();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
   // Protect this route - redirect if not authenticated or not the expected role
   useEffect(() => {
@@ -47,6 +48,17 @@ const DashboardAccessControl = ({
     }
   }, [user, profile, loading, navigate, expectedRole]);
 
+  // Add a safety timeout for loading state
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 5000); // 5 seconds timeout
+
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
   if (error) {
     return (
       <Layout>
@@ -61,12 +73,31 @@ const DashboardAccessControl = ({
     );
   }
 
-  if (loading) {
+  if (loading && !loadingTimeout) {
     return (
       <Layout>
         <div className="container mx-auto py-10 px-4">
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <p className="text-center text-lg text-[#0E3366]">Loading your dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Show the reload option if loading takes too long
+  if (loading && loadingTimeout) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-10 px-4">
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <p className="text-center text-lg text-[#0E3366] mb-4">Loading is taking longer than expected</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="default"
+            >
+              Reload Page
+            </Button>
           </div>
         </div>
       </Layout>

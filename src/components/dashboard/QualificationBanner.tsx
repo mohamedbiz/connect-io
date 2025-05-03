@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QualificationBannerProps {
@@ -13,7 +13,12 @@ const QualificationBanner = ({ isQualified, isLoading }: QualificationBannerProp
   const navigate = useNavigate();
 
   if (isLoading) {
-    return null;
+    return (
+      <Alert className="mb-6 bg-blue-50 border-blue-200">
+        <Loader2 className="h-5 w-5 text-blue-500 animate-spin mr-2" />
+        <AlertTitle className="text-blue-800">Checking qualification status...</AlertTitle>
+      </Alert>
+    );
   }
 
   if (isQualified) {

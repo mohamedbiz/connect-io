@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface QualificationStatus {
   isQualified: boolean;
@@ -25,21 +26,46 @@ export const useQualificationStatus = (): QualificationStatus => {
       }
 
       try {
-        const { data, error } = await supabase
+        // Use maybeSingle instead of single to handle cases where no record exists
+        const { data, error: fetchError } = await supabase
           .from('founder_onboarding')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) {
-          throw error;
+        if (fetchError) {
+          throw fetchError;
         }
 
-        setQualificationData(data);
-        setIsQualified(data?.qualification_completed || false);
+        // If no data exists, create a default record
+        if (!data) {
+          console.log('No qualification data found, creating default record');
+          
+          const { data: newData, error: insertError } = await supabase
+            .from('founder_onboarding')
+            .insert({
+              user_id: user.id,
+              qualification_completed: false,
+              acquisition_completed: false
+            })
+            .select('*')
+            .single();
+
+          if (insertError) {
+            throw insertError;
+          }
+
+          setQualificationData(newData);
+          setIsQualified(false);
+        } else {
+          setQualificationData(data);
+          setIsQualified(data?.qualification_completed || false);
+        }
       } catch (err) {
         console.error('Error checking qualification status:', err);
         setError(err instanceof Error ? err : new Error('Unknown error checking qualification'));
+        // Ensure we still update loading state even when error occurs
+        toast.error('Error checking qualification status');
       } finally {
         setIsLoading(false);
       }
