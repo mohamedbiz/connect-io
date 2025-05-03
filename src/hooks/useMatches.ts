@@ -90,9 +90,8 @@ export const useMatches = () => {
 
       // Show a warning if not qualified, but still allow match
       if (!founderQualification?.qualification_completed) {
-        toast({
-          title: 'Qualification recommended',
-          description: 'Completing qualification helps you get better provider matches.',
+        toast.warning('Qualification recommended', {
+          description: 'Completing qualification helps you get better provider matches.'
         });
       }
 
