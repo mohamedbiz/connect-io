@@ -106,6 +106,9 @@ export async function createProfileManually(userId: string, email: string, first
   try {
     console.log("Manually creating profile for user:", userId);
     
+    // Ensure role is valid
+    const validRole = (role === "founder" || role === "provider" || role === "admin") ? role : "founder";
+    
     const { data: newProfile, error } = await supabase
       .from("profiles")
       .insert({
@@ -113,7 +116,7 @@ export async function createProfileManually(userId: string, email: string, first
         email: email,
         first_name: firstName,
         last_name: lastName,
-        role: role
+        role: validRole
       })
       .select("*")
       .single();

@@ -6,19 +6,18 @@ import { toast } from "sonner";
 export const useOAuth = () => {
   const [loading, setLoading] = useState(false);
 
-  const handleOAuth = async (provider: "google" | "github" | "twitter", userType: "founder" | "provider") => {
+  const handleOAuth = async (provider: "google" | "github" | "twitter") => {
     setLoading(true);
     try {
       console.log(`Attempting to sign in with ${provider}...`);
-      console.log("Current user type:", userType);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth`,
           queryParams: {
-            // Pass role info as a query parameter (will be stored in user metadata)
-            role: userType,
+            // Default to founder role for OAuth sign-ins
+            role: "founder",
           }
         }
       });
