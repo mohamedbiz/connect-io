@@ -15,10 +15,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [profileAttempts, setProfileAttempts] = useState(0);
 
   // Memoized profile fetch function with exponential backoff
   const fetchProfileAndSetState = useCallback(async (userId: string, retryCount = 0) => {
     setProfileLoading(true);
+    setProfileAttempts(prev => prev + 1);
+    
     try {
       console.log(`Fetching profile for user: ${userId} (attempt ${retryCount + 1})`);
       const profileData = await fetchProfile(userId);
@@ -39,11 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Last attempt - notify user of the issue
           toast.error("Could not load your profile. Please refresh the page or contact support if the problem persists.");
           setAuthError("Failed to load user profile after multiple attempts");
+          setLoading(false);  // Important: set loading to false even if profile fails
         }
       } else {
         console.log("Profile data retrieved successfully:", profileData);
         setProfile(profileData);
         setAuthError(null);
+        setLoading(false);  // Set loading to false when profile is successfully loaded
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
@@ -59,12 +64,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         toast.error("Error loading profile data. Please try refreshing the page.");
         setAuthError("Error loading profile data after multiple attempts");
+        setLoading(false);  // Set loading to false even after error
       }
     } finally {
-      // Only set loading to false after all retries are exhausted or profile is found
-      if (retryCount >= 3 || profile) {
+      // Set profileLoading to false after all attempts
+      if (retryCount >= 3) {
         setProfileLoading(false);
-        setLoading(false);
       }
     }
   }, []);
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setProfile(null);
           setLoading(false);
+          setProfileLoading(false);
         }
       }
     });
@@ -108,11 +114,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setProfile(null);
         setLoading(false);
+        setProfileLoading(false);
       }
     }).catch(error => {
       console.error("Error getting session:", error);
       if (isMounted) {
         setLoading(false);
+        setProfileLoading(false);
         setAuthError("Failed to get session");
       }
     });
