@@ -1,60 +1,54 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
 import { useOAuth } from "@/hooks/useOAuth";
-import { useRedirection } from "@/hooks/useRedirection";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
-export default function useAuthPageController() {
+const useAuthPageController = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [userType, setUserType] = useState<"founder" | "provider">("founder");
   const navigate = useNavigate();
-  
-  const { form, setForm, loading: authLoading, handleInput, handleSignIn, handleSignUp } = useEmailPasswordAuth();
+  const { form, loading, handleInput, handleSignIn, handleSignUp } = useEmailPasswordAuth();
   const { loading: oauthLoading, handleOAuth } = useOAuth();
-  const { loading: redirectLoading, handleRedirectBasedOnRole } = useRedirection();
-  
-  const loading = authLoading || oauthLoading || redirectLoading;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Starting authentication process");
-
+    
     try {
       if (isRegister) {
+        // Handle sign up
         const { data, error } = await handleSignUp(userType);
         
-        if (!error && data?.user) {
-          // For new founder registrations, add a flag for the qualification page
-          if (userType === "founder") {
-            toast.success("Account created! Redirecting to qualification...");
-            // Add delay for better user experience and to ensure profile is created
-            setTimeout(() => {
-              navigate("/founder-qualification?new=true");
-            }, 1000);
-            return;
-          }
-          
-          // For other user types, use standard redirection
-          toast.success("Account created! Setting up your account...");
-          setTimeout(() => {
-            handleRedirectBasedOnRole(data.user.id);
-          }, 1000);
+        if (error) {
+          return; // Error is handled within the hook
+        }
+        
+        if (data?.user) {
+          console.log("Registration successful, redirecting to post-register navigation");
+          navigate("/post-register"); // Use the post-register navigator
         }
       } else {
+        // Handle sign in
         const { data, error } = await handleSignIn();
         
-        if (!error && data?.user) {
-          toast.success("Login successful! Redirecting...");
-          // Add delay for better user experience and to ensure profile is loaded
+        if (error) {
+          return; // Error is handled within the hook
+        }
+        
+        if (data?.user) {
+          console.log("Login successful, waiting for profile data before redirecting");
+          // Small delay to let profile fetch complete
           setTimeout(() => {
-            handleRedirectBasedOnRole(data.user.id);
-          }, 1000);
+            // Use post-register navigator for proper role-based routing
+            navigate("/post-register");
+          }, 200);
         }
       }
-    } catch (error) {
-      console.error("Auth error:", error);
+    } catch (err) {
+      console.error("Auth error:", err);
+      toast.error("Authentication error. Please try again.");
     }
   };
 
@@ -62,12 +56,13 @@ export default function useAuthPageController() {
     isRegister,
     setIsRegister,
     form,
-    setForm,
-    loading,
+    loading: loading || oauthLoading,
     handleInput,
     handleAuth,
-    handleOAuth: (provider: "google" | "github" | "twitter") => handleOAuth(provider, userType),
+    handleOAuth,
     userType,
     setUserType
   };
-}
+};
+
+export default useAuthPageController;

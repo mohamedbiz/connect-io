@@ -3,8 +3,9 @@ import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "@/contexts/AuthProvider"
+import { useAuth } from "@/contexts/AuthContext"
 import Index from "./pages/Index"
 import ForFoundersPage from "./pages/ForFoundersPage"
 import ForProvidersPage from "./pages/ForProvidersPage"
@@ -18,6 +19,8 @@ import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage"
 import PaymentCanceledPage from "./pages/payment/PaymentCanceledPage"
 import PaymentsDashboardPage from "./pages/payment/PaymentsDashboardPage"
 import FounderQualificationPage from "./pages/FounderQualificationPage"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +30,31 @@ const queryClient = new QueryClient({
     },
   },
 })
+
+// Helper component for post-registration navigation
+const PostRegisterNavigator = () => {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (loading) return;
+    
+    if (user && profile?.role === "founder") {
+      // New user, direct them to qualification
+      navigate("/founder-qualification?new=true", { replace: true });
+    } else if (user && profile?.role === "provider") {
+      navigate("/provider-dashboard", { replace: true });
+    } else if (!user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, profile, loading, navigate]);
+  
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-pulse">Redirecting...</div>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,6 +68,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
+            <Route path="/post-register" element={<PostRegisterNavigator />} />
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
             <Route path="/founder-dashboard" element={<FounderDashboard />} />

@@ -17,6 +17,7 @@ interface AuthContextType {
     last_name?: string; 
     role?: string;
   }) => Promise<AuthResponse>;
+  ensureProfile: () => Promise<Profile | null>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

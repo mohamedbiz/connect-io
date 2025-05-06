@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Session, User, AuthResponse } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "./AuthContext";
-import { fetchProfile } from "@/utils/auth-utils";
+import { fetchProfile, createProfileManually } from "@/utils/auth-utils";
 import { Profile } from "@/types/auth";
 import { shouldRedirectToAcquisition } from "@/utils/redirect-utils";
 import { toast } from "sonner";
@@ -17,8 +17,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [profileAttempts, setProfileAttempts] = useState(0);
 
-  // Memoized profile fetch function with exponential backoff
+  // Memoized profile fetch function with limited retries
   const fetchProfileAndSetState = useCallback(async (userId: string, retryCount = 0) => {
+    if (!userId) return;
+    
     setProfileLoading(true);
     setProfileAttempts(prev => prev + 1);
     
@@ -29,32 +31,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!profileData) {
         console.warn(`No profile found for user: ${userId} on attempt ${retryCount + 1}`);
         
-        // Implement exponential backoff for retries
-        if (retryCount < 3) {
-          const delay = Math.pow(2, retryCount) * 500; // 500ms, 1000ms, 2000ms
+        // Implement limited retries (max 2)
+        if (retryCount < 1) {
+          const delay = Math.max(500, Math.min(retryCount * 1000, 2000)); // Between 500ms and 2000ms
           console.log(`Retrying profile fetch in ${delay}ms...`);
           
           setTimeout(() => {
             fetchProfileAndSetState(userId, retryCount + 1);
           }, delay);
           return;
-        } else if (retryCount === 3) {
-          // Last attempt - notify user of the issue
-          toast.error("Could not load your profile. Please refresh the page or contact support if the problem persists.");
-          setAuthError("Failed to load user profile after multiple attempts");
-          setLoading(false);  // Important: set loading to false even if profile fails
+        } else {
+          // After final retry - set loading to false even if profile is null
+          setLoading(false);
+          setProfileLoading(false);
+          setAuthError("Unable to load user profile");
         }
       } else {
         console.log("Profile data retrieved successfully:", profileData);
         setProfile(profileData);
         setAuthError(null);
-        setLoading(false);  // Set loading to false when profile is successfully loaded
+        setLoading(false);
+        setProfileLoading(false);
       }
     } catch (err) {
       console.error("Error fetching profile:", err);
       
-      if (retryCount < 3) {
-        const delay = Math.pow(2, retryCount) * 500;
+      if (retryCount < 1) {
+        const delay = Math.max(500, Math.min(retryCount * 1000, 2000));
         console.log(`Error occurred, retrying profile fetch in ${delay}ms...`);
         
         setTimeout(() => {
@@ -62,14 +65,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }, delay);
         return;
       } else {
-        toast.error("Error loading profile data. Please try refreshing the page.");
-        setAuthError("Error loading profile data after multiple attempts");
-        setLoading(false);  // Set loading to false even after error
-      }
-    } finally {
-      // Set profileLoading to false after all attempts
-      if (retryCount >= 3) {
+        // After final retry - set loading to false even with errors
+        setLoading(false);
         setProfileLoading(false);
+        setAuthError("Error loading profile data");
       }
     }
   }, []);
@@ -131,6 +130,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [fetchProfileAndSetState]);
 
+  // Force end loading state after 5 seconds to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.log("Forcing end of loading state after timeout");
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   async function logout() {
     try {
       await supabase.auth.signOut();
@@ -175,6 +186,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
+  // Function to manually attempt creating a profile if automatic creation failed
+  async function ensureProfile(): Promise<Profile | null> {
+    if (!user) return null;
+    
+    if (profile) return profile;
+    
+    // Try to create profile manually if we have user but no profile
+    try {
+      const newProfile = await createProfileManually(
+        user.id, 
+        user.email || '', 
+        user.user_metadata?.first_name || '',
+        user.user_metadata?.last_name || '',
+        user.user_metadata?.role || 'founder'
+      );
+      
+      if (newProfile) {
+        setProfile(newProfile);
+        return newProfile;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Failed to ensure profile exists:", error);
+      return null;
+    }
+  }
+
   // Function to decide if we should redirect founders
   function handleShouldRedirectToAcquisition(currentPath: string) {
     return shouldRedirectToAcquisition(currentPath, loading || profileLoading, user, profile);
@@ -190,7 +229,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout,
       shouldRedirectToAcquisition: handleShouldRedirectToAcquisition,
       login,
-      register
+      register,
+      ensureProfile
     }}>
       {children}
     </AuthContext.Provider>
