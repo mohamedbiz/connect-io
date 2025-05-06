@@ -47,7 +47,7 @@ const ForFoundersPage = () => {
               className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
               asChild
             >
-              <Link to="/register">
+              <Link to="/auth?register=true&type=founder">
                 Get Started
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
@@ -204,7 +204,7 @@ const ForFoundersPage = () => {
                 className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
                 asChild
               >
-                <Link to="/register">
+                <Link to="/auth?register=true&type=founder">
                   Get Started Now
                   <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>

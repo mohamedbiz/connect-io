@@ -1,4 +1,6 @@
 
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import useAuthPageController from "@/pages/auth/useAuthPageController";
 import SocialAuthButtons from "@/components/auth/SocialAuthButtons";
@@ -10,6 +12,10 @@ import AuthCard from "@/components/auth/AuthCard";
 import AuthToggle from "@/components/auth/AuthToggle";
 
 const AuthPage = () => {
+  const [searchParams] = useSearchParams();
+  const shouldRegister = searchParams.get('register') === 'true';
+  const userTypeParam = searchParams.get('type') as "founder" | "provider" | null;
+  
   const {
     isRegister,
     setIsRegister,
@@ -21,6 +27,17 @@ const AuthPage = () => {
     userType,
     setUserType
   } = useAuthPageController();
+
+  // Set initial values based on URL params
+  useEffect(() => {
+    if (shouldRegister) {
+      setIsRegister(true);
+    }
+    
+    if (userTypeParam && (userTypeParam === "founder" || userTypeParam === "provider")) {
+      setUserType(userTypeParam);
+    }
+  }, [shouldRegister, userTypeParam, setIsRegister, setUserType]);
 
   const toggleAuth = () => {
     setIsRegister(!isRegister);

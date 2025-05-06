@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
 import { useOAuth } from "@/hooks/useOAuth";
 import { useRedirection } from "@/hooks/useRedirection";
-import { AuthFormData } from "@/types/auth";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function useAuthPageController() {
   const [isRegister, setIsRegister] = useState(false);
   const [userType, setUserType] = useState<"founder" | "provider">("founder");
+  const navigate = useNavigate();
   
   const { form, setForm, loading: authLoading, handleInput, handleSignIn, handleSignUp } = useEmailPasswordAuth();
   const { loading: oauthLoading, handleOAuth } = useOAuth();
@@ -24,7 +26,18 @@ export default function useAuthPageController() {
         const { data, error } = await handleSignUp(userType);
         
         if (!error && data?.user) {
-          // Add delay for better user experience and to ensure profile is created
+          // For new founder registrations, add a flag for the qualification page
+          if (userType === "founder") {
+            toast.success("Account created! Redirecting to qualification...");
+            // Add delay for better user experience and to ensure profile is created
+            setTimeout(() => {
+              navigate("/founder-qualification?new=true");
+            }, 1000);
+            return;
+          }
+          
+          // For other user types, use standard redirection
+          toast.success("Account created! Setting up your account...");
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);
           }, 1000);
@@ -33,6 +46,7 @@ export default function useAuthPageController() {
         const { data, error } = await handleSignIn();
         
         if (!error && data?.user) {
+          toast.success("Login successful! Redirecting...");
           // Add delay for better user experience and to ensure profile is loaded
           setTimeout(() => {
             handleRedirectBasedOnRole(data.user.id);

@@ -46,6 +46,8 @@ const FounderQualificationPage = () => {
     return null; // Redirect will happen via useEffect
   }
 
+  const isNewUser = new URLSearchParams(window.location.search).get('new') === 'true';
+
   return (
     <Layout>
       <div className="container py-10">
@@ -57,7 +59,7 @@ const FounderQualificationPage = () => {
             This helps us better understand your business and match you with the most suitable providers.
           </AlertDescription>
         </Alert>
-        <FounderQualificationForm isNewUser={true} />
+        <FounderQualificationForm isNewUser={isNewUser} />
       </div>
     </Layout>
   );

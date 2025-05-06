@@ -56,11 +56,19 @@ export const useRedirection = () => {
         
         if (!isQualified) {
           console.log("Founder not qualified, redirecting to qualification page");
+          toastNotification({
+            title: "Welcome!",
+            description: "Please complete the qualification to access your dashboard."
+          });
           navigate("/founder-qualification");
           return;
         }
         
         console.log("Founder is qualified, redirecting to dashboard");
+        toastNotification({
+          title: "Login Successful",
+          description: "Welcome to your founder dashboard."
+        });
         navigate("/founder-dashboard");
       } else if (data.role === "provider") {
         console.log("User is a provider, checking application status");
@@ -81,10 +89,18 @@ export const useRedirection = () => {
           if (!providerApplication) {
             // No application yet, redirect to application form
             console.log("No application found, redirecting to provider application page");
+            toastNotification({
+              title: "Complete Your Application",
+              description: "Please complete your provider application."
+            });
             navigate("/provider-apply");
           } else {
             // Has submitted an application already, go to dashboard
             console.log("Application found, redirecting to provider dashboard");
+            toastNotification({
+              title: "Login Successful",
+              description: "Welcome to your provider dashboard."
+            });
             navigate("/provider-dashboard");
           }
         } catch (err) {
@@ -99,6 +115,10 @@ export const useRedirection = () => {
         }
       } else if (data.role === "admin") {
         console.log("Redirecting to admin dashboard");
+        toastNotification({
+          title: "Admin Login",
+          description: "Welcome to the admin dashboard."
+        });
         navigate("/admin/provider-applications");
       } else {
         console.log("Unknown role, redirecting to home");
