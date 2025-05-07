@@ -5,10 +5,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQualificationStatus } from "@/hooks/useQualificationStatus";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Info, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import QualificationPageLoader from "@/components/qualification/QualificationPageLoader";
+import ProfileCreationSection from "@/components/qualification/ProfileCreationSection";
+import QualificationErrorSection from "@/components/qualification/QualificationErrorSection";
+import QualificationWelcomeAlert from "@/components/qualification/QualificationWelcomeAlert";
 
 const FounderQualificationPage = () => {
   const { user, profile, loading, error, ensureProfile } = useAuth();
@@ -110,12 +111,9 @@ const FounderQualificationPage = () => {
     return (
       <Layout>
         <div className="container py-10">
-          <div className="flex justify-center items-center min-h-[60vh] flex-col">
-            <Loader2 className="h-8 w-8 text-[#0E3366] animate-spin mb-4" />
-            <p className="text-[#0E3366]">
-              {creatingProfile ? "Creating your profile..." : "Loading qualification status..."}
-            </p>
-          </div>
+          <QualificationPageLoader 
+            message={creatingProfile ? "Creating your profile..." : "Loading qualification status..."}
+          />
         </div>
       </Layout>
     );
@@ -130,53 +128,10 @@ const FounderQualificationPage = () => {
     return (
       <Layout>
         <div className="container py-10">
-          <div className="flex justify-center items-center min-h-[60vh] flex-col max-w-lg mx-auto">
-            <Alert className="bg-amber-50 border-amber-300 mb-4">
-              <AlertCircle className="h-5 w-5 text-amber-800" />
-              <AlertTitle className="text-amber-800">Profile Loading Issue</AlertTitle>
-              <AlertDescription className="text-amber-700">
-                We're having trouble loading your profile. This is needed to continue with qualification.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="flex flex-col gap-3">
-              <Button 
-                onClick={handleManualProfileCreation}
-                className="bg-[#2D82B7] hover:bg-[#3D9AD1] w-full"
-                disabled={creatingProfile}
-              >
-                {creatingProfile ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating Profile...
-                  </>
-                ) : (
-                  "Create Profile Now"
-                )}
-              </Button>
-              
-              <Button 
-                onClick={() => {
-                  toast.info("Reloading page to retrieve your profile...");
-                  setTimeout(() => window.location.reload(), 500);
-                }}
-                variant="outline"
-                className="w-full"
-                disabled={creatingProfile}
-              >
-                Retry Loading Profile
-              </Button>
-              
-              <Button
-                onClick={() => navigate("/")}
-                variant="ghost"
-                className="text-[#0E3366]/70 w-full"
-                disabled={creatingProfile}
-              >
-                Return to Home
-              </Button>
-            </div>
-          </div>
+          <ProfileCreationSection 
+            handleManualProfileCreation={handleManualProfileCreation}
+            creatingProfile={creatingProfile}
+          />
         </div>
       </Layout>
     );
@@ -187,22 +142,7 @@ const FounderQualificationPage = () => {
     return (
       <Layout>
         <div className="container py-10">
-          <div className="flex justify-center items-center min-h-[60vh] flex-col max-w-lg mx-auto">
-            <Alert className="bg-red-50 border-red-300 mb-4">
-              <AlertCircle className="h-5 w-5 text-red-800" />
-              <AlertTitle className="text-red-800">Qualification Check Error</AlertTitle>
-              <AlertDescription className="text-red-700">
-                We encountered an error checking your qualification status. Please try again.
-              </AlertDescription>
-            </Alert>
-            
-            <Button 
-              onClick={() => window.location.reload()}
-              className="bg-[#2D82B7] hover:bg-[#3D9AD1] w-full"
-            >
-              Retry
-            </Button>
-          </div>
+          <QualificationErrorSection />
         </div>
       </Layout>
     );
@@ -213,14 +153,7 @@ const FounderQualificationPage = () => {
   return (
     <Layout>
       <div className="container py-10">
-        <Alert className="max-w-3xl mx-auto mb-6 bg-blue-50 border-blue-200">
-          <Info className="h-5 w-5 text-blue-500" />
-          <AlertTitle className="text-blue-800">Welcome to Connect!</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            Before you can access your dashboard, please complete this qualification process. 
-            This helps us better understand your business and match you with the most suitable providers.
-          </AlertDescription>
-        </Alert>
+        <QualificationWelcomeAlert />
         <FounderQualificationForm isNewUser={isNewUser} />
       </div>
     </Layout>
