@@ -1,46 +1,21 @@
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useLocation, useNavigate, Navigate } from "react-router-dom";
-import { useEffect } from "react";
 import Layout from "@/components/layout/Layout";
-import { useQualificationStatus } from "@/hooks/useQualificationStatus";
-import QualificationBanner from "@/components/dashboard/QualificationBanner";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardTabs from "@/components/dashboard/DashboardTabs";
+import { useFounderDashboard } from "@/hooks/useFounderDashboard";
 import DashboardAccessControl from "@/components/dashboard/DashboardAccessControl";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import QualificationBanner from "@/components/dashboard/QualificationBanner";
+import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import FounderDashboardContent from "@/components/dashboard/FounderDashboardContent";
 
 const FounderDashboard = () => {
-  const { user, profile, loading, error } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { isQualified, isLoading: qualificationLoading } = useQualificationStatus();
-
-  // Log states for debugging
-  console.log("FounderDashboard:", { 
-    user: !!user, 
-    profile: profile?.role,
-    loading,
-    error: error || 'none',
-    path: location.pathname,
-    isQualified
-  });
-
-  // Check if qualification is required and redirect if needed
-  useEffect(() => {
-    if (!loading && !qualificationLoading && user && profile?.role === "founder" && !isQualified) {
-      console.log("User not qualified, redirecting to qualification page");
-      navigate("/founder-qualification");
-    }
-  }, [user, profile, loading, qualificationLoading, isQualified, navigate]);
-
+  const { user, profile, loading, error, isQualified, qualificationLoading } = useFounderDashboard();
   const dashboardTabs = FounderDashboardContent();
 
   return (
     <DashboardAccessControl 
       user={user}
       profile={profile}
-      loading={loading || qualificationLoading}
+      loading={loading}
       error={error}
       expectedRole="founder"
     >
