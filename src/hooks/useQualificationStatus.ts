@@ -12,20 +12,26 @@ interface QualificationStatus {
 }
 
 export const useQualificationStatus = (): QualificationStatus => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isQualified, setIsQualified] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [qualificationData, setQualificationData] = useState<any | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkQualification = async () => {
-      if (!user) {
-        setIsLoading(false);
+      if (!user || !profile) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
         return;
       }
 
       try {
+        console.log(`Checking qualification for user ${user.id}, attempt ${retryCount + 1}`);
         // Use maybeSingle instead of single to handle cases where no record exists
         const { data, error: fetchError } = await supabase
           .from('founder_onboarding')
@@ -55,24 +61,57 @@ export const useQualificationStatus = (): QualificationStatus => {
             throw insertError;
           }
 
-          setQualificationData(newData);
-          setIsQualified(false);
+          if (isMounted) {
+            setQualificationData(newData);
+            setIsQualified(false);
+            setError(null);
+          }
         } else {
-          setQualificationData(data);
-          setIsQualified(data?.qualification_completed || false);
+          if (isMounted) {
+            setQualificationData(data);
+            setIsQualified(data?.qualification_completed || false);
+            setError(null);
+          }
         }
       } catch (err) {
         console.error('Error checking qualification status:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error checking qualification'));
-        // Ensure we still update loading state even when error occurs
-        toast.error('Error checking qualification status');
+        
+        // Retry logic with exponential backoff
+        if (retryCount < 2 && isMounted) {
+          const delay = Math.min(1000 * (2 ** retryCount), 3000);
+          console.log(`Retrying qualification check in ${delay}ms...`);
+          
+          setTimeout(() => {
+            if (isMounted) {
+              setRetryCount(prev => prev + 1);
+              checkQualification();
+            }
+          }, delay);
+          return;
+        }
+        
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Unknown error checking qualification'));
+          // Ensure we still update loading state even when error occurs
+          toast.error('Error checking qualification status');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    checkQualification();
-  }, [user]);
+    if (user && profile) {
+      checkQualification();
+    } else {
+      setIsLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, profile, retryCount]);
 
   return {
     isQualified,

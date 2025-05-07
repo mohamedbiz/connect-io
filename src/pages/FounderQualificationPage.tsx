@@ -4,7 +4,7 @@ import FounderQualificationForm from "@/components/qualification/FounderQualific
 import { useAuth } from "@/contexts/AuthContext";
 import { useQualificationStatus } from "@/hooks/useQualificationStatus";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { toast } from "sonner";
 const FounderQualificationPage = () => {
   const { user, profile, loading, error, ensureProfile } = useAuth();
   const navigate = useNavigate();
-  const { isQualified, isLoading: qualificationLoading } = useQualificationStatus();
+  const [searchParams] = useSearchParams();
+  const { isQualified, isLoading: qualificationLoading, error: qualificationError } = useQualificationStatus();
   const [retryCount, setRetryCount] = useState(0);
   const [creatingProfile, setCreatingProfile] = useState(false);
   const isLoading = loading || qualificationLoading || creatingProfile;
@@ -39,7 +40,7 @@ const FounderQualificationPage = () => {
     let mounted = true;
     
     const tryCreateProfile = async () => {
-      if (!user || profile || retryCount >= 3 || creatingProfile || loading) {
+      if (!user || profile || retryCount >= 2 || creatingProfile || loading) {
         return;
       }
       
@@ -72,7 +73,7 @@ const FounderQualificationPage = () => {
     if (!loading && user && !profile) {
       const timer = setTimeout(() => {
         tryCreateProfile();
-      }, 1000); // Wait before trying to create profile
+      }, 800); // Reasonable wait before trying to create profile
       
       return () => {
         mounted = false;
@@ -94,7 +95,7 @@ const FounderQualificationPage = () => {
       if (newProfile) {
         toast.success("Profile created successfully");
         // Force reload the page to ensure everything is refreshed
-        window.location.reload();
+        setTimeout(() => window.location.reload(), 500);
       } else {
         toast.error("Failed to create profile. Please contact support.");
       }
@@ -157,7 +158,7 @@ const FounderQualificationPage = () => {
               <Button 
                 onClick={() => {
                   toast.info("Reloading page to retrieve your profile...");
-                  setTimeout(() => window.location.reload(), 1000);
+                  setTimeout(() => window.location.reload(), 500);
                 }}
                 variant="outline"
                 className="w-full"
@@ -181,7 +182,33 @@ const FounderQualificationPage = () => {
     );
   }
 
-  const isNewUser = new URLSearchParams(window.location.search).get('new') === 'true';
+  // Show qualification error if it exists
+  if (qualificationError) {
+    return (
+      <Layout>
+        <div className="container py-10">
+          <div className="flex justify-center items-center min-h-[60vh] flex-col max-w-lg mx-auto">
+            <Alert className="bg-red-50 border-red-300 mb-4">
+              <AlertCircle className="h-5 w-5 text-red-800" />
+              <AlertTitle className="text-red-800">Qualification Check Error</AlertTitle>
+              <AlertDescription className="text-red-700">
+                We encountered an error checking your qualification status. Please try again.
+              </AlertDescription>
+            </Alert>
+            
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-[#2D82B7] hover:bg-[#3D9AD1] w-full"
+            >
+              Retry
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  const isNewUser = searchParams.get('new') === 'true';
 
   return (
     <Layout>

@@ -67,7 +67,7 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
           role: role
         })
         .select("*")
-        .single();
+        .maybeSingle();
       
       if (createError) {
         console.error("Error creating profile:", createError);
@@ -86,6 +86,11 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
         
         console.log("Found profile on retry:", retryProfile);
         return retryProfile as Profile;
+      }
+      
+      if (!newProfile) {
+        console.log("No profile created or returned");
+        return null;
       }
       
       console.log("Created new profile:", newProfile);
@@ -119,7 +124,7 @@ export async function createProfileManually(userId: string, email: string, first
         role: validRole
       })
       .select("*")
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error("Error manually creating profile:", error);
