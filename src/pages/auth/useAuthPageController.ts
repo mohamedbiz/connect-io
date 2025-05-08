@@ -27,6 +27,8 @@ const useAuthPageController = () => {
         
         if (data?.user) {
           console.log("Registration successful, redirecting to post-register navigation");
+          // Add a toast message for feedback
+          toast.success("Account created successfully! Setting up your profile...");
           navigate("/post-register"); // Use the post-register navigator
         }
       } else {
@@ -39,11 +41,13 @@ const useAuthPageController = () => {
         
         if (data?.user) {
           console.log("Login successful, waiting for profile data before redirecting");
-          // Small delay to let profile fetch complete
+          toast.success("Login successful! Preparing your dashboard...");
+          
+          // Increased delay to let profile fetch complete
           setTimeout(() => {
             // Use post-register navigator for proper role-based routing
             navigate("/post-register");
-          }, 200);
+          }, 800); // Increased from 200ms to 800ms for better reliability
         }
       }
     } catch (err) {

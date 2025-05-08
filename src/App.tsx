@@ -19,8 +19,9 @@ import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage"
 import PaymentCanceledPage from "./pages/payment/PaymentCanceledPage"
 import PaymentsDashboardPage from "./pages/payment/PaymentsDashboardPage"
 import FounderQualificationPage from "./pages/FounderQualificationPage"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Loader2 } from "lucide-react"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,25 +34,130 @@ const queryClient = new QueryClient({
 
 // Helper component for post-registration navigation
 const PostRegisterNavigator = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error, ensureProfile } = useAuth();
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("Preparing your account...");
+  const [retryCount, setRetryCount] = useState(0);
+  const [delayCompleted, setDelayCompleted] = useState(false);
   
+  // Step 1: Add a safety delay to ensure auth state is stable
   useEffect(() => {
-    if (loading) return;
+    const timer = setTimeout(() => {
+      setDelayCompleted(true);
+    }, 800); // Increased delay for better stability
     
-    if (user && profile?.role === "founder") {
-      // New user, direct them to qualification
-      navigate("/founder-qualification?new=true", { replace: true });
-    } else if (user && profile?.role === "provider") {
-      navigate("/provider-dashboard", { replace: true });
-    } else if (!user) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, profile, loading, navigate]);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Step 2: Handle redirection with profile confirmation
+  useEffect(() => {
+    if (loading || !delayCompleted) return;
+    
+    const handleNavigation = async () => {
+      if (isProcessing) return;
+      setIsProcessing(true);
+      
+      try {
+        if (!user) {
+          console.log("No user found, redirecting to auth");
+          navigate("/auth", { replace: true });
+          return;
+        }
+        
+        // Check if profile exists, if not, try to ensure it
+        if (!profile && retryCount < 3) {
+          setStatusMessage("Creating your profile...");
+          console.log("Attempting to ensure profile exists...");
+          
+          try {
+            const createdProfile = await ensureProfile();
+            
+            if (createdProfile) {
+              console.log("Profile created successfully:", createdProfile);
+              
+              // Add a small delay after profile creation
+              setTimeout(() => {
+                if (createdProfile.role === "founder") {
+                  navigate("/founder-qualification?new=true", { replace: true });
+                } else if (createdProfile.role === "provider") {
+                  navigate("/provider-dashboard", { replace: true });
+                }
+              }, 500);
+              
+              return;
+            } else {
+              // Schedule a retry with exponential backoff
+              setRetryCount(count => count + 1);
+              setStatusMessage(`Retrying profile setup (${retryCount + 1}/3)...`);
+              return;
+            }
+          } catch (err) {
+            console.error("Error ensuring profile:", err);
+            setStatusMessage("There was an issue setting up your profile. Redirecting...");
+            
+            // Still try to redirect based on user metadata as fallback
+            setTimeout(() => {
+              const role = user?.user_metadata?.role || "founder";
+              if (role === "founder") {
+                navigate("/founder-qualification?new=true", { replace: true });
+              } else {
+                navigate("/provider-dashboard", { replace: true });
+              }
+            }, 1000);
+            
+            return;
+          }
+        }
+        
+        // Handle case where we have both user and profile
+        if (user && profile) {
+          console.log("User and profile available, redirecting based on role:", profile.role);
+          
+          if (profile.role === "founder") {
+            navigate("/founder-qualification?new=true", { replace: true });
+          } else if (profile.role === "provider") {
+            navigate("/provider-dashboard", { replace: true });
+          }
+          return;
+        }
+        
+        // Fallback if we have user but no profile after retries
+        if (user && !profile && retryCount >= 3) {
+          console.log("Failed to get profile after retries, using fallback navigation");
+          const role = user.user_metadata?.role || "founder";
+          
+          if (role === "founder") {
+            navigate("/founder-qualification?new=true", { replace: true });
+          } else {
+            navigate("/provider-dashboard", { replace: true });
+          }
+        }
+      } finally {
+        setIsProcessing(false);
+      }
+    };
+    
+    handleNavigation();
+  }, [user, profile, loading, navigate, delayCompleted, retryCount, isProcessing, ensureProfile]);
   
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-pulse">Redirecting...</div>
+    <div className="flex flex-col justify-center items-center min-h-screen bg-gray-50">
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+        <Loader2 className="h-10 w-10 animate-spin text-[#2D82B7] mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-[#0A2342] mb-2">Setting Up Your Account</h2>
+        <p className="text-[#0E3366]">{statusMessage}</p>
+        {retryCount > 0 && (
+          <p className="text-sm text-[#0E3366]/70 mt-2">
+            This is taking longer than expected. Please wait...
+          </p>
+        )}
+        {error && (
+          <p className="text-sm text-red-500 mt-2">
+            {typeof error === 'string' ? error : "An error occurred during setup."}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
