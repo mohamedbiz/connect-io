@@ -13,6 +13,7 @@ import FounderDashboard from "./pages/FounderDashboard"
 import ProviderDashboard from "./pages/ProviderDashboard"
 import NotFound from "./pages/NotFound"
 import AuthPage from "./pages/AuthPage"
+import FounderApplicationPage from "./pages/founder/FounderApplicationPage"
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage"
 import ProviderApplicationsPage from "./pages/admin/ProviderApplicationsPage"
 import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage"
@@ -79,9 +80,9 @@ const PostRegisterNavigator = () => {
               // Add a small delay after profile creation
               setTimeout(() => {
                 if (createdProfile.role === "founder") {
-                  navigate("/founder-qualification?new=true", { replace: true });
+                  navigate("/founder-apply", { replace: true });
                 } else if (createdProfile.role === "provider") {
-                  navigate("/provider-dashboard", { replace: true });
+                  navigate("/provider-apply", { replace: true });
                 }
               }, 500);
               
@@ -100,9 +101,9 @@ const PostRegisterNavigator = () => {
             setTimeout(() => {
               const role = user?.user_metadata?.role || "founder";
               if (role === "founder") {
-                navigate("/founder-qualification?new=true", { replace: true });
+                navigate("/founder-apply", { replace: true });
               } else {
-                navigate("/provider-dashboard", { replace: true });
+                navigate("/provider-apply", { replace: true });
               }
             }, 1000);
             
@@ -115,9 +116,9 @@ const PostRegisterNavigator = () => {
           console.log("User and profile available, redirecting based on role:", profile.role);
           
           if (profile.role === "founder") {
-            navigate("/founder-qualification?new=true", { replace: true });
+            navigate("/founder-apply", { replace: true });
           } else if (profile.role === "provider") {
-            navigate("/provider-dashboard", { replace: true });
+            navigate("/provider-apply", { replace: true });
           }
           return;
         }
@@ -128,9 +129,9 @@ const PostRegisterNavigator = () => {
           const role = user.user_metadata?.role || "founder";
           
           if (role === "founder") {
-            navigate("/founder-qualification?new=true", { replace: true });
+            navigate("/founder-apply", { replace: true });
           } else {
-            navigate("/provider-dashboard", { replace: true });
+            navigate("/provider-apply", { replace: true });
           }
         }
       } finally {
@@ -179,6 +180,7 @@ const App = () => (
             <Route path="/for-providers" element={<ForProvidersPage />} />
             <Route path="/founder-dashboard" element={<FounderDashboard />} />
             <Route path="/founder-qualification" element={<FounderQualificationPage />} />
+            <Route path="/founder-apply" element={<FounderApplicationPage />} />
             <Route path="/provider-dashboard" element={<ProviderDashboard />} />
             <Route path="/provider-apply" element={<ProviderApplicationPage />} />
             <Route path="/admin/provider-applications" element={<ProviderApplicationsPage />} />

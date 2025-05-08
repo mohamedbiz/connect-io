@@ -89,6 +89,39 @@ export type Database = {
         }
         Relationships: []
       }
+      founder_applications: {
+        Row: {
+          application_data: Json
+          created_at: string
+          id: string
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          application_data: Json
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          application_data?: Json
+          created_at?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       founder_onboarding: {
         Row: {
           accepts_performance_based: boolean | null

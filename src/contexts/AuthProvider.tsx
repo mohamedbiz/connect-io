@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -180,9 +181,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }
 
-  // Function to ensure a profile exists
+  // Function to ensure a profile exists - Fixed return type
   const ensureUserProfile = async (): Promise<Profile | null> => {
-    return await safeAuthOperation(async () => ensureProfile(user));
+    return await ensureProfile(user);
   };
 
   // Function to decide if we should redirect founders
