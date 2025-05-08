@@ -181,8 +181,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }
 
-  // Function to ensure a profile exists - Fixed return type
+  // Function to ensure a profile exists - Fix the return type to match the context interface
   const ensureUserProfile = async (): Promise<Profile | null> => {
+    if (!user) return null;
     return await ensureProfile(user);
   };
 
