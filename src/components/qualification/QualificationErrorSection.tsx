@@ -1,25 +1,37 @@
 
+import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const QualificationErrorSection = () => {
+  const navigate = useNavigate();
+  
   return (
-    <div className="flex justify-center items-center min-h-[60vh] flex-col max-w-lg mx-auto">
-      <Alert className="bg-red-50 border-red-300 mb-4">
-        <AlertCircle className="h-5 w-5 text-red-800" />
-        <AlertTitle className="text-red-800">Qualification Check Error</AlertTitle>
-        <AlertDescription className="text-red-700">
-          We encountered an error checking your qualification status. Please try again.
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <Alert variant="destructive" className="mb-6">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error Loading Qualification</AlertTitle>
+        <AlertDescription>
+          There was a problem loading your qualification data. Please try again later.
         </AlertDescription>
       </Alert>
       
-      <Button 
-        onClick={() => window.location.reload()}
-        className="bg-[#2D82B7] hover:bg-[#3D9AD1] w-full"
-      >
-        Retry
-      </Button>
+      <div className="text-center mt-8">
+        <Button 
+          onClick={() => navigate("/founder-dashboard")}
+          variant="outline"
+          className="mr-4"
+        >
+          Return to Dashboard
+        </Button>
+        
+        <Button 
+          onClick={() => window.location.reload()}
+        >
+          Try Again
+        </Button>
+      </div>
     </div>
   );
 };

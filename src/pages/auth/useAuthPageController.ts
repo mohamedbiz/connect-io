@@ -1,71 +1,126 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect, FormEvent } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
-import { useOAuth } from "@/hooks/useOAuth";
+
+export interface AuthForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword?: string;
+}
+
+const initialForm: AuthForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
 
 const useAuthPageController = () => {
-  const [isRegister, setIsRegister] = useState(false);
-  const [userType, setUserType] = useState<"founder" | "provider">("founder");
-  const navigate = useNavigate();
-  const { form, loading, handleInput, handleSignIn, handleSignUp } = useEmailPasswordAuth();
-  const { loading: oauthLoading, handleOAuth } = useOAuth();
+  const [searchParams] = useSearchParams();
+  const shouldRegister = searchParams.get('register') === 'true';
+  const userTypeParam = searchParams.get('type') as "founder" | "provider" | null;
+  
+  const [isRegister, setIsRegister] = useState(shouldRegister || false);
+  const [userType, setUserType] = useState<"founder" | "provider">(
+    userTypeParam === "provider" ? "provider" : "founder"
+  );
+  const [form, setForm] = useState<AuthForm>(initialForm);
+  const [loading, setLoading] = useState(false);
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const { user, login, register } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/post-register", { replace: true });
+    }
+  }, [user, navigate]);
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission for both login and register
+  const handleAuth = async (e: FormEvent) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     try {
       if (isRegister) {
-        // Handle sign up
-        const { data, error } = await handleSignUp(userType);
-        
-        if (error) {
-          return; // Error is handled within the hook
+        // Registration flow
+        if (form.password !== form.confirmPassword) {
+          toast.error("Passwords do not match");
+          setLoading(false);
+          return;
         }
-        
-        if (data?.user) {
-          console.log("Registration successful, redirecting to post-register navigation");
-          // Add a toast message for feedback
-          toast.success("Account created successfully! Setting up your profile...");
-          navigate("/post-register"); // Use the post-register navigator
+
+        if (!form.firstName.trim() || !form.lastName.trim()) {
+          toast.error("Please provide your first and last name");
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await register(form.email, form.password, {
+          first_name: form.firstName,
+          last_name: form.lastName,
+          role: userType
+        });
+
+        if (error) {
+          toast.error(error.message);
+        } else {
+          // Success - the navigation will be handled by the user effect above
+          toast.success("Registration successful! Redirecting...");
         }
       } else {
-        // Handle sign in
-        const { data, error } = await handleSignIn();
+        // Login flow
+        const { error } = await login(form.email, form.password);
         
         if (error) {
-          return; // Error is handled within the hook
-        }
-        
-        if (data?.user) {
-          console.log("Login successful, waiting for profile data before redirecting");
-          toast.success("Login successful! Preparing your dashboard...");
-          
-          // Increased delay to let profile fetch complete
-          setTimeout(() => {
-            // Use post-register navigator for proper role-based routing
-            navigate("/post-register");
-          }, 800); // Increased from 200ms to 800ms for better reliability
+          toast.error(error.message);
+        } else {
+          toast.success("Login successful! Redirecting...");
+          // Navigation will be handled by the user effect
         }
       }
-    } catch (err) {
-      console.error("Auth error:", err);
-      toast.error("Authentication error. Please try again.");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred during authentication");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle OAuth providers
+  const handleOAuth = async (provider: string) => {
+    setLoading(true);
+    
+    try {
+      toast.info(`${provider} authentication coming soon`);
+      // OAuth implementation would go here when ready
+    } catch (error: any) {
+      toast.error(error.message || `An error occurred with ${provider} authentication`);
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     isRegister,
     setIsRegister,
+    userType,
+    setUserType,
     form,
-    loading: loading || oauthLoading,
+    loading,
     handleInput,
     handleAuth,
     handleOAuth,
-    userType,
-    setUserType
   };
 };
 

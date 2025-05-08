@@ -23,6 +23,7 @@ import FounderQualificationPage from "./pages/FounderQualificationPage"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,11 +42,13 @@ const PostRegisterNavigator = () => {
   const [statusMessage, setStatusMessage] = useState("Preparing your account...");
   const [retryCount, setRetryCount] = useState(0);
   const [delayCompleted, setDelayCompleted] = useState(false);
+  const [setupProgress, setSetupProgress] = useState(10);
   
   // Step 1: Add a safety delay to ensure auth state is stable
   useEffect(() => {
     const timer = setTimeout(() => {
       setDelayCompleted(true);
+      setSetupProgress(30);
     }, 800); // Increased delay for better stability
     
     return () => clearTimeout(timer);
@@ -66,6 +69,8 @@ const PostRegisterNavigator = () => {
           return;
         }
         
+        setSetupProgress(50);
+        
         // Check if profile exists, if not, try to ensure it
         if (!profile && retryCount < 3) {
           setStatusMessage("Creating your profile...");
@@ -73,15 +78,19 @@ const PostRegisterNavigator = () => {
           
           try {
             const createdProfile = await ensureProfile();
+            setSetupProgress(80);
             
             if (createdProfile) {
               console.log("Profile created successfully:", createdProfile);
+              setSetupProgress(90);
               
               // Add a small delay after profile creation
               setTimeout(() => {
                 if (createdProfile.role === "founder") {
+                  setSetupProgress(100);
                   navigate("/founder-apply", { replace: true });
                 } else if (createdProfile.role === "provider") {
+                  setSetupProgress(100);
                   navigate("/provider-apply", { replace: true });
                 }
               }, 500);
@@ -114,6 +123,7 @@ const PostRegisterNavigator = () => {
         // Handle case where we have both user and profile
         if (user && profile) {
           console.log("User and profile available, redirecting based on role:", profile.role);
+          setSetupProgress(100);
           
           if (profile.role === "founder") {
             navigate("/founder-apply", { replace: true });
@@ -127,6 +137,7 @@ const PostRegisterNavigator = () => {
         if (user && !profile && retryCount >= 3) {
           console.log("Failed to get profile after retries, using fallback navigation");
           const role = user.user_metadata?.role || "founder";
+          setSetupProgress(100);
           
           if (role === "founder") {
             navigate("/founder-apply", { replace: true });
@@ -147,7 +158,12 @@ const PostRegisterNavigator = () => {
       <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
         <Loader2 className="h-10 w-10 animate-spin text-[#2D82B7] mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-[#0A2342] mb-2">Setting Up Your Account</h2>
-        <p className="text-[#0E3366]">{statusMessage}</p>
+        <p className="text-[#0E3366] mb-4">{statusMessage}</p>
+        
+        <div className="w-full h-2 mb-4">
+          <Progress value={setupProgress} className="w-full h-2" />
+        </div>
+        
         {retryCount > 0 && (
           <p className="text-sm text-[#0E3366]/70 mt-2">
             This is taking longer than expected. Please wait...

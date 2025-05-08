@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useFounderApplicationContext } from './ApplicationContext';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface ApplicationNavigationProps {
   handleSubmit: () => Promise<void>;
@@ -19,6 +20,7 @@ const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => 
     isComplete
   } = useFounderApplicationContext();
   const [validationError, setValidationError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const isLastStep = currentStep === totalSteps - 1;
   const isFirstStep = currentStep === 0;
@@ -74,6 +76,12 @@ const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => 
     }
   };
 
+  const handleSkip = () => {
+    if (window.confirm("Are you sure you want to skip the application? You can complete it later from your dashboard.")) {
+      navigate("/founder-dashboard");
+    }
+  };
+
   if (isComplete) {
     return null; // Don't show navigation if process is complete
   }
@@ -88,7 +96,7 @@ const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => 
       
       <div className="flex justify-between">
         <div>
-          {!isFirstStep && (
+          {!isFirstStep ? (
             <Button 
               type="button" 
               variant="outline" 
@@ -96,6 +104,15 @@ const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => 
               className="flex items-center gap-1"
             >
               <ChevronLeft className="w-4 h-4" /> Back
+            </Button>
+          ) : (
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={handleSkip}
+              className="text-[#0E3366]/80"
+            >
+              Skip for now
             </Button>
           )}
         </div>

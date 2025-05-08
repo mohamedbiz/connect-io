@@ -1,3 +1,4 @@
+
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -15,13 +16,16 @@ const CTASection = () => {
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Button size="lg" variant="default" className="bg-[#2D82B7] text-white hover:bg-[#3D9AD1] transition-colors" asChild>
-              <Link to="/register">
+              <Link to="/auth?register=true&type=founder">
                 Get Started Now
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:border-white transition-colors" asChild>
-              
+              <Link to="/for-founders">
+                Learn More
+                <ArrowRight className="ml-1 h-5 w-5" />
+              </Link>
             </Button>
           </div>
         </div>
