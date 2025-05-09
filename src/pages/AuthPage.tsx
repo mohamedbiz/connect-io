@@ -43,6 +43,14 @@ const AuthPage = () => {
     setIsRegister(!isRegister);
   };
 
+  // Map form data to match what AuthForm expects
+  const authFormData = {
+    email: form.email,
+    password: form.password,
+    first_name: form.firstName || '',
+    last_name: form.lastName || ''
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16 md:py-24">
@@ -59,7 +67,7 @@ const AuthPage = () => {
 
             <AuthForm
               isRegister={isRegister}
-              form={form}
+              form={authFormData}
               handleInput={handleInput}
               loading={loading}
               handleSubmit={handleAuth}
