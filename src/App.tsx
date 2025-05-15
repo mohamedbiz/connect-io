@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -24,6 +23,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import PostRegisterPage from "@/pages/PostRegisterPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -191,7 +191,7 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
-            <Route path="/post-register" element={<PostRegisterNavigator />} />
+            <Route path="/post-register" element={<PostRegisterPage />} />
             <Route path="/for-founders" element={<ForFoundersPage />} />
             <Route path="/for-providers" element={<ForProvidersPage />} />
             <Route path="/founder-dashboard" element={<FounderDashboard />} />

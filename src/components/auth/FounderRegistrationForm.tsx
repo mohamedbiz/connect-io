@@ -2,16 +2,21 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router-dom";
-import { Building, Lock, Mail, Check, AlertCircle } from "lucide-react";
+import { Building, Lock, Mail, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { validatePassword } from "@/utils/password-utils";
+import PasswordStrengthIndicator from "./PasswordStrengthIndicator";
 
 const FounderRegistrationForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordValidation, setPasswordValidation] = useState(validatePassword(""));
+  const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   
   const [form, setForm] = useState({
@@ -20,8 +25,16 @@ const FounderRegistrationForm = () => {
     company: "",
     email: "",
     password: "",
+    password_confirmation: "",
     accepted_terms: false
   });
+
+  useEffect(() => {
+    // Validate password when it changes
+    if (form.password) {
+      setPasswordValidation(validatePassword(form.password));
+    }
+  }, [form.password]);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -40,7 +53,7 @@ const FounderRegistrationForm = () => {
     }
   };
 
-  // Basic form validation
+  // Enhanced form validation
   const validateForm = () => {
     const errors: Record<string, string> = {};
     
@@ -64,8 +77,12 @@ const FounderRegistrationForm = () => {
     
     if (!form.password) {
       errors.password = "Password is required";
-    } else if (form.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+    } else if (!passwordValidation.isValid) {
+      errors.password = "Password doesn't meet security requirements";
+    }
+    
+    if (form.password !== form.password_confirmation) {
+      errors.password_confirmation = "Passwords don't match";
     }
     
     if (!form.accepted_terms) {
@@ -73,6 +90,10 @@ const FounderRegistrationForm = () => {
     }
     
     return errors;
+  };
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,15 +120,24 @@ const FounderRegistrationForm = () => {
             role: "founder",
             company_name: form.company
           },
+          emailRedirectTo: window.location.origin + "/post-register",
         },
       });
       
       if (error) {
-        toast.error(error.message);
-        setFormErrors(prev => ({
-          ...prev,
-          submit: error.message
-        }));
+        if (error.message.includes("User already registered")) {
+          toast.error("This email is already registered. Please try logging in instead.");
+          setFormErrors(prev => ({
+            ...prev,
+            email: "Email already in use"
+          }));
+        } else {
+          toast.error(error.message);
+          setFormErrors(prev => ({
+            ...prev,
+            submit: error.message
+          }));
+        }
       } else {
         toast.success("Account created! Redirecting you to the dashboard.");
         
@@ -130,7 +160,7 @@ const FounderRegistrationForm = () => {
 
   return (
     <>
-      <div className="text-sm text-gray-500 mb-4 mt-2">
+      <div className="text-sm text-[#0E3366] mb-4 mt-2">
         For eCommerce store owners looking to grow their sales and improve customer retention
       </div>
       
@@ -155,7 +185,7 @@ const FounderRegistrationForm = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label htmlFor="first-name" className="text-sm font-medium">
+            <label htmlFor="first-name" className="text-sm font-medium text-[#0A2342]">
               First Name
             </label>
             <Input 
@@ -165,14 +195,14 @@ const FounderRegistrationForm = () => {
               required 
               value={form.first_name}
               onChange={handleInput}
-              className={formErrors.first_name ? "border-red-500" : ""}
+              className={`border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.first_name ? "border-red-500" : ""}`}
             />
             {formErrors.first_name && (
               <p className="text-red-500 text-xs mt-1">{formErrors.first_name}</p>
             )}
           </div>
           <div className="space-y-2">
-            <label htmlFor="last-name" className="text-sm font-medium">
+            <label htmlFor="last-name" className="text-sm font-medium text-[#0A2342]">
               Last Name
             </label>
             <Input 
@@ -182,7 +212,7 @@ const FounderRegistrationForm = () => {
               required 
               value={form.last_name}
               onChange={handleInput}
-              className={formErrors.last_name ? "border-red-500" : ""}
+              className={`border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.last_name ? "border-red-500" : ""}`}
             />
             {formErrors.last_name && (
               <p className="text-red-500 text-xs mt-1">{formErrors.last_name}</p>
@@ -190,11 +220,11 @@ const FounderRegistrationForm = () => {
           </div>
         </div>
         <div className="space-y-2">
-          <label htmlFor="company" className="text-sm font-medium">
+          <label htmlFor="company" className="text-sm font-medium text-[#0A2342]">
             Company/Store Name
           </label>
           <div className="relative">
-            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#2D82B7]/70" />
             <Input 
               name="company"
               id="company" 
@@ -202,7 +232,7 @@ const FounderRegistrationForm = () => {
               required 
               value={form.company}
               onChange={handleInput}
-              className={`pl-10 ${formErrors.company ? "border-red-500" : ""}`}
+              className={`pl-10 border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.company ? "border-red-500" : ""}`}
             />
           </div>
           {formErrors.company && (
@@ -210,18 +240,18 @@ const FounderRegistrationForm = () => {
           )}
         </div>
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium">
+          <label htmlFor="email" className="text-sm font-medium text-[#0A2342]">
             Email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#2D82B7]/70" />
             <Input 
               name="email"
               id="email" 
               type="email" 
               placeholder="name@example.com" 
               required 
-              className={`pl-10 ${formErrors.email ? "border-red-500" : ""}`}
+              className={`pl-10 border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.email ? "border-red-500" : ""}`}
               value={form.email}
               onChange={handleInput}
             />
@@ -231,55 +261,116 @@ const FounderRegistrationForm = () => {
           )}
         </div>
         <div className="space-y-2">
-          <label htmlFor="password" className="text-sm font-medium">
+          <label htmlFor="password" className="text-sm font-medium text-[#0A2342]">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#2D82B7]/70" />
             <Input 
               name="password"
               id="password" 
-              type="password" 
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••" 
               required 
-              className={`pl-10 ${formErrors.password ? "border-red-500" : ""}`}
+              className={`pl-10 pr-10 border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.password ? "border-red-500" : ""}`}
               value={form.password}
               onChange={handleInput}
             />
+            <button 
+              type="button"
+              onClick={handleTogglePassword}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-gray-500" />
+              ) : (
+                <Eye className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
           </div>
           {formErrors.password && (
             <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>
           )}
-          <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+          {form.password && <PasswordStrengthIndicator validation={passwordValidation} />}
         </div>
-        <div className="flex items-start space-x-2 text-sm">
-          <div className="flex items-center h-5">
-            <input
-              id="terms"
-              name="accepted_terms"
-              type="checkbox"
-              className={`focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded ${
-                formErrors.accepted_terms ? "border-red-500" : ""
-              }`}
-              checked={form.accepted_terms}
+        
+        <div className="space-y-2">
+          <label htmlFor="password_confirmation" className="text-sm font-medium text-[#0A2342]">
+            Confirm Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#2D82B7]/70" />
+            <Input 
+              name="password_confirmation"
+              id="password_confirmation" 
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••" 
+              required 
+              className={`pl-10 border-[#2D82B7]/50 focus-visible:ring-[#2D82B7] ${formErrors.password_confirmation ? "border-red-500" : ""}`}
+              value={form.password_confirmation}
               onChange={handleInput}
             />
           </div>
-          <label htmlFor="terms" className="text-gray-500">
-            I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and{" "}
-            <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+          {formErrors.password_confirmation && (
+            <p className="text-red-500 text-xs mt-1">{formErrors.password_confirmation}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2 text-sm">
+            <div className="flex items-center h-5">
+              <input
+                id="terms"
+                name="accepted_terms"
+                type="checkbox"
+                className={`h-4 w-4 text-[#2D82B7] border-[#2D82B7]/50 rounded ${
+                  formErrors.accepted_terms ? "border-red-500" : ""
+                }`}
+                checked={form.accepted_terms}
+                onChange={handleInput}
+              />
+            </div>
+            <label htmlFor="terms" className="text-[#0E3366]">
+              I agree to the <Link to="/terms" className="text-[#2D82B7] hover:text-[#3D9AD1] hover:underline">Terms of Service</Link> and{" "}
+              <Link to="/privacy" className="text-[#2D82B7] hover:text-[#3D9AD1] hover:underline">Privacy Policy</Link>
+            </label>
+          </div>
+          {formErrors.accepted_terms && (
+            <p className="text-red-500 text-xs">{formErrors.accepted_terms}</p>
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <input
+            id="remember-me"
+            name="remember-me"
+            type="checkbox"
+            className="h-4 w-4 text-[#2D82B7] border-[#2D82B7]/50 rounded"
+            checked={rememberMe}
+            onChange={() => setRememberMe(!rememberMe)}
+          />
+          <label htmlFor="remember-me" className="text-sm text-[#0E3366]">
+            Remember me
           </label>
         </div>
-        {formErrors.accepted_terms && (
-          <p className="text-red-500 text-xs">{formErrors.accepted_terms}</p>
-        )}
+        
         <Button 
           type="submit" 
-          className="w-full" 
+          className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1]" 
           disabled={isLoading}
         >
           {isLoading ? "Creating account..." : "Create Founder Account"}
         </Button>
+        
+        <p className="text-center text-sm text-[#0E3366]">
+          Already have an account?{" "}
+          <Link 
+            to="/auth?login=true" 
+            className="text-[#2D82B7] hover:text-[#3D9AD1] hover:underline"
+          >
+            Log in
+          </Link>
+        </p>
       </form>
     </>
   );
