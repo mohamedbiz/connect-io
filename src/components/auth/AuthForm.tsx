@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 
 type AuthFormProps = {
   isRegister: boolean;
-  form: { email: string; password: string; first_name: string; last_name: string };
+  form: { 
+    email: string; 
+    password: string; 
+    first_name: string; 
+    last_name: string; 
+  };
   handleInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
   loading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void> | void;
@@ -19,7 +24,7 @@ const AuthForm = ({
   handleSubmit,
   userType,
 }: AuthFormProps) => {
-  // Map from first_name/last_name to firstName/lastName if needed
+  // Create a properly typed mapping function for input events
   const handleInputMapping = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     

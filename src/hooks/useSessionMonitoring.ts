@@ -15,11 +15,13 @@ export const useSessionMonitoring = (
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authStateChangeCount, setAuthStateChangeCount] = useState(0);
+  const [lastProfileFetch, setLastProfileFetch] = useState(0);
 
   // Set up auth listener and session initialization
   useEffect(() => {
     console.log("Setting up auth listener");
     let isMounted = true;
+    let profileFetchInProgress = false;
     
     // Set up auth listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -30,8 +32,13 @@ export const useSessionMonitoring = (
         const newCount = prev + 1;
         
         // Log warning if too many auth state changes
-        if (newCount > 20 && newCount % 5 === 0) {
+        if (newCount > 15 && newCount % 5 === 0) {
           console.warn(`High frequency of auth state changes detected (${newCount}). Possible auth loop.`);
+          
+          if (newCount > 30) {
+            console.error("Auth state change limit exceeded. Circuit breaker engaged.");
+            return prev; // Don't increment further to avoid processing more auth changes
+          }
         }
         
         return newCount;
@@ -42,16 +49,30 @@ export const useSessionMonitoring = (
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Defer Supabase call with setTimeout to prevent potential deadlocks
-          // Use increasing timeouts for stability
-          setTimeout(() => {
-            if (isMounted && session?.user?.id) {
-              // Only fetch profile if enough time has passed since last fetch
-              safeAuthOperation(async () => {
-                fetchProfileAndSetState(session.user.id);
-              });
-            }
-          }, 200);
+          // Check if we've recently fetched this profile to avoid redundant fetches
+          const now = Date.now();
+          const timeSinceLastFetch = now - lastProfileFetch;
+          
+          // Only fetch profile if enough time has passed and no fetch is in progress
+          if (timeSinceLastFetch > 2000 && !profileFetchInProgress && isMounted) {
+            profileFetchInProgress = true;
+            
+            // Defer Supabase call with setTimeout to prevent potential deadlocks
+            setTimeout(() => {
+              if (isMounted && session?.user?.id) {
+                safeAuthOperation(async () => {
+                  try {
+                    await fetchProfileAndSetState(session.user.id);
+                    setLastProfileFetch(Date.now());
+                  } finally {
+                    if (isMounted) {
+                      profileFetchInProgress = false;
+                    }
+                  }
+                });
+              }
+            }, 200);
+          }
         } else {
           resetProfileState();
           setLoading(false);
@@ -72,19 +93,30 @@ export const useSessionMonitoring = (
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Add delay before fetching profile to avoid race conditions
           setTimeout(() => {
-            if (isMounted && session?.user?.id) {
+            if (isMounted && session?.user?.id && !profileFetchInProgress) {
+              profileFetchInProgress = true;
+              
               safeAuthOperation(async () => {
-                fetchProfileAndSetState(session.user.id);
+                try {
+                  await fetchProfileAndSetState(session.user.id);
+                  setLastProfileFetch(Date.now());
+                } finally {
+                  if (isMounted) {
+                    profileFetchInProgress = false;
+                    setLoading(false);
+                    setAuthInitialized(true);
+                  }
+                }
               });
             }
           }, 200);
         } else {
           resetProfileState();
           setLoading(false);
+          setAuthInitialized(true);
         }
-        
-        setAuthInitialized(true);
       } catch (error) {
         console.error("Error getting session:", error);
         if (isMounted) {
@@ -99,7 +131,7 @@ export const useSessionMonitoring = (
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfileAndSetState, resetProfileState, setAuthError]);
+  }, [fetchProfileAndSetState, resetProfileState, setAuthError, lastProfileFetch]);
 
   // Force end loading state after 5 seconds to prevent infinite loading
   useEffect(() => {
