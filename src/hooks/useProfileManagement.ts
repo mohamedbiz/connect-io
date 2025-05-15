@@ -1,17 +1,12 @@
 
 import { useState, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
-import { fetchProfile, createProfileManually } from "@/utils/auth-utils";
 import { Profile } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-// Helper for improved exponential backoff with jitter
-const getBackoffDelay = (attempt: number, baseDelay = 1000): number => {
-  // Add some randomness to avoid thundering herd problem
-  const jitter = Math.random() * 500;
-  return Math.min(baseDelay * Math.pow(1.5, attempt) + jitter, 6000); // Cap at 6 seconds
-};
+import { fetchProfile, createProfileManually } from "@/utils/profile/profile-api";
+import { getBackoffDelay, applyRateLimiting } from "@/utils/profile/profile-retry";
+import { logProfile } from "@/utils/profile/profile-logger";
 
 export const useProfileManagement = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -20,15 +15,6 @@ export const useProfileManagement = () => {
   const [profileAttempts, setProfileAttempts] = useState(0);
   const [lastFetchTime, setLastFetchTime] = useState(0);
   const [retryTimeoutId, setRetryTimeoutId] = useState<number | null>(null);
-
-  // Enhanced logging function that only logs in development
-  const logProfile = (message: string, data?: any, isWarning = false, isError = false) => {
-    if (process.env.NODE_ENV !== 'production') {
-      const timestamp = new Date().toISOString();
-      const logMethod = isError ? console.error : isWarning ? console.warn : console.log;
-      logMethod(`${timestamp} ${isWarning ? 'warning:' : isError ? 'error:' : 'info:'} ${message}`, data);
-    }
-  };
 
   // Clear any existing retry timeout when component unmounts or before setting new ones
   const clearRetryTimeout = () => {
@@ -42,15 +28,8 @@ export const useProfileManagement = () => {
   const fetchProfileAndSetState = useCallback(async (userId: string, retryCount = 0) => {
     if (!userId) return;
     
-    // Add rate limiting to prevent too many requests
-    const now = Date.now();
-    const timeSinceLastFetch = now - lastFetchTime;
-    
-    if (timeSinceLastFetch < 800 && retryCount > 0) {
-      const waitTime = 800 - timeSinceLastFetch;
-      logProfile(`Rate limiting: waiting ${waitTime}ms before next profile fetch`, null, true);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
+    // Apply rate limiting to prevent too many requests
+    await applyRateLimiting(lastFetchTime);
     
     setLastFetchTime(Date.now());
     setProfileLoading(true);
@@ -144,11 +123,11 @@ export const useProfileManagement = () => {
         setProfileLoading(false);
         setProfileError("Error loading profile data");
         
-        // Show recoverable error to user - using plain string instead of JSX
+        // Show recoverable error to user
         toast.error("Profile loading failed. Unable to load your profile. Please try refreshing the page or contact support if the issue persists.");
       }
     }
-  }, [lastFetchTime]);
+  }, [lastFetchTime, retryTimeoutId]);
 
   // Function to manually attempt creating a profile with improved rate limiting
   const ensureProfile = async (user: User | null): Promise<Profile | null> => {
@@ -156,15 +135,8 @@ export const useProfileManagement = () => {
     
     if (profile) return profile;
     
-    // Add rate limiting for profile creation attempts
-    const now = Date.now();
-    const timeSinceLastFetch = now - lastFetchTime;
-    
-    if (timeSinceLastFetch < 1000) {
-      const waitTime = 1000 - timeSinceLastFetch;
-      logProfile(`Rate limiting: waiting ${waitTime}ms before profile creation attempt`, null, true);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
-    }
+    // Apply rate limiting for profile creation attempts
+    await applyRateLimiting(lastFetchTime, 1000);
     
     setLastFetchTime(Date.now());
     
