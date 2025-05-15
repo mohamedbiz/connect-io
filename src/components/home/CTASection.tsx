@@ -1,4 +1,3 @@
-
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -22,10 +21,7 @@ const CTASection = () => {
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:border-white transition-colors" asChild>
-              <Link to="/for-founders">
-                Learn More
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </Link>
+              
             </Button>
           </div>
         </div>
