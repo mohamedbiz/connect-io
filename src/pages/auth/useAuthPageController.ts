@@ -3,6 +3,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useOAuth } from "@/hooks/useOAuth";
 
 export interface AuthForm {
   firstName: string;
@@ -34,6 +35,7 @@ const useAuthPageController = () => {
 
   const navigate = useNavigate();
   const { user, login, register } = useAuth();
+  const { handleOAuth, loadingProviders } = useOAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -97,17 +99,12 @@ const useAuthPageController = () => {
     }
   };
 
-  // Handle OAuth providers
-  const handleOAuth = async (provider: string) => {
-    setLoading(true);
-    
+  // Handle OAuth providers - now using the improved hook
+  const handleSocialAuth = async (provider: "google" | "github" | "twitter") => {
     try {
-      toast.info(`${provider} authentication coming soon`);
-      // OAuth implementation would go here when ready
+      await handleOAuth(provider);
     } catch (error: any) {
-      toast.error(error.message || `An error occurred with ${provider} authentication`);
-    } finally {
-      setLoading(false);
+      // Error is handled by the OAuth hook
     }
   };
 
@@ -120,7 +117,8 @@ const useAuthPageController = () => {
     loading,
     handleInput,
     handleAuth,
-    handleOAuth,
+    handleOAuth: handleSocialAuth,
+    loadingProviders
   };
 };
 

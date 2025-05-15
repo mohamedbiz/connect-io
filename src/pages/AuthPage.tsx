@@ -25,7 +25,8 @@ const AuthPage = () => {
     handleAuth,
     handleOAuth,
     userType,
-    setUserType
+    setUserType,
+    loadingProviders
   } = useAuthPageController();
 
   // Set initial values based on URL params
@@ -84,6 +85,7 @@ const AuthPage = () => {
               <SocialAuthButtons 
                 handleOAuth={handleOAuth}
                 loading={loading}
+                loadingProviders={loadingProviders}
               />
             </div>
           </AuthCard>
