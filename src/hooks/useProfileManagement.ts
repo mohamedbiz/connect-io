@@ -4,7 +4,7 @@ import { User } from "@supabase/supabase-js";
 import { fetchProfile, createProfileManually } from "@/utils/auth-utils";
 import { Profile } from "@/types/auth";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 // Helper for improved exponential backoff with jitter
 const getBackoffDelay = (attempt: number, baseDelay = 1000): number => {
@@ -144,17 +144,8 @@ export const useProfileManagement = () => {
         setProfileLoading(false);
         setProfileError("Error loading profile data");
         
-        // Show recoverable error to user
-        toast.error(
-          <div className="flex flex-col gap-2">
-            <span>Profile loading failed</span>
-            <Alert variant="warning" className="mt-2">
-              <AlertDescription>
-                Unable to load your profile. Please try refreshing the page or contact support if the issue persists.
-              </AlertDescription>
-            </Alert>
-          </div>
-        );
+        // Show recoverable error to user - using plain string instead of JSX
+        toast.error("Profile loading failed. Unable to load your profile. Please try refreshing the page or contact support if the issue persists.");
       }
     }
   }, [lastFetchTime]);
@@ -211,7 +202,7 @@ export const useProfileManagement = () => {
     setProfileLoading(false);
     setProfileError(null);
     setProfileAttempts(0);
-    setLastProfileFetch(0);
+    setLastFetchTime(0);
   };
 
   return {
@@ -225,6 +216,3 @@ export const useProfileManagement = () => {
     setProfile
   };
 };
-
-// Import for profile creation
-import { supabase } from "@/integrations/supabase/client";

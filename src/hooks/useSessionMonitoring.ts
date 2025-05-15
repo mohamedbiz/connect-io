@@ -4,7 +4,6 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { safeAuthOperation, recoverAuthState } from "@/utils/auth/rate-limiting";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const useSessionMonitoring = (
   fetchProfileAndSetState: (userId: string) => Promise<void>,
@@ -156,16 +155,7 @@ export const useSessionMonitoring = (
         
         // Show toast if we had to force end loading
         if (!authInitialized) {
-          toast.error(
-            <div className="flex flex-col gap-2">
-              <span>Authentication is taking longer than expected</span>
-              <Alert variant="warning" className="mt-2">
-                <AlertDescription>
-                  You may need to refresh the page if you experience issues.
-                </AlertDescription>
-              </Alert>
-            </div>
-          );
+          toast.error("Authentication is taking longer than expected. You may need to refresh the page if you experience issues.");
         }
       }
     }, 7000); // Increased from 5000ms to 7000ms
@@ -203,16 +193,7 @@ export const useSessionMonitoring = (
       setAuthStateChangeCount(0);
       
       // Notify user
-      toast.warning(
-        <div className="flex flex-col gap-2">
-          <span>Authentication session recovered</span>
-          <Alert variant="warning" className="mt-2">
-            <AlertDescription>
-              Your session has been reset due to an authentication loop. Please sign in again.
-            </AlertDescription>
-          </Alert>
-        </div>
-      );
+      toast.warning("Authentication session recovered. Your session has been reset due to an authentication loop. Please sign in again.");
     } catch (error) {
       logAuth("Session recovery failed:", error, false, true);
       toast.error("Session recovery failed. Please refresh the page.");

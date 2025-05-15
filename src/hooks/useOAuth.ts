@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const useOAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -50,27 +49,9 @@ export const useOAuth = () => {
         logOAuth(`OAuth error with ${provider}:`, error, false, true);
         
         if (error.message.includes("not enabled")) {
-          toast.error(
-            <div className="flex flex-col gap-2">
-              <span>{`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled`}</span>
-              <Alert variant="warning" className="mt-2">
-                <AlertDescription>
-                  This social login provider is not enabled in your Supabase project settings.
-                </AlertDescription>
-              </Alert>
-            </div>
-          );
+          toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled. This provider may not be configured in Supabase.`);
         } else if (error.message.includes("PKCE")) {
-          toast.error(
-            <div className="flex flex-col gap-2">
-              <span>OAuth configuration error</span>
-              <Alert variant="warning" className="mt-2">
-                <AlertDescription>
-                  There's an issue with the OAuth configuration. Please check that your Supabase URL configuration has the correct redirect URLs.
-                </AlertDescription>
-              </Alert>
-            </div>
-          );
+          toast.error(`OAuth configuration error. Please check that your Supabase URL configuration has the correct redirect URLs.`);
         } else {
           toast.error(`Sign in with ${provider} failed: ${error.message}`);
         }
@@ -84,16 +65,7 @@ export const useOAuth = () => {
       return Promise.resolve();
     } catch (error) {
       logOAuth(`OAuth error with ${provider}:`, error, false, true);
-      toast.error(
-        <div className="flex flex-col gap-2">
-          <span>{`Failed to connect to ${provider}`}</span>
-          <Alert variant="warning" className="mt-2">
-            <AlertDescription>
-              There was a problem connecting to {provider}. Please try again or use email login instead.
-            </AlertDescription>
-          </Alert>
-        </div>
-      );
+      toast.error(`Failed to connect to ${provider}. Please try again or use email login instead.`);
       
       setLoadingProviders(prev => ({ ...prev, [provider]: false }));
       return Promise.reject(error);
