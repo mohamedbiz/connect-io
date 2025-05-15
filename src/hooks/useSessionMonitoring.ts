@@ -2,8 +2,11 @@
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { safeAuthOperation, recoverAuthState } from "@/utils/auth/rate-limiting";
+import { safeAuthOperation } from "@/utils/auth/rate-limiting";
+import { useSessionRecovery } from "./auth/useSessionRecovery";
+import { useAuthStateMonitoring } from "./auth/useAuthStateMonitoring";
+import { useSessionTimeout } from "./auth/useSessionTimeout";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 export const useSessionMonitoring = (
   fetchProfileAndSetState: (userId: string) => Promise<void>,
@@ -14,19 +17,33 @@ export const useSessionMonitoring = (
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [authStateChangeCount, setAuthStateChangeCount] = useState(0);
   const [lastProfileFetch, setLastProfileFetch] = useState(0);
-  const [recoveryAttempted, setRecoveryAttempted] = useState(false);
-  const [sessionRecoveryInProgress, setSessionRecoveryInProgress] = useState(false);
 
-  // Enhanced logging function that only logs in development mode
-  const logAuth = (message: string, data?: any, isWarning = false, isError = false) => {
-    if (process.env.NODE_ENV !== 'production') {
-      const timestamp = new Date().toISOString();
-      const logMethod = isError ? console.error : isWarning ? console.warn : console.log;
-      logMethod(`${timestamp} ${isWarning ? 'warning:' : isError ? 'error:' : 'info:'} ${message}`, data);
-    }
+  // Reset state function - used in multiple places
+  const resetAllState = () => {
+    setUser(null);
+    setSession(null);
+    resetProfileState();
+    setAuthError(null);
+    setAuthStateChangeCount(0);
   };
+
+  // Use refactored session recovery hook
+  const {
+    recoveryAttempted,
+    sessionRecoveryInProgress,
+    initiateSessionRecovery
+  } = useSessionRecovery(resetAllState);
+
+  // Use refactored auth state monitoring hook
+  const {
+    authStateChangeCount,
+    trackAuthStateChange,
+    setAuthStateChangeCount
+  } = useAuthStateMonitoring(initiateSessionRecovery, recoveryAttempted);
+
+  // Use timeout hook to prevent infinite loading
+  useSessionTimeout(loading, authInitialized);
 
   // Set up auth listener and session initialization
   useEffect(() => {
@@ -39,23 +56,7 @@ export const useSessionMonitoring = (
       logAuth("Auth state changed:", event);
       
       // Track auth state changes to detect potential loops
-      setAuthStateChangeCount(prev => {
-        const newCount = prev + 1;
-        
-        // Log warning if too many auth state changes
-        if (newCount > 10 && newCount % 5 === 0) {
-          logAuth(`High frequency of auth state changes detected (${newCount}). Possible auth loop.`, null, true);
-          
-          if (newCount > 25 && !recoveryAttempted) {
-            logAuth("Auth state change threshold exceeded. Initiating recovery.", null, true);
-            setRecoveryAttempted(true);
-            initiateSessionRecovery();
-            return prev; // Don't increment further during recovery
-          }
-        }
-        
-        return newCount;
-      });
+      trackAuthStateChange();
       
       if (isMounted) {
         setSession(session);
@@ -131,7 +132,7 @@ export const useSessionMonitoring = (
           setAuthInitialized(true);
         }
       } catch (error) {
-        logAuth("Error getting session:", error, false, true);
+        logAuth("Error getting session:", error, 'error');
         if (isMounted) {
           setLoading(false);
           setAuthError("Failed to get session");
@@ -144,64 +145,8 @@ export const useSessionMonitoring = (
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfileAndSetState, resetProfileState, setAuthError, lastProfileFetch]);
-
-  // Force end loading state after timeout to prevent infinite loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading) {
-        logAuth("Forcing end of loading state after timeout", null, true);
-        setLoading(false);
-        
-        // Show toast if we had to force end loading
-        if (!authInitialized) {
-          toast.error("Authentication is taking longer than expected. You may need to refresh the page if you experience issues.");
-        }
-      }
-    }, 7000); // Increased from 5000ms to 7000ms
-
-    return () => clearTimeout(timer);
-  }, [loading, authInitialized]);
-
-  // Monitor for potential auth refresh loops and add circuit breaker
-  useEffect(() => {
-    if (authStateChangeCount > 25 && !sessionRecoveryInProgress && !recoveryAttempted) {
-      logAuth("Too many auth state changes detected. Possible auth loop. Initiating recovery.", null, false, true);
-      initiateSessionRecovery();
-    }
-  }, [authStateChangeCount, sessionRecoveryInProgress, recoveryAttempted]);
-
-  // Session recovery function
-  const initiateSessionRecovery = async () => {
-    if (sessionRecoveryInProgress) return;
-    
-    setSessionRecoveryInProgress(true);
-    logAuth("Starting session recovery procedure", null, true);
-    
-    try {
-      // Clear pending operations first
-      await recoverAuthState();
-      
-      // Sign out completely to reset state
-      await supabase.auth.signOut({ scope: 'local' });
-      
-      // Reset all local state
-      setUser(null);
-      setSession(null);
-      resetProfileState();
-      setAuthError(null);
-      setAuthStateChangeCount(0);
-      
-      // Notify user
-      toast.warning("Authentication session recovered. Your session has been reset due to an authentication loop. Please sign in again.");
-    } catch (error) {
-      logAuth("Session recovery failed:", error, false, true);
-      toast.error("Session recovery failed. Please refresh the page.");
-    } finally {
-      setSessionRecoveryInProgress(false);
-      setRecoveryAttempted(true);
-    }
-  };
+  }, [fetchProfileAndSetState, resetProfileState, setAuthError, lastProfileFetch, 
+      trackAuthStateChange, resetAllState]);
 
   return {
     user,
