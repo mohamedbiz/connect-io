@@ -1,21 +1,21 @@
 
 /**
- * Enhanced logging utility specific to profile management
+ * OAuth specific logging utility
  */
 import { LogContext, createLogger } from '../logging/logger-core';
 
-// Create a specialized logger for profile operations
-const profileLogger = createLogger('profile');
+// Create a specialized logger for OAuth operations
+const oauthLogger = createLogger('oauth');
 
 /**
- * Enhanced logging function for profile operations
+ * Enhanced logging function for OAuth operations
  * @param message - The message to log
  * @param data - Optional data to include with the log
  * @param isWarning - Whether this is a warning message
  * @param isError - Whether this is an error message
  * @param context - Optional contextual information
  */
-export const logProfile = (
+export const logOAuth = (
   message: string, 
   data?: any, 
   isWarning = false, 
@@ -23,10 +23,10 @@ export const logProfile = (
   context?: LogContext
 ): void => {
   if (isError) {
-    profileLogger.error(message, data, context);
+    oauthLogger.error(message, data, context);
   } else if (isWarning) {
-    profileLogger.warning(message, data, context);
+    oauthLogger.warning(message, data, context);
   } else {
-    profileLogger.info(message, data, context);
+    oauthLogger.info(message, data, context);
   }
 };

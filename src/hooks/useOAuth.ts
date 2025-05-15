@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logOAuth } from "@/utils/auth/oauth-logger";
 
 export const useOAuth = () => {
   const [loading, setLoading] = useState(false);
@@ -10,15 +11,6 @@ export const useOAuth = () => {
     github: false,
     twitter: false
   });
-
-  // Enhanced logging function that only logs in development
-  const logOAuth = (message: string, data?: any, isWarning = false, isError = false) => {
-    if (process.env.NODE_ENV !== 'production') {
-      const timestamp = new Date().toISOString();
-      const logMethod = isError ? console.error : isWarning ? console.warn : console.log;
-      logMethod(`${timestamp} ${isWarning ? 'warning:' : isError ? 'error:' : 'info:'} ${message}`, data);
-    }
-  };
 
   const handleOAuth = async (provider: "google" | "github" | "twitter") => {
     // Use provider-specific loading state
@@ -32,7 +24,7 @@ export const useOAuth = () => {
       const currentPath = window.location.pathname;
       const redirectUrl = `${currentOrigin}${currentPath}`;
       
-      logOAuth(`OAuth redirect URL: ${redirectUrl}`);
+      logOAuth(`OAuth redirect URL: ${redirectUrl}`, { provider, redirectUrl });
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -46,7 +38,7 @@ export const useOAuth = () => {
       });
       
       if (error) {
-        logOAuth(`OAuth error with ${provider}:`, error, false, true);
+        logOAuth(`OAuth error with ${provider}:`, error, false, true, { provider });
         
         if (error.message.includes("not enabled")) {
           toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled. This provider may not be configured in Supabase.`);
@@ -60,11 +52,11 @@ export const useOAuth = () => {
         return Promise.reject(error);
       }
       
-      logOAuth(`OAuth ${provider} response:`, data);
+      logOAuth(`OAuth ${provider} response:`, data, false, false, { provider });
       // The OAuth flow will redirect the user, so we don't need to do anything else here
       return Promise.resolve();
     } catch (error) {
-      logOAuth(`OAuth error with ${provider}:`, error, false, true);
+      logOAuth(`OAuth error with ${provider}:`, error, false, true, { provider });
       toast.error(`Failed to connect to ${provider}. Please try again or use email login instead.`);
       
       setLoadingProviders(prev => ({ ...prev, [provider]: false }));
