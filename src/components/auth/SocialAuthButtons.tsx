@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Github, Twitter } from "lucide-react";
 type SocialAuthButtonsProps = {
@@ -34,7 +35,10 @@ const SocialAuthButtons = ({
         <Github className="mr-2 h-4 w-4" /> 
         {loadingProviders.github ? "Connecting..." : "Continue with GitHub"}
       </Button>
-      
+      <Button variant="outline" className="w-full" onClick={() => handleSocialAuth("twitter")} type="button" disabled={loading || loadingProviders.twitter}>
+        <Twitter className="mr-2 h-4 w-4" /> 
+        {loadingProviders.twitter ? "Connecting..." : "Continue with Twitter"}
+      </Button>
     </div>;
 };
 export default SocialAuthButtons;
