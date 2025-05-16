@@ -14,3 +14,12 @@ export { createLogger };
 export const apiLogger = createLogger('api');
 export const uiLogger = createLogger('ui');
 export const routerLogger = createLogger('router');
+export const authLogger = createLogger('auth');
+
+// Create a general logging object for backwards compatibility
+export const logging = {
+  info: (message: string, data?: any) => apiLogger.info(message, data),
+  warn: (message: string, data?: any) => apiLogger.warning(message, data),
+  error: (message: string, data?: any) => apiLogger.error(message, data),
+  debug: (message: string, data?: any) => apiLogger.debug(message, data),
+};

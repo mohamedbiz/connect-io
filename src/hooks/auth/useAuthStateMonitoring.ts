@@ -27,10 +27,10 @@ export const useAuthStateMonitoring = (
       
       // Log warning if too many auth state changes
       if (newCount > 10 && newCount % 5 === 0) {
-        logAuth(`High frequency of auth state changes detected (${newCount}). Possible auth loop.`, null, 'warning');
+        logAuth(`High frequency of auth state changes detected (${newCount}). Possible auth loop.`, null, 'warn');
         
         if (newCount > 25 && !recoveryAttempted) {
-          logAuth("Auth state change threshold exceeded. Initiating recovery.", null, 'warning');
+          logAuth("Auth state change threshold exceeded. Initiating recovery.", null, 'warn');
           initiateSessionRecovery();
           return prev; // Don't increment further during recovery
         }

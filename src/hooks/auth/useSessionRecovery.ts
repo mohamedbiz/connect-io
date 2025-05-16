@@ -16,7 +16,7 @@ export const useSessionRecovery = (resetState: () => void) => {
     if (sessionRecoveryInProgress) return;
     
     setSessionRecoveryInProgress(true);
-    logAuth("Starting session recovery procedure", null, 'warning');
+    logAuth("Starting session recovery procedure", null, 'warn');
     
     try {
       // Clear pending operations first

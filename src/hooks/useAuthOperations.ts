@@ -13,12 +13,12 @@ export const useAuthOperations = () => {
     try {
       logAuth("Attempting login with email", { email });
       
-      const response = await safeAuthOperation(async () => {
-        return await supabase.auth.signInWithPassword({
+      const response = await safeAuthOperation(() => {
+        return supabase.auth.signInWithPassword({
           email,
           password,
         });
-      }, "login");
+      });
       
       if (response.error) {
         logAuth("Login failed", response.error, "error");
@@ -44,15 +44,15 @@ export const useAuthOperations = () => {
     try {
       logAuth("Attempting registration", { email, ...metadata });
       
-      const response = await safeAuthOperation(async () => {
-        return await supabase.auth.signUp({
+      const response = await safeAuthOperation(() => {
+        return supabase.auth.signUp({
           email,
           password,
           options: { 
             data: metadata 
           },
         });
-      }, "register");
+      });
       
       if (response.error) {
         logAuth("Registration failed", response.error, "error");
