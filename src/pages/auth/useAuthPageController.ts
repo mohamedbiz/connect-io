@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
 import { useOAuth } from "@/hooks/useOAuth";
+import { toast } from "sonner";
 
 /**
  * Controller hook for the authentication page
@@ -36,10 +37,17 @@ const useAuthPageController = () => {
   const handleAuth = useCallback(async () => {
     // Form validation
     if (!form.email || !form.password) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (isRegister) {
+      // For registration, we need first and last name
+      if (!form.firstName || !form.lastName) {
+        toast.error("Please enter your first and last name");
+        return;
+      }
+
       // For registration, we need to include the user type and name info
       const success = await handleRegister(form.email, form.password, {
         first_name: form.firstName,
@@ -48,24 +56,24 @@ const useAuthPageController = () => {
       });
 
       if (success) {
-        // Redirect to appropriate onboarding flow based on user type
-        if (userType === "founder") {
-          navigate("/founder-qualification");
-        } else {
-          navigate("/provider-application");
-        }
+        // Redirect to post-register page
+        navigate("/post-register", { 
+          state: { 
+            userType,
+            isNewUser: true 
+          } 
+        });
       }
     } else {
       // For login
       const success = await handleLogin(form.email, form.password);
       
       if (success) {
-        // Redirect to the page the user was trying to access, or home
-        const from = location.state?.from || "/";
-        navigate(from, { replace: true });
+        // Redirection will be handled by useEmailPasswordAuth
+        console.log("Login successful, redirection handled by auth hook");
       }
     }
-  }, [form, isRegister, userType, handleRegister, handleLogin, navigate, location.state]);
+  }, [form, isRegister, userType, handleRegister, handleLogin, navigate]);
 
   return {
     isRegister,

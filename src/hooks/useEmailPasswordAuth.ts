@@ -3,9 +3,11 @@ import { useState, useCallback } from "react";
 import { AuthError, AuthResponse } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRedirection } from "./useRedirection";
 
 export const useEmailPasswordAuth = () => {
   const { login, register } = useAuth();
+  const { handleRedirectBasedOnRole } = useRedirection();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,8 +28,14 @@ export const useEmailPasswordAuth = () => {
           return false;
         }
 
-        toast.success("Successfully signed in!");
-        return true;
+        if (response.data.user) {
+          toast.success("Successfully signed in!");
+          // Handle redirection based on user role
+          await handleRedirectBasedOnRole(response.data.user.id);
+          return true;
+        }
+
+        return false;
       } catch (err) {
         const errorMessage = err instanceof AuthError 
           ? err.message 
@@ -40,7 +48,7 @@ export const useEmailPasswordAuth = () => {
         setLoading(false);
       }
     },
-    [login]
+    [login, handleRedirectBasedOnRole]
   );
 
   /**
@@ -64,8 +72,14 @@ export const useEmailPasswordAuth = () => {
           return false;
         }
 
-        toast.success("Registration successful! Welcome to Connect!");
-        return true;
+        if (response.data.user) {
+          toast.success("Registration successful! Welcome to Connect!");
+          
+          // Redirect to post-register page for onboarding
+          return true;
+        }
+
+        return false;
       } catch (err) {
         const errorMessage = err instanceof AuthError 
           ? err.message 
