@@ -35,6 +35,8 @@ const useAuthPageController = () => {
 
   // Submit handler for both login and registration
   const handleAuth = useCallback(async () => {
+    console.log("Auth form submission. Is registration:", isRegister);
+    
     // Form validation
     if (!form.email || !form.password) {
       toast.error("Please fill in all required fields");
@@ -49,6 +51,7 @@ const useAuthPageController = () => {
       }
 
       // For registration, we need to include the user type and name info
+      console.log("Registering new user with role:", userType);
       const success = await handleRegister(form.email, form.password, {
         first_name: form.firstName,
         last_name: form.lastName,
@@ -56,6 +59,7 @@ const useAuthPageController = () => {
       });
 
       if (success) {
+        console.log("Registration successful, redirecting to post-register");
         // Redirect to post-register page
         navigate("/post-register", { 
           state: { 
@@ -66,6 +70,7 @@ const useAuthPageController = () => {
       }
     } else {
       // For login
+      console.log("Logging in existing user");
       const success = await handleLogin(form.email, form.password);
       
       if (success) {

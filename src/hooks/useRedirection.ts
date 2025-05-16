@@ -19,7 +19,7 @@ export const useRedirection = () => {
       // Add a small delay to ensure Supabase has time to update
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from("profiles")
         .select("role, onboarding_complete")
         .eq("id", userId)
@@ -32,23 +32,23 @@ export const useRedirection = () => {
         return;
       }
 
-      if (!data || !data.role) {
-        console.error("No role found for user:", userId);
-        toast.error("User profile not found or role not specified.");
+      if (!profileData) {
+        console.error("No profile found for user:", userId);
+        toast.error("User profile not found.");
         navigate("/post-register");
         return;
       }
 
-      console.log("User role found:", data.role, "Onboarding complete:", data.onboarding_complete);
+      console.log("User role found:", profileData.role, "Onboarding complete:", profileData.onboarding_complete);
       
       // Check if user needs to complete onboarding first
-      if (data.onboarding_complete === false) {
+      if (profileData.onboarding_complete === false) {
         console.log("User needs to complete onboarding");
-        navigate("/post-register", { state: { userType: data.role } });
+        navigate("/post-register", { state: { userType: profileData.role } });
         return;
       }
       
-      if (data.role === "founder") {
+      if (profileData.role === "founder") {
         console.log("User is a founder, checking qualification status");
         
         if (!isQualified) {
@@ -61,7 +61,7 @@ export const useRedirection = () => {
         console.log("Founder is qualified, redirecting to dashboard");
         toast.success("Welcome to your founder dashboard.");
         navigate("/founder-dashboard");
-      } else if (data.role === "provider") {
+      } else if (profileData.role === "provider") {
         console.log("User is a provider, checking application status");
         
         try {
@@ -94,7 +94,7 @@ export const useRedirection = () => {
           // Default to provider dashboard in case of errors
           navigate("/provider-dashboard");
         }
-      } else if (data.role === "admin") {
+      } else if (profileData.role === "admin") {
         console.log("Redirecting to admin dashboard");
         toast.success("Welcome to the admin dashboard.");
         navigate("/admin/provider-applications");

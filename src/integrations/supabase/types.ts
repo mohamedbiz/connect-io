@@ -371,6 +371,7 @@ export type Database = {
           id: string
           last_name: string | null
           linkedin_url: string | null
+          onboarding_complete: boolean | null
           portfolio_url: string | null
           role: Database["public"]["Enums"]["user_role"]
         }
@@ -385,6 +386,7 @@ export type Database = {
           id: string
           last_name?: string | null
           linkedin_url?: string | null
+          onboarding_complete?: boolean | null
           portfolio_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }
@@ -399,6 +401,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           linkedin_url?: string | null
+          onboarding_complete?: boolean | null
           portfolio_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
         }

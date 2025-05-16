@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const PostRegisterPage = () => {
   const { user, profile, loading, error } = useAuth();
@@ -27,8 +28,27 @@ const PostRegisterPage = () => {
       if (isNewUser) {
         toast.success(`Welcome to Connect! Let's get you set up as a ${userType}.`);
       }
+      
+      // Update the profile to mark onboarding_complete if this step is viewed
+      // This helps in case the user navigates away before completing onboarding
+      const updateOnboardingStatus = async () => {
+        if (user && profile && !profile.onboarding_complete) {
+          try {
+            await supabase
+              .from("profiles")
+              .update({ onboarding_complete: true })
+              .eq("id", user.id);
+            
+            console.log("Marked onboarding as complete for user:", user.id);
+          } catch (err) {
+            console.error("Failed to update onboarding status:", err);
+          }
+        }
+      };
+      
+      updateOnboardingStatus();
     }
-  }, [user, loading, navigate, isNewUser, userType]);
+  }, [user, loading, navigate, isNewUser, userType, profile]);
 
   const redirectToOnboarding = () => {
     if (userType === "founder") {
