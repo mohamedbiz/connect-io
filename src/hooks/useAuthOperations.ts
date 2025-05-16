@@ -1,59 +1,95 @@
 
-import { useState } from "react";
-import { AuthResponse } from "@supabase/supabase-js";
+import { useCallback } from "react";
+import { AuthError, AuthResponse } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { safeAuthOperation } from "@/utils/auth/rate-limiting";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 export const useAuthOperations = () => {
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  async function logout() {
+  /**
+   * Login with email and password
+   */
+  const login = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
     try {
-      await supabase.auth.signOut();
+      logAuth("Attempting login with email", { email });
+      
+      const response = await safeAuthOperation(async () => {
+        return await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      }, "login");
+      
+      if (response.error) {
+        logAuth("Login failed", response.error, "error");
+        throw response.error;
+      }
+      
+      logAuth("Login successful", { userId: response.data?.user?.id });
+      return response;
+    } catch (error) {
+      logAuth("Login error", error, "error");
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Register with email and password
+   */
+  const register = useCallback(async (
+    email: string,
+    password: string,
+    metadata?: { first_name?: string; last_name?: string; role?: string }
+  ): Promise<AuthResponse> => {
+    try {
+      logAuth("Attempting registration", { email, ...metadata });
+      
+      const response = await safeAuthOperation(async () => {
+        return await supabase.auth.signUp({
+          email,
+          password,
+          options: { 
+            data: metadata 
+          },
+        });
+      }, "register");
+      
+      if (response.error) {
+        logAuth("Registration failed", response.error, "error");
+        throw response.error;
+      }
+      
+      logAuth("Registration successful", { userId: response.data?.user?.id });
+      return response;
+    } catch (error) {
+      logAuth("Registration error", error, "error");
+      throw error;
+    }
+  }, []);
+
+  /**
+   * Logout current user
+   */
+  const logout = useCallback(async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        logAuth("Logout failed", error, "error");
+        return false;
+      }
+      
+      logAuth("Logout successful");
       return true;
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to log out. Please try again.");
+      logAuth("Logout error", error, "error");
       return false;
     }
-  }
-  
-  async function login(email: string, password: string): Promise<AuthResponse> {
-    try {
-      return await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  }
-  
-  async function register(email: string, password: string, metadata?: { 
-    first_name?: string; 
-    last_name?: string; 
-    role?: string;
-  }): Promise<AuthResponse> {
-    try {
-      return await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata
-        }
-      });
-    } catch (error) {
-      console.error("Register error:", error);
-      throw error;
-    }
-  }
+  }, []);
 
   return {
-    authError,
-    setAuthError,
-    logout,
     login,
-    register
+    register,
+    logout,
   };
 };

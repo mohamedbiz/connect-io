@@ -1,125 +1,108 @@
 
-import { useState, useEffect, FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOAuth } from "@/hooks/useOAuth";
 
-export interface AuthForm {
+interface AuthForm {
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
   password: string;
-  confirmPassword?: string;
 }
 
-const initialForm: AuthForm = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-};
-
-const useAuthPageController = () => {
-  const [searchParams] = useSearchParams();
-  const shouldRegister = searchParams.get('register') === 'true';
-  const userTypeParam = searchParams.get('type') as "founder" | "provider" | null;
-  
-  const [isRegister, setIsRegister] = useState(shouldRegister || false);
-  const [userType, setUserType] = useState<"founder" | "provider">(
-    userTypeParam === "provider" ? "provider" : "founder"
-  );
-  const [form, setForm] = useState<AuthForm>(initialForm);
-  const [loading, setLoading] = useState(false);
-
+export default function useAuthPageController() {
   const navigate = useNavigate();
-  const { user, login, register } = useAuth();
-  const { handleOAuth, loadingProviders } = useOAuth();
+  const location = useLocation();
+  const { login, register } = useAuth();
+  const { signInWithOAuth, loadingProviders } = useOAuth();
+  
+  const [isRegister, setIsRegister] = useState(false);
+  const [userType, setUserType] = useState<"founder" | "provider">("founder");
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState<AuthForm>({
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
+  });
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/post-register", { replace: true });
-    }
-  }, [user, navigate]);
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }, []);
 
-  // Handle form submission for both login and register
-  const handleAuth = async (e: FormEvent) => {
+  const handleAuth = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       if (isRegister) {
-        // Registration flow
-        if (form.password !== form.confirmPassword) {
-          toast.error("Passwords do not match");
-          setLoading(false);
-          return;
-        }
-
-        if (!form.firstName.trim() || !form.lastName.trim()) {
-          toast.error("Please provide your first and last name");
-          setLoading(false);
-          return;
-        }
-
-        const { error } = await register(form.email, form.password, {
+        // Registration
+        const metadata = {
           first_name: form.firstName,
           last_name: form.lastName,
-          role: userType
-        });
+          role: userType,
+        };
 
-        if (error) {
-          toast.error(error.message);
-        } else {
-          // Success - the navigation will be handled by the user effect above
-          toast.success("Registration successful! Redirecting...");
+        const response = await register(form.email, form.password, metadata);
+
+        if (response.error) {
+          toast.error(response.error.message);
+          return;
         }
+
+        // Redirect to appropriate page based on user type
+        const redirectPath = userType === "founder" 
+          ? "/founder-qualification?new=true" 
+          : "/provider-application";
+          
+        toast.success("Registration successful!");
+        navigate(redirectPath, { replace: true });
       } else {
-        // Login flow
-        const { error } = await login(form.email, form.password);
+        // Login
+        const response = await login(form.email, form.password);
         
-        if (error) {
-          toast.error(error.message);
-        } else {
-          toast.success("Login successful! Redirecting...");
-          // Navigation will be handled by the user effect
+        if (response.error) {
+          toast.error(response.error.message);
+          return;
         }
+        
+        // Redirect to where the user was trying to go, or home
+        const from = location.state?.from || "/";
+        toast.success("Login successful!");
+        navigate(from, { replace: true });
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred during authentication");
+      toast.error(error.message || "Authentication failed");
     } finally {
       setLoading(false);
     }
-  };
+  }, [isRegister, form, userType, register, login, navigate, location.state]);
 
-  // Handle OAuth providers - now using the improved hook
-  const handleSocialAuth = async (provider: "google" | "github" | "twitter") => {
+  const handleOAuth = useCallback(async (provider: string) => {
     try {
-      await handleOAuth(provider);
+      const metadata = isRegister ? { role: userType } : {};
+      await signInWithOAuth(provider, metadata);
     } catch (error: any) {
-      // Error is handled by the OAuth hook
+      toast.error(error.message || `Failed to sign in with ${provider}`);
     }
-  };
+  }, [signInWithOAuth, isRegister, userType]);
 
   return {
     isRegister,
     setIsRegister,
-    userType,
-    setUserType,
     form,
     loading,
     handleInput,
     handleAuth,
-    handleOAuth: handleSocialAuth,
+    handleOAuth,
+    userType,
+    setUserType,
     loadingProviders
   };
-};
-
-export default useAuthPageController;
+}

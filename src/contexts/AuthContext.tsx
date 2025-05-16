@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { User, Session, AuthResponse } from '@supabase/supabase-js';
 import { Profile } from '@/types/auth';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 
@@ -11,22 +11,22 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   logout: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, metadata?: any) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  register: (email: string, password: string, metadata?: any) => Promise<AuthResponse>;
   ensureProfile: () => Promise<Profile | null>;
   shouldRedirectToAcquisition: (path: string) => boolean;
   shouldRedirectToQualification: (path: string) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   profile: null,
   loading: true,
   error: null,
   logout: async () => {},
-  login: async () => {},
-  register: async () => {},
+  login: async () => { throw new Error('Not implemented'); },
+  register: async () => { throw new Error('Not implemented'); },
   ensureProfile: async () => null,
   shouldRedirectToAcquisition: () => false,
   shouldRedirectToQualification: () => false,

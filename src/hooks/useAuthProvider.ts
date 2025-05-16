@@ -72,11 +72,11 @@ export const useAuthProvider = () => {
           setAuthError(null);
           logAuth("Logout successful");
         } else {
-          logAuth("Logout failed", null, false, true);
+          logAuth("Logout failed", null, "error", true);
           setAuthError("Failed to log out. Please try again.");
         }
       } catch (error) {
-        logAuth("Logout error:", error, false, true);
+        logAuth("Logout error:", error, "error", true);
         setAuthError("An error occurred during logout. Please try again.");
       }
     }, "logout");

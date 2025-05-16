@@ -1,39 +1,32 @@
 
-/**
- * Auth logging utility with enhanced features
- */
-import { LogLevel, LogContext, createLogger } from '../logging/logger-core';
+import { logging } from "@/utils/logging";
 
-// Create a specialized logger for auth operations
-const authLogger = createLogger('auth');
+// Define allowed log levels
+type LogLevel = "info" | "warn" | "error" | "debug";
 
 /**
- * Enhanced logging function for authentication operations
- * @param message - The message to log
- * @param data - Optional data to include with the log
- * @param level - Log level (info, warning, error)
- * @param context - Optional contextual information
+ * Log authentication related events
+ * @param message The main log message
+ * @param data Additional data to log (optional)
+ * @param level Log level (default: info)
+ * @param includeStackTrace Whether to include stack trace (default: false)
  */
-export const logAuth = (
-  message: string, 
-  data?: any, 
-  level: LogLevel = 'info',
-  context?: LogContext
-): void => {
-  // Use the appropriate log method based on the level
-  switch (level) {
-    case 'debug':
-      authLogger.debug(message, data, context);
-      break;
-    case 'warning':
-      authLogger.warning(message, data, context);
-      break;
-    case 'error':
-      authLogger.error(message, data, context);
-      break;
-    case 'info':
-    default:
-      authLogger.info(message, data, context);
-      break;
+export function logAuth(
+  message: string,
+  data: any = null,
+  level: LogLevel = "info",
+  includeStackTrace = false
+): void {
+  const logFn = logging[level] || logging.info;
+  
+  if (includeStackTrace) {
+    // Create an error to capture stack trace
+    const err = new Error();
+    logFn(`[Auth] ${message}`, {
+      ...(data ? { data } : {}),
+      stack: err.stack?.split('\n').slice(2).join('\n') // Remove the first two lines which are this function
+    });
+  } else {
+    logFn(`[Auth] ${message}`, data);
   }
-};
+}
