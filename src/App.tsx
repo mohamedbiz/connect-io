@@ -13,6 +13,8 @@ import ProviderDashboardPage from "@/pages/provider/ProviderDashboardPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotFoundPage from "@/pages/errors/NotFoundPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ForFoundersPage from "@/pages/ForFoundersPage";
+import ForProvidersPage from "@/pages/ForProvidersPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -35,6 +37,8 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<IndexPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/for-founders" element={<ForFoundersPage />} />
+        <Route path="/for-providers" element={<ForProvidersPage />} />
         
         {/* Protected routes */}
         <Route 

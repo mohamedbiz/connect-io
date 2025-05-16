@@ -1,3 +1,4 @@
+
 export type UserRole = 'founder' | 'provider' | 'admin';
 
 export interface Profile {
@@ -12,6 +13,7 @@ export interface Profile {
   portfolio_url?: string;
   linkedin_url?: string;
   about?: string;
+  onboarding_complete?: boolean;
 }
 
 export interface AuthFormData {

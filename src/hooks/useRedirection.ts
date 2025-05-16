@@ -3,12 +3,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { checkQualificationStatus } from "@/utils/redirect-utils";
+import { useQualificationStatus } from "@/hooks/useQualificationStatus";
 
 export const useRedirection = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast: toastNotification } = useToast();
+  const { isQualified } = useQualificationStatus();
 
   const handleRedirectBasedOnRole = async (userId: string) => {
     console.log("Handling redirect based on role for user ID:", userId);
@@ -51,9 +52,6 @@ export const useRedirection = () => {
       if (data.role === "founder") {
         console.log("User is a founder, checking qualification status");
         
-        // Check qualification status
-        const isQualified = await checkQualificationStatus(userId);
-        
         if (!isQualified) {
           console.log("Founder not qualified, redirecting to qualification page");
           toastNotification({
@@ -93,7 +91,7 @@ export const useRedirection = () => {
               title: "Complete Your Application",
               description: "Please complete your provider application."
             });
-            navigate("/provider-apply");
+            navigate("/provider-application");
           } else {
             // Has submitted an application already, go to dashboard
             console.log("Application found, redirecting to provider dashboard");
