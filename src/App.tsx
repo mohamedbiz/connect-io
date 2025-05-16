@@ -15,6 +15,8 @@ import NotFoundPage from "@/pages/errors/NotFoundPage";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ForFoundersPage from "@/pages/ForFoundersPage";
 import ForProvidersPage from "@/pages/ForProvidersPage";
+import ProviderApplyRedirect from "@/pages/provider/ProviderApplyRedirect";
+import PostRegisterPage from "@/pages/PostRegisterPage";
 
 function App() {
   const { user, loading } = useAuth();
@@ -39,6 +41,19 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/for-founders" element={<ForFoundersPage />} />
         <Route path="/for-providers" element={<ForProvidersPage />} />
+        
+        {/* Redirect routes */}
+        <Route path="/provider-apply" element={<ProviderApplyRedirect />} />
+        
+        {/* Onboarding routes */}
+        <Route 
+          path="/post-register" 
+          element={
+            <ProtectedRoute>
+              <PostRegisterPage />
+            </ProtectedRoute>
+          }
+        />
         
         {/* Protected routes */}
         <Route 
