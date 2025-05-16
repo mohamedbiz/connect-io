@@ -59,9 +59,23 @@ export async function fetchProfile(userId: string): Promise<Profile | null> {
 /**
  * Create profile from authenticated user data
  */
-async function createProfileFromAuthUser(authUser: any): Promise<Profile | null> {
+export async function createProfileFromAuthUser(authUser: any): Promise<Profile | null> {
   try {
     logProfile("Creating new profile for user:", authUser.id);
+    
+    // Verify if profile exists before creating (additional safety check)
+    const { data: existingProfile, error: checkError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", authUser.id)
+      .maybeSingle();
+      
+    if (checkError) {
+      logProfile("Error checking for existing profile:", checkError, false, true);
+    } else if (existingProfile) {
+      logProfile("Profile already exists during creation check:", existingProfile);
+      return existingProfile as Profile;
+    }
     
     // Extract user metadata - handle potential missing values safely
     const metadata = authUser.user_metadata || {};
@@ -82,7 +96,7 @@ async function createProfileFromAuthUser(authUser: any): Promise<Profile | null>
         role: role
       })
       .select("*")
-      .maybeSingle();
+      .single();
     
     if (createError) {
       logProfile("Error creating profile:", createError, false, true);
@@ -95,7 +109,7 @@ async function createProfileFromAuthUser(authUser: any): Promise<Profile | null>
         .maybeSingle();
       
       if (retryError || !retryProfile) {
-        toast.error("Unable to create your user profile. Please refresh and try again.");
+        logProfile("Final attempt to find profile failed:", retryError, false, true);
         return null;
       }
       
@@ -109,10 +123,23 @@ async function createProfileFromAuthUser(authUser: any): Promise<Profile | null>
     }
     
     logProfile("Created new profile:", newProfile);
+    
+    // Also create founder_onboarding record if user is a founder
+    if (role === "founder") {
+      try {
+        await supabase.from("founder_onboarding").insert({
+          user_id: authUser.id,
+        });
+        logProfile("Created founder_onboarding record");
+      } catch (onboardingError) {
+        logProfile("Error creating founder_onboarding record:", onboardingError, false, true);
+        // Don't fail the whole operation if this secondary insert fails
+      }
+    }
+    
     return newProfile as Profile;
   } catch (createErr) {
     logProfile("Exception creating profile:", createErr, false, true);
-    toast.error("Profile creation failed. Please try again.");
     return null;
   }
 }
@@ -133,6 +160,18 @@ export async function createProfileManually(
     // Ensure role is valid
     const validRole = (role === "founder" || role === "provider" || role === "admin") ? role : "founder";
     
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+      
+    if (existingProfile) {
+      logProfile("Profile already exists during manual creation:", existingProfile);
+      return existingProfile as Profile;
+    }
+    
     const { data: newProfile, error } = await supabase
       .from("profiles")
       .insert({
@@ -143,14 +182,41 @@ export async function createProfileManually(
         role: validRole
       })
       .select("*")
-      .maybeSingle();
+      .single();
     
     if (error) {
       logProfile("Error manually creating profile:", error, false, true);
+      
+      // One more attempt in case of race condition
+      const { data: retryProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+        
+      if (retryProfile) {
+        logProfile("Found profile on retry after manual creation error:", retryProfile);
+        return retryProfile as Profile;
+      }
+      
       return null;
     }
     
     logProfile("Manually created profile:", newProfile);
+    
+    // Also create founder_onboarding record if user is a founder
+    if (validRole === "founder") {
+      try {
+        await supabase.from("founder_onboarding").insert({
+          user_id: userId,
+        });
+        logProfile("Created founder_onboarding record during manual profile creation");
+      } catch (onboardingError) {
+        logProfile("Error creating founder_onboarding record during manual creation:", onboardingError, false, true);
+        // Don't fail the whole operation if this secondary insert fails
+      }
+    }
+    
     return newProfile as Profile;
   } catch (err) {
     logProfile("Manual profile creation exception:", err, false, true);

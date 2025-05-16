@@ -1,7 +1,8 @@
 
-import { createContext, useContext } from "react";
-import { Session, User, AuthResponse } from "@supabase/supabase-js";
-import { Profile } from "@/types/auth";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { Profile } from '@/types/auth';
+import { useAuthProvider } from '@/hooks/useAuthProvider';
 
 interface AuthContextType {
   user: User | null;
@@ -10,22 +11,65 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   logout: () => Promise<void>;
-  shouldRedirectToAcquisition: (currentPath: string) => boolean;
-  login: (email: string, password: string) => Promise<AuthResponse>;
-  register: (email: string, password: string, metadata?: { 
-    first_name?: string; 
-    last_name?: string; 
-    role?: string;
-  }) => Promise<AuthResponse>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, metadata?: any) => Promise<void>;
   ensureProfile: () => Promise<Profile | null>;
+  shouldRedirectToAcquisition: (path: string) => boolean;
+  shouldRedirectToQualification: (path: string) => boolean;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  profile: null,
+  loading: true,
+  error: null,
+  logout: async () => {},
+  login: async () => {},
+  register: async () => {},
+  ensureProfile: async () => null,
+  shouldRedirectToAcquisition: () => false,
+  shouldRedirectToQualification: () => false,
+});
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
+export const useAuth = () => useContext(AuthContext);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const {
+    user,
+    session,
+    profile,
+    loading,
+    error,
+    logout,
+    login,
+    register,
+    ensureProfile,
+    shouldRedirectToAcquisition,
+    shouldRedirectToQualification
+  } = useAuthProvider();
+
+  const value = {
+    user,
+    session,
+    profile,
+    loading,
+    error,
+    logout,
+    login,
+    register,
+    ensureProfile,
+    shouldRedirectToAcquisition,
+    shouldRedirectToQualification
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
