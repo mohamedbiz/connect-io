@@ -83,7 +83,7 @@ export const useAuthProvider = () => {
   }, [performLogout, setUser, setSession, resetProfileState, setAuthError]);
 
   // Function to decide if we should redirect founders to acquisition
-  const shouldRedirectToAcquisition = useCallback((path: string = currentPath) => {
+  const shouldRedirectToAcquisition = useCallback((path: string = currentPath || '') => {
     return handleShouldRedirectToAcquisition(
       path,
       loading || profileLoading || isCreatingProfile,
@@ -93,7 +93,7 @@ export const useAuthProvider = () => {
   }, [handleShouldRedirectToAcquisition, loading, profileLoading, isCreatingProfile, user, profile, currentPath]);
 
   // Function to decide if we should redirect founders to qualification
-  const shouldRedirectToQualification = useCallback((path: string = currentPath) => {
+  const shouldRedirectToQualification = useCallback((path: string = currentPath || '') => {
     return handleShouldRedirectToQualification(
       path,
       loading || profileLoading || isCreatingProfile || qualificationLoading,

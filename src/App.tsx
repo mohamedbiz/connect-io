@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import AuthPage from "@/pages/AuthPage";
-import HomePage from "@/pages/home/HomePage";
+import IndexPage from "@/pages/IndexPage"; 
 import ProviderApplicationPage from "@/pages/provider/ProviderApplicationPage";
 import FounderApplicationPage from "@/pages/founder/FounderApplicationPage";
 import FounderQualificationPage from "@/pages/FounderQualificationPage";
@@ -33,7 +33,7 @@ function App() {
       <Toaster position="top-center" richColors />
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<IndexPage />} />
         <Route path="/auth" element={<AuthPage />} />
         
         {/* Protected routes */}

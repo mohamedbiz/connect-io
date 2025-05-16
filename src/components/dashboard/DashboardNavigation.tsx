@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { 
   ChevronRight, 
   Mail, 
@@ -17,7 +17,6 @@ interface DashboardNavigationProps {
 }
 
 const DashboardNavigation = ({ activeTab, onTabChange }: DashboardNavigationProps) => {
-  const navigate = useNavigate();
   const [unreadMessages, setUnreadMessages] = useState(0);
   
   // Quick action handlers
@@ -122,6 +121,3 @@ const DashboardNavigation = ({ activeTab, onTabChange }: DashboardNavigationProp
 };
 
 export default DashboardNavigation;
-
-// Import for toast notifications
-import { toast } from "sonner";

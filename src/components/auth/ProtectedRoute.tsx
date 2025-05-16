@@ -30,14 +30,19 @@ const ProtectedRoute = ({
       profile?.role === "founder" &&
       isProtectedRoute(currentPath)
     ) {
-      const shouldRedirect = shouldRedirectToQualification(currentPath);
-      
-      if (shouldRedirect) {
-        logAuth("Redirecting to qualification from protected route", { path: currentPath });
-        navigate("/founder-qualification", { 
-          state: { from: currentPath },
-          replace: true
-        });
+      try {
+        const shouldRedirect = shouldRedirectToQualification(currentPath);
+        
+        if (shouldRedirect) {
+          logAuth("Redirecting to qualification from protected route", { path: currentPath });
+          navigate("/founder-qualification", { 
+            state: { from: currentPath },
+            replace: true
+          });
+        }
+      } catch (error) {
+        logAuth("Error in qualification redirect check", error, "error");
+        // Continue rendering children even if redirect check fails
       }
     }
   }, [

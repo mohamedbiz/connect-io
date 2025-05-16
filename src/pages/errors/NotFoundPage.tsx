@@ -1,33 +1,33 @@
 
-import React from 'react';
+import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const NotFoundPage = () => {
-  const navigate = useNavigate();
-  
+  useEffect(() => {
+    console.error("404 Error: User attempted to access non-existent route");
+  }, []);
+
   return (
     <Layout>
-      <div className="container flex flex-col items-center justify-center min-h-[60vh]">
-        <h1 className="text-4xl font-bold mb-4 text-[#0A2342]">404</h1>
-        <p className="text-2xl font-semibold mb-6 text-[#0A2342]">Page Not Found</p>
-        <p className="text-center text-[#0E3366] mb-8 max-w-md">
-          The page you are looking for doesn't exist or has been moved.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button 
-            onClick={() => navigate('/')}
-            className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white"
+      <div className="container mx-auto px-4 py-24 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="mb-6">
+            <h1 className="text-5xl font-bold text-[#0A2342]">404</h1>
+            <h2 className="text-2xl font-semibold text-[#2D82B7] mt-2">Page Not Found</h2>
+          </div>
+          
+          <p className="text-[#0E3366] mb-8">
+            We couldn't find the page you were looking for. 
+            It might have been removed, renamed, or doesn't exist.
+          </p>
+          
+          <Link 
+            to="/"
+            className="inline-block bg-[#2D82B7] text-white px-6 py-3 rounded-md hover:bg-[#0E3366] transition-colors"
           >
-            Go to Homepage
-          </Button>
-          <Button 
-            onClick={() => navigate(-1)}
-            variant="outline"
-          >
-            Go Back
-          </Button>
+            Return to Home Page
+          </Link>
         </div>
       </div>
     </Layout>

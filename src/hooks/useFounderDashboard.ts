@@ -10,16 +10,6 @@ export function useFounderDashboard() {
   const navigate = useNavigate();
   const { isQualified, isLoading: qualificationLoading } = useQualificationStatus();
 
-  // Log states for debugging
-  console.log("FounderDashboard:", { 
-    user: !!user, 
-    profile: profile?.role,
-    loading,
-    error: error || 'none',
-    path: location.pathname,
-    isQualified
-  });
-
   // Check if qualification is required and redirect if needed
   useEffect(() => {
     if (!loading && !qualificationLoading && user && profile?.role === "founder" && !isQualified) {
