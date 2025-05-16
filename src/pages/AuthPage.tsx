@@ -84,8 +84,7 @@ const AuthPage = () => {
               <AuthSocialDivider />
               <SocialAuthButtons 
                 handleOAuth={handleOAuth}
-                loading={loading}
-                loadingProviders={loadingProviders}
+                loading={loading || loadingProviders}
               />
             </div>
           </AuthCard>
