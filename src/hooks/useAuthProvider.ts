@@ -26,6 +26,11 @@ export const useAuthProvider = () => {
     isCreatingProfile
   } = useProfileManagement();
 
+  // Wrapper for fetchProfileAndSetState to handle void return type
+  const fetchProfileWrapper = useCallback(async (userId: string): Promise<void> => {
+    await fetchProfileAndSetState(userId);
+  }, [fetchProfileAndSetState]);
+
   // Use session monitoring hook
   const {
     user,
@@ -34,7 +39,7 @@ export const useAuthProvider = () => {
     setUser,
     setSession,
     setLoading
-  } = useSessionMonitoring(fetchProfileAndSetState, resetProfileState, setAuthError);
+  } = useSessionMonitoring(fetchProfileWrapper, resetProfileState, setAuthError);
 
   // Use auth operations hook for login/logout
   const {
@@ -61,7 +66,7 @@ export const useAuthProvider = () => {
 
   // Logout function with improved error handling
   const logout = useCallback(async () => {
-    logAuth("Logging out");
+    logAuth("Logging out", null);
     await safeAuthOperation(async () => {
       try {
         const success = await performLogout();
@@ -70,7 +75,7 @@ export const useAuthProvider = () => {
           setSession(null);
           resetProfileState();
           setAuthError(null);
-          logAuth("Logout successful");
+          logAuth("Logout successful", null);
         } else {
           logAuth("Logout failed", null, "error", true);
           setAuthError("Failed to log out. Please try again.");

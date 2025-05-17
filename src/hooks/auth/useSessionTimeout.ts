@@ -11,7 +11,7 @@ export const useSessionTimeout = (loading: boolean, authInitialized: boolean) =>
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading) {
-        logAuth("Forcing end of loading state after timeout", null, 'warn');
+        logAuth("Forcing end of loading state after timeout", null, 'warning');
         
         // Show toast if we had to force end loading
         if (!authInitialized) {

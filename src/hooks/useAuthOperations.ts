@@ -18,7 +18,7 @@ export const useAuthOperations = () => {
           email,
           password,
         });
-      });
+      }, "login");
       
       if (response.error) {
         logAuth("Login failed", response.error, "error");
@@ -52,7 +52,7 @@ export const useAuthOperations = () => {
             data: metadata 
           },
         });
-      });
+      }, "register");
       
       if (response.error) {
         logAuth("Registration failed", response.error, "error");
@@ -79,7 +79,7 @@ export const useAuthOperations = () => {
         return false;
       }
       
-      logAuth("Logout successful");
+      logAuth("Logout successful", null);
       return true;
     } catch (error) {
       logAuth("Logout error", error, "error");

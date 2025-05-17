@@ -31,3 +31,17 @@ export const safeAuthOperation = async <T>(
     throw error;
   }
 };
+
+/**
+ * Reset auth state operations when recovering from potential auth loops
+ * Clears the throttle timers to allow immediate operations after recovery
+ */
+export const recoverAuthState = async (): Promise<void> => {
+  // Clear all throttled operations
+  Object.keys(authOperations).forEach((key) => {
+    delete authOperations[key];
+  });
+  
+  // Return a resolved promise for consistent async behavior
+  return Promise.resolve();
+};

@@ -41,7 +41,7 @@ export const createProfileManually = async (
   email: string,
   firstName: string,
   lastName: string,
-  role: string = "founder"
+  role: "founder" | "provider" | "admin" = "founder"
 ): Promise<Profile | null> => {
   try {
     // Check if profile already exists to avoid duplicate creation
