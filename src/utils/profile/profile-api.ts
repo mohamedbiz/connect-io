@@ -1,225 +1,117 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/auth";
-import { toast } from "sonner";
-import { logProfile } from "./profile-logger";
 
 /**
- * Fetch user profile from Supabase
+ * Fetch a user's profile by their user ID
+ * @param userId The user's ID
+ * @returns The user's profile or null if not found
  */
-export async function fetchProfile(userId: string): Promise<Profile | null> {
-  logProfile("Fetching profile for:", userId);
-  
-  if (!userId) {
-    logProfile("fetchProfile called without a userId", null, false, true);
-    return null;
-  }
-  
+export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
-    // First attempt to get an existing profile
-    const { data: existingProfile, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .maybeSingle();
-    
-    if (fetchError) {
-      logProfile("Error fetching profile:", fetchError, false, true);
-      throw fetchError;
-    }
-    
-    if (existingProfile) {
-      logProfile("Existing profile loaded:", existingProfile);
-      return existingProfile as Profile;
-    }
-    
-    logProfile("No profile found for user:", userId, true);
-    
-    // Get auth user data for profile creation
-    const { data: { user: authUser }, error: authUserError } = await supabase.auth.getUser();
-    
-    if (authUserError) {
-      logProfile("Error getting auth user data:", authUserError, false, true);
-      return null;
-    }
-    
-    if (!authUser) {
-      logProfile("No authenticated user found but userId was provided", null, false, true);
-      return null;
-    }
-    
-    // Create a new profile with data from auth user
-    return await createProfileFromAuthUser(authUser);
-  } catch (err) {
-    logProfile("Profile fetch exception:", err, false, true);
-    throw err;
-  }
-}
 
-/**
- * Create profile from authenticated user data
- */
-export async function createProfileFromAuthUser(authUser: any): Promise<Profile | null> {
-  try {
-    logProfile("Creating new profile for user:", authUser.id);
-    
-    // Verify if profile exists before creating (additional safety check)
-    const { data: existingProfile, error: checkError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", authUser.id)
-      .maybeSingle();
-      
-    if (checkError) {
-      logProfile("Error checking for existing profile:", checkError, false, true);
-    } else if (existingProfile) {
-      logProfile("Profile already exists during creation check:", existingProfile);
-      return existingProfile as Profile;
-    }
-    
-    // Extract user metadata - handle potential missing values safely
-    const metadata = authUser.user_metadata || {};
-    const email = authUser.email || "";
-    const firstName = metadata.first_name || "";
-    const lastName = metadata.last_name || "";
-    const role = metadata.role || "founder";
-    
-    // Insert new profile
-    const { data: newProfile, error: createError } = await supabase
-      .from("profiles")
-      .insert({
-        id: authUser.id,
-        email: email,
-        first_name: firstName,
-        last_name: lastName,
-        avatar_url: metadata.avatar_url || "",
-        role: role
-      })
-      .select("*")
-      .single();
-    
-    if (createError) {
-      logProfile("Error creating profile:", createError, false, true);
-      
-      // One more attempt to get the profile in case it was created in another session
-      const { data: retryProfile, error: retryError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle();
-      
-      if (retryError || !retryProfile) {
-        logProfile("Final attempt to find profile failed:", retryError, false, true);
-        return null;
-      }
-      
-      logProfile("Found profile on retry:", retryProfile);
-      return retryProfile as Profile;
-    }
-    
-    if (!newProfile) {
-      logProfile("No profile created or returned", null, false, true);
+    if (error) {
+      console.error("Error fetching profile:", error);
       return null;
     }
-    
-    logProfile("Created new profile:", newProfile);
-    
-    // Also create founder_onboarding record if user is a founder
-    if (role === "founder") {
-      try {
-        await supabase.from("founder_onboarding").insert({
-          user_id: authUser.id,
-        });
-        logProfile("Created founder_onboarding record");
-      } catch (onboardingError) {
-        logProfile("Error creating founder_onboarding record:", onboardingError, false, true);
-        // Don't fail the whole operation if this secondary insert fails
-      }
-    }
-    
-    return newProfile as Profile;
-  } catch (createErr) {
-    logProfile("Exception creating profile:", createErr, false, true);
+
+    return data as Profile | null;
+  } catch (error) {
+    console.error("Unexpected error in fetchProfile:", error);
     return null;
   }
-}
+};
 
 /**
- * Helper function to manually create a profile if automatic creation failed
+ * Create a user profile manually
+ * @param userId The user's ID
+ * @param email The user's email
+ * @param firstName The user's first name
+ * @param lastName The user's last name
+ * @param role The user's role
+ * @returns The created profile or null if creation failed
  */
-export async function createProfileManually(
-  userId: string, 
-  email: string, 
-  firstName: string = "", 
-  lastName: string = "", 
+export const createProfileManually = async (
+  userId: string,
+  email: string,
+  firstName: string,
+  lastName: string,
   role: string = "founder"
-): Promise<Profile | null> {
+): Promise<Profile | null> => {
   try {
-    logProfile("Manually creating profile for user:", userId);
-    
-    // Ensure role is valid
-    const validRole = (role === "founder" || role === "provider" || role === "admin") ? role : "founder";
-    
-    // Check if profile already exists
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-      
+    // Check if profile already exists to avoid duplicate creation
+    const existingProfile = await fetchProfile(userId);
     if (existingProfile) {
-      logProfile("Profile already exists during manual creation:", existingProfile);
-      return existingProfile as Profile;
+      return existingProfile;
     }
-    
-    const { data: newProfile, error } = await supabase
+
+    const { data, error } = await supabase
       .from("profiles")
       .insert({
         id: userId,
         email: email,
         first_name: firstName,
         last_name: lastName,
-        role: validRole
+        role: role,
+        onboarding_complete: false,
       })
       .select("*")
       .single();
-    
+
     if (error) {
-      logProfile("Error manually creating profile:", error, false, true);
-      
-      // One more attempt in case of race condition
-      const { data: retryProfile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-        
-      if (retryProfile) {
-        logProfile("Found profile on retry after manual creation error:", retryProfile);
-        return retryProfile as Profile;
-      }
-      
+      console.error("Error creating profile:", error);
       return null;
     }
-    
-    logProfile("Manually created profile:", newProfile);
-    
-    // Also create founder_onboarding record if user is a founder
-    if (validRole === "founder") {
-      try {
-        await supabase.from("founder_onboarding").insert({
-          user_id: userId,
-        });
-        logProfile("Created founder_onboarding record during manual profile creation");
-      } catch (onboardingError) {
-        logProfile("Error creating founder_onboarding record during manual creation:", onboardingError, false, true);
-        // Don't fail the whole operation if this secondary insert fails
-      }
-    }
-    
-    return newProfile as Profile;
-  } catch (err) {
-    logProfile("Manual profile creation exception:", err, false, true);
+
+    return data as Profile;
+  } catch (error) {
+    console.error("Unexpected error in createProfileManually:", error);
     return null;
   }
-}
+};
+
+/**
+ * Updates a user profile
+ * @param userId The user's ID
+ * @param profileData The profile data to update
+ * @returns The updated profile or null if update failed
+ */
+export const updateProfile = async (
+  userId: string,
+  profileData: Partial<Profile>
+): Promise<Profile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(profileData)
+      .eq("id", userId)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Error updating profile:", error);
+      return null;
+    }
+
+    return data as Profile;
+  } catch (error) {
+    console.error("Unexpected error in updateProfile:", error);
+    return null;
+  }
+};
+
+/**
+ * Mark a user's onboarding as complete
+ * @param userId The user's ID
+ * @returns The updated profile or null if update failed
+ */
+export const completeOnboarding = async (userId: string): Promise<Profile | null> => {
+  return updateProfile(userId, {
+    onboarding_complete: true
+  });
+};

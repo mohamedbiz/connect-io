@@ -1,22 +1,29 @@
 
 /**
- * Helper for improved exponential backoff with jitter
+ * Calculate exponential backoff delay
+ * @param retryCount Current retry attempt
+ * @returns Delay in milliseconds
  */
-export const getBackoffDelay = (attempt: number, baseDelay = 1000): number => {
-  // Add some randomness to avoid thundering herd problem
-  const jitter = Math.random() * 500;
-  return Math.min(baseDelay * Math.pow(1.5, attempt) + jitter, 6000); // Cap at 6 seconds
+export const getBackoffDelay = (retryCount: number): number => {
+  // Base delay of 300ms, doubled for each retry with some random jitter
+  const baseDelay = 300;
+  const exponentialDelay = baseDelay * Math.pow(2, retryCount);
+  const jitter = Math.random() * 0.3 * exponentialDelay;
+  
+  return Math.min(exponentialDelay + jitter, 5000); // Cap at 5 seconds
 };
 
 /**
- * Utility to handle rate limiting for profile operations
+ * Apply rate limiting to prevent too many requests
+ * @param lastRequestTime Timestamp of the last request
+ * @param minDelay Minimum delay between requests in ms (default: 500ms)
  */
-export const applyRateLimiting = async (lastActionTime: number, minInterval = 800): Promise<void> => {
+export const applyRateLimiting = async (lastRequestTime: number, minDelay = 500): Promise<void> => {
   const now = Date.now();
-  const timeSinceLastAction = now - lastActionTime;
+  const timeSinceLastRequest = now - lastRequestTime;
   
-  if (timeSinceLastAction < minInterval) {
-    const waitTime = minInterval - timeSinceLastAction;
-    await new Promise(resolve => setTimeout(resolve, waitTime));
+  if (lastRequestTime > 0 && timeSinceLastRequest < minDelay) {
+    const delayNeeded = minDelay - timeSinceLastRequest;
+    await new Promise(resolve => setTimeout(resolve, delayNeeded));
   }
 };

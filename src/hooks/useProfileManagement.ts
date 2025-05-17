@@ -32,7 +32,10 @@ export const useProfileManagement = () => {
 
   // Fetch profile function with improved retry logic and rate limiting
   const fetchProfileAndSetState = useCallback(async (userId: string, retryCount = 0) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log("No userId provided to fetchProfileAndSetState");
+      return;
+    }
     
     // Apply rate limiting to prevent too many requests
     await applyRateLimiting(lastFetchTime);
@@ -65,7 +68,7 @@ export const useProfileManagement = () => {
           }, delay) as unknown as number;
           
           setRetryTimeoutId(timeoutId);
-          return;
+          return null;
         } else if (retryCount === 2 && !isCreatingProfile) {
           // After final retry - attempt to auto-create profile
           setIsCreatingProfile(true);
@@ -90,7 +93,7 @@ export const useProfileManagement = () => {
                 toast.success("Profile created automatically");
                 setProfileLoading(false);
                 setIsCreatingProfile(false);
-                return;
+                return createdProfile;
               }
             }
             setIsCreatingProfile(false);
@@ -102,12 +105,14 @@ export const useProfileManagement = () => {
           // If we get here, both fetch and auto-create failed
           setProfileLoading(false);
           setProfileError("Unable to load user profile");
+          return null;
         }
       } else {
         logProfile("Profile data retrieved successfully:", profileData);
         setProfile(profileData);
         setProfileError(null);
         setProfileLoading(false);
+        return profileData;
       }
     } catch (err) {
       logProfile("Error fetching profile:", err, false, true);
@@ -128,7 +133,7 @@ export const useProfileManagement = () => {
         }, delay) as unknown as number;
         
         setRetryTimeoutId(timeoutId);
-        return;
+        return null;
       } else {
         // After final retry - set loading to false even with errors
         setProfileLoading(false);
@@ -136,13 +141,20 @@ export const useProfileManagement = () => {
         
         // Show recoverable error to user
         toast.error("Profile loading failed. Please try refreshing the page or contact support if the issue persists.");
+        return null;
       }
     }
+    
+    setProfileLoading(false);
+    return null;
   }, [lastFetchTime, clearRetryTimeout, isCreatingProfile]);
 
   // Function to manually attempt creating a profile with improved rate limiting
   const ensureProfile = async (user: User | null): Promise<Profile | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.log("No user provided to ensureProfile");
+      return null;
+    }
     
     if (profile) return profile;
     

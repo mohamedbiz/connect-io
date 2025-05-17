@@ -1,23 +1,15 @@
 
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
+import { useMemo } from "react";
 
 /**
- * Custom hook to get the current path from the location object
- * @returns The current path
+ * Hook to get the current path from the URL
+ * @returns The current path without query parameters
  */
-export function useCurrentPath(): string {
-  try {
-    const location = useLocation();
-    const [currentPath, setCurrentPath] = useState<string>(location.pathname);
-
-    useEffect(() => {
-      setCurrentPath(location.pathname);
-    }, [location.pathname]);
-
-    return currentPath;
-  } catch (error) {
-    // Return an empty string if not in a Router context
-    return '';
-  }
-}
+export const useCurrentPath = (): string => {
+  const location = useLocation();
+  
+  return useMemo(() => {
+    return location.pathname;
+  }, [location.pathname]);
+};

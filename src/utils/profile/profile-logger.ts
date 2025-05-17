@@ -1,32 +1,25 @@
 
 /**
- * Enhanced logging utility specific to profile management
- */
-import { LogContext, createLogger } from '../logging/logger-core';
-
-// Create a specialized logger for profile operations
-const profileLogger = createLogger('profile');
-
-/**
- * Enhanced logging function for profile operations
- * @param message - The message to log
- * @param data - Optional data to include with the log
- * @param isWarning - Whether this is a warning message
- * @param isError - Whether this is an error message
- * @param context - Optional contextual information
+ * Log profile-related messages with consistent formatting
+ * @param message The message to log
+ * @param data Optional data to include
+ * @param warning Whether to log as a warning
+ * @param isError Whether to log as an error
  */
 export const logProfile = (
-  message: string, 
-  data?: any, 
-  isWarning = false, 
-  isError = false,
-  context?: LogContext
+  message: string,
+  data: any = null,
+  warning = false,
+  isError = false
 ): void => {
+  const timestamp = new Date().toISOString();
+  const logPrefix = `[Profile Service ${timestamp}]`;
+  
   if (isError) {
-    profileLogger.error(message, data, context);
-  } else if (isWarning) {
-    profileLogger.warning(message, data, context);
+    console.error(`${logPrefix} ERROR: ${message}`, data);
+  } else if (warning) {
+    console.warn(`${logPrefix} WARNING: ${message}`, data);
   } else {
-    profileLogger.info(message, data, context);
+    console.log(`${logPrefix} INFO: ${message}`, data ? data : '');
   }
 };

@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { AuthError, AuthResponse } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useRedirection } from "./useRedirection";
@@ -16,6 +16,12 @@ export const useEmailPasswordAuth = () => {
    */
   const handleLogin = useCallback(
     async (email: string, password: string) => {
+      if (!email || !password) {
+        setError("Please enter both email and password");
+        toast.error("Please enter both email and password");
+        return false;
+      }
+      
       setLoading(true);
       setError(null);
 
@@ -64,6 +70,18 @@ export const useEmailPasswordAuth = () => {
       password: string,
       metadata?: { first_name?: string; last_name?: string; role?: string }
     ) => {
+      if (!email || !password) {
+        setError("Please enter both email and password");
+        toast.error("Please enter both email and password");
+        return false;
+      }
+      
+      if (!metadata?.first_name || !metadata?.last_name) {
+        setError("Please enter your first and last name");
+        toast.error("Please enter your first and last name");
+        return false;
+      }
+      
       setLoading(true);
       setError(null);
 

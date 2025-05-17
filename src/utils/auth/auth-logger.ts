@@ -1,32 +1,30 @@
 
-import { logging } from "@/utils/logging";
-
-// Define allowed log levels
-type LogLevel = "info" | "warn" | "error" | "debug";
-
 /**
- * Log authentication related events
- * @param message The main log message
- * @param data Additional data to log (optional)
- * @param level Log level (default: info)
- * @param includeStackTrace Whether to include stack trace (default: false)
+ * Log authentication-related events with consistent formatting
+ * @param message The message to log
+ * @param data Optional data to include
+ * @param level Log level - info, warning, error
+ * @param sensitive Whether the log contains sensitive data
  */
-export function logAuth(
+export const logAuth = (
   message: string,
   data: any = null,
-  level: LogLevel = "info",
-  includeStackTrace = false
-): void {
-  const logFn = logging[level] || logging.info;
+  level: "info" | "warning" | "error" = "info",
+  sensitive = false
+): void => {
+  const timestamp = new Date().toISOString();
+  const logPrefix = sensitive 
+    ? `[Auth Service ${timestamp}] SENSITIVE:` 
+    : `[Auth Service ${timestamp}]`;
   
-  if (includeStackTrace) {
-    // Create an error to capture stack trace
-    const err = new Error();
-    logFn(`[Auth] ${message}`, {
-      ...(data ? { data } : {}),
-      stack: err.stack?.split('\n').slice(2).join('\n') // Remove the first two lines which are this function
-    });
-  } else {
-    logFn(`[Auth] ${message}`, data);
+  switch (level) {
+    case "error":
+      console.error(`${logPrefix} ERROR: ${message}`, data);
+      break;
+    case "warning":
+      console.warn(`${logPrefix} WARNING: ${message}`, data);
+      break;
+    default:
+      console.log(`${logPrefix} INFO: ${message}`, data ? data : '');
   }
-}
+};
