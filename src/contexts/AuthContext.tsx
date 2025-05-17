@@ -18,19 +18,26 @@ interface AuthContextType {
   shouldRedirectToQualification: (path: string) => boolean;
 }
 
-export const AuthContext = createContext<AuthContextType>({
+// Default values that match the correct shape but don't implement functionality
+const defaultAuthContext: AuthContextType = {
   user: null,
   session: null,
   profile: null,
   loading: true,
   error: null,
   logout: async () => {},
-  login: async () => { throw new Error('Authentication not initialized'); },
-  register: async () => { throw new Error('Authentication not initialized'); },
+  login: async () => { 
+    throw new Error('Authentication not initialized'); 
+  },
+  register: async () => { 
+    throw new Error('Authentication not initialized'); 
+  },
   ensureProfile: async () => null,
   shouldRedirectToAcquisition: () => false,
   shouldRedirectToQualification: () => false,
-});
+};
+
+export const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
 export const useAuth = () => useContext(AuthContext);
 

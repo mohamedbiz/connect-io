@@ -1,48 +1,71 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProfile, createProfileManually } from "@/utils/profile/profile-api";
-import { getBackoffDelay, applyRateLimiting } from "@/utils/profile/profile-retry";
 import { logProfile } from "@/utils/profile/profile-logger";
+
+// Constants to configure behavior
+const MAX_RETRY_COUNT = 2;
+const RETRY_DELAY_BASE = 1000; // 1 second
+const MIN_FETCH_INTERVAL = 1000; // 1 second minimum between fetches
 
 export const useProfileManagement = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileAttempts, setProfileAttempts] = useState(0);
-  const [lastFetchTime, setLastFetchTime] = useState(0);
-  const [retryTimeoutId, setRetryTimeoutId] = useState<number | null>(null);
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
-
-  // Clear any existing retry timeout when component unmounts or before setting new ones
-  const clearRetryTimeout = useCallback(() => {
-    if (retryTimeoutId !== null) {
-      clearTimeout(retryTimeoutId);
-      setRetryTimeoutId(null);
-    }
-  }, [retryTimeoutId]);
-
-  // Cleanup on unmount
+  const lastFetchTime = useRef<number>(0);
+  const isCreatingProfile = useRef<boolean>(false);
+  const fetchInProgress = useRef<boolean>(false);
+  const retryTimeoutId = useRef<number | null>(null);
+  
+  // Clear any existing retry timeout when component unmounts
   useEffect(() => {
-    return () => clearRetryTimeout();
-  }, [clearRetryTimeout]);
+    return () => {
+      if (retryTimeoutId.current !== null) {
+        clearTimeout(retryTimeoutId.current);
+      }
+    };
+  }, []);
+
+  // Calculate delay for retry attempts using exponential backoff
+  const getBackoffDelay = (retryCount: number): number => {
+    return RETRY_DELAY_BASE * Math.pow(2, retryCount) * (1 + Math.random() * 0.1);
+  };
+
+  // Apply rate limiting to prevent too many requests
+  const shouldThrottleFetch = (): boolean => {
+    const now = Date.now();
+    if (now - lastFetchTime.current < MIN_FETCH_INTERVAL) {
+      logProfile("Throttling profile fetch - too many requests", null, true);
+      return true;
+    }
+    lastFetchTime.current = now;
+    return false;
+  };
 
   // Fetch profile function with improved retry logic and rate limiting
   const fetchProfileAndSetState = useCallback(async (userId: string, retryCount = 0) => {
     if (!userId) {
-      console.log("No userId provided to fetchProfileAndSetState");
-      return;
+      logProfile("No userId provided to fetchProfileAndSetState", null, true);
+      return null;
     }
     
-    // Apply rate limiting to prevent too many requests
-    await applyRateLimiting(lastFetchTime);
+    // Prevent concurrent fetches for the same user
+    if (fetchInProgress.current) {
+      logProfile("Profile fetch already in progress", null, true);
+      return null;
+    }
     
-    setLastFetchTime(Date.now());
+    // Apply rate limiting
+    if (shouldThrottleFetch()) {
+      return null;
+    }
+    
+    fetchInProgress.current = true;
     setProfileLoading(true);
-    setProfileAttempts(prev => prev + 1);
     
     try {
       logProfile(`Fetching profile for user: ${userId} (attempt ${retryCount + 1})`);
@@ -51,129 +74,141 @@ export const useProfileManagement = () => {
       if (!profileData) {
         logProfile(`No profile found for user: ${userId} on attempt ${retryCount + 1}`, null, true);
         
-        // Implement limited retries (max 3)
-        if (retryCount < 2) {
+        // Implement limited retries (max 2)
+        if (retryCount < MAX_RETRY_COUNT) {
           // Use exponential backoff for retries
           const delay = getBackoffDelay(retryCount);
           logProfile(`Retrying profile fetch in ${delay}ms...`, null, true);
           
           // Clear any existing timeout
-          clearRetryTimeout();
+          if (retryTimeoutId.current !== null) {
+            clearTimeout(retryTimeoutId.current);
+          }
           
           // Set new timeout
-          const timeoutId = window.setTimeout(() => {
+          retryTimeoutId.current = window.setTimeout(() => {
+            fetchInProgress.current = false;
             if (userId) { // Double check userId is still valid
               fetchProfileAndSetState(userId, retryCount + 1);
             }
           }, delay) as unknown as number;
           
-          setRetryTimeoutId(timeoutId);
           return null;
-        } else if (retryCount === 2 && !isCreatingProfile) {
+        } else if (retryCount === MAX_RETRY_COUNT && !isCreatingProfile.current) {
           // After final retry - attempt to auto-create profile
-          setIsCreatingProfile(true);
-          logProfile("Attempting to auto-create profile after fetch failures", null, true);
-          
-          try {
-            // Fetch the current user to ensure we have the latest data
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user && user.id === userId) {
-              const createdProfile = await createProfileManually(
-                user.id,
-                user.email || '',
-                user.user_metadata?.first_name || '',
-                user.user_metadata?.last_name || '',
-                user.user_metadata?.role || 'founder'
-              );
-              
-              if (createdProfile) {
-                setProfile(createdProfile);
-                setProfileError(null);
-                logProfile("Auto-created profile successfully", createdProfile);
-                toast.success("Profile created automatically");
-                setProfileLoading(false);
-                setIsCreatingProfile(false);
-                return createdProfile;
-              }
-            }
-            setIsCreatingProfile(false);
-          } catch (autoCreateError) {
-            logProfile("Failed to auto-create profile:", autoCreateError, false, true);
-            setIsCreatingProfile(false);
-          }
-          
-          // If we get here, both fetch and auto-create failed
-          setProfileLoading(false);
-          setProfileError("Unable to load user profile");
-          return null;
+          return await attemptProfileCreation(userId);
         }
       } else {
         logProfile("Profile data retrieved successfully:", profileData);
         setProfile(profileData);
         setProfileError(null);
         setProfileLoading(false);
+        fetchInProgress.current = false;
         return profileData;
       }
     } catch (err) {
       logProfile("Error fetching profile:", err, false, true);
       
-      if (retryCount < 2) {
+      if (retryCount < MAX_RETRY_COUNT) {
         // Use exponential backoff for retries
         const delay = getBackoffDelay(retryCount);
         logProfile(`Error occurred, retrying profile fetch in ${delay}ms...`, null, true);
         
         // Clear any existing timeout
-        clearRetryTimeout();
+        if (retryTimeoutId.current !== null) {
+          clearTimeout(retryTimeoutId.current);
+        }
         
         // Set new timeout
-        const timeoutId = window.setTimeout(() => {
+        retryTimeoutId.current = window.setTimeout(() => {
+          fetchInProgress.current = false;
           if (userId) { // Double check userId is still valid
             fetchProfileAndSetState(userId, retryCount + 1);
           }
         }, delay) as unknown as number;
         
-        setRetryTimeoutId(timeoutId);
         return null;
       } else {
         // After final retry - set loading to false even with errors
-        setProfileLoading(false);
         setProfileError("Error loading profile data");
+        setProfileLoading(false);
+        fetchInProgress.current = false;
         
         // Show recoverable error to user
-        toast.error("Profile loading failed. Please try refreshing the page or contact support if the issue persists.");
+        toast.error("Profile loading failed. Please try refreshing the page.");
         return null;
       }
     }
     
     setProfileLoading(false);
+    fetchInProgress.current = false;
     return null;
-  }, [lastFetchTime, clearRetryTimeout, isCreatingProfile]);
+  }, []);
 
-  // Function to manually attempt creating a profile with improved rate limiting
+  // Attempt to create a profile automatically after fetch failures
+  const attemptProfileCreation = async (userId: string): Promise<Profile | null> => {
+    isCreatingProfile.current = true;
+    logProfile("Attempting to auto-create profile after fetch failures", null, true);
+    
+    try {
+      // Fetch the current user to ensure we have the latest data
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id === userId) {
+        const createdProfile = await createProfileManually(
+          user.id,
+          user.email || '',
+          user.user_metadata?.first_name || '',
+          user.user_metadata?.last_name || '',
+          user.user_metadata?.role || 'founder'
+        );
+        
+        if (createdProfile) {
+          setProfile(createdProfile);
+          setProfileError(null);
+          logProfile("Auto-created profile successfully", createdProfile);
+          toast.success("Profile created automatically");
+          setProfileLoading(false);
+          isCreatingProfile.current = false;
+          fetchInProgress.current = false;
+          return createdProfile;
+        }
+      }
+    } catch (autoCreateError) {
+      logProfile("Failed to auto-create profile:", autoCreateError, false, true);
+    }
+    
+    // If auto-creation failed
+    setProfileLoading(false);
+    setProfileError("Unable to load or create user profile");
+    isCreatingProfile.current = false;
+    fetchInProgress.current = false;
+    return null;
+  };
+
+  // Function to manually create a profile
   const ensureProfile = async (user: User | null): Promise<Profile | null> => {
     if (!user) {
-      console.log("No user provided to ensureProfile");
+      logProfile("No user provided to ensureProfile", null, true);
       return null;
     }
     
     if (profile) return profile;
     
     // Prevent multiple simultaneous creation attempts
-    if (isCreatingProfile) {
+    if (isCreatingProfile.current) {
       logProfile("Profile creation already in progress", null, true);
       return null;
     }
     
-    setIsCreatingProfile(true);
+    // Apply rate limiting
+    if (shouldThrottleFetch()) {
+      return null;
+    }
     
-    // Apply rate limiting for profile creation attempts
-    await applyRateLimiting(lastFetchTime, 1000);
+    isCreatingProfile.current = true;
+    setProfileLoading(true);
     
-    setLastFetchTime(Date.now());
-    
-    // Try to create profile manually if we have user but no profile
     try {
-      setProfileLoading(true);
       logProfile(`Manual profile creation initiated for user: ${user.id}`, { email: user.email });
       
       const newProfile = await createProfileManually(
@@ -184,48 +219,51 @@ export const useProfileManagement = () => {
         user.user_metadata?.role || 'founder'
       );
       
-      setProfileLoading(false);
-      setIsCreatingProfile(false);
-      
       if (newProfile) {
         setProfile(newProfile);
         setProfileError(null);
         toast.success("Profile created successfully");
+        setProfileLoading(false);
+        isCreatingProfile.current = false;
         return newProfile;
       }
       
       setProfileError("Failed to create user profile");
-      toast.error("Could not create your profile. Please try again or contact support.");
+      toast.error("Could not create your profile. Please try again.");
+      setProfileLoading(false);
+      isCreatingProfile.current = false;
       return null;
     } catch (error) {
       logProfile("Failed to ensure profile exists:", error, false, true);
-      setProfileLoading(false);
-      setIsCreatingProfile(false);
       setProfileError("Error creating user profile");
       toast.error("Error creating your profile. Please try again.");
+      setProfileLoading(false);
+      isCreatingProfile.current = false;
       return null;
     }
   };
 
   const resetProfileState = useCallback(() => {
-    clearRetryTimeout();
+    if (retryTimeoutId.current !== null) {
+      clearTimeout(retryTimeoutId.current);
+      retryTimeoutId.current = null;
+    }
     setProfile(null);
     setProfileLoading(false);
     setProfileError(null);
-    setProfileAttempts(0);
-    setLastFetchTime(0);
-    setIsCreatingProfile(false);
-  }, [clearRetryTimeout]);
+    lastFetchTime.current = 0;
+    isCreatingProfile.current = false;
+    fetchInProgress.current = false;
+  }, []);
 
   return {
     profile,
     profileLoading,
     profileError,
-    profileAttempts,
     fetchProfileAndSetState,
     ensureProfile,
     resetProfileState,
     setProfile,
-    isCreatingProfile
+    isCreatingProfile: isCreatingProfile.current
   };
 };

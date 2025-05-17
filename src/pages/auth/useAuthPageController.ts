@@ -34,25 +34,27 @@ const useAuthPageController = () => {
     []
   );
 
-  // Submit handler for both login and registration
+  // Submit handler for both login and registration - optimize to reduce excessive renders
   const handleAuth = useCallback(async () => {
-    logAuth("Auth form submission. Is registration:", { isRegister, userType });
-    
-    // Form validation
+    // Simple client-side validation
     if (!form.email || !form.password) {
       toast.error("Please fill in all required fields");
       return;
     }
 
+    // For registration, check additional required fields
     if (isRegister) {
-      // For registration, we need first and last name
       if (!form.firstName || !form.lastName) {
         toast.error("Please enter your first and last name");
         return;
       }
 
-      // For registration, we need to include the user type and name info
-      logAuth("Registering new user with role:", { role: userType });
+      logAuth("Registration attempt", { 
+        email: form.email, 
+        role: userType 
+      });
+
+      // Call registration handler with necessary data
       const success = await handleRegister(form.email, form.password, {
         first_name: form.firstName,
         last_name: form.lastName,
@@ -60,21 +62,16 @@ const useAuthPageController = () => {
       });
 
       if (success) {
-        logAuth("Registration successful, redirecting to post-register");
-        // Redirect to post-register page
+        // Only navigate if registration was successful
         navigate("/post-register", { 
-          state: { 
-            userType,
-            isNewUser: true 
-          },
+          state: { userType, isNewUser: true },
           replace: true
         });
       }
     } else {
-      // For login
-      logAuth("Logging in existing user");
+      // For login, simply call the login handler
+      logAuth("Login attempt", { email: form.email });
       await handleLogin(form.email, form.password);
-      // Redirection will be handled by useEmailPasswordAuth
     }
   }, [form, isRegister, userType, handleRegister, handleLogin, navigate]);
 

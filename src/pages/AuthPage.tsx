@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import useAuthPageController from "@/pages/auth/useAuthPageController";
@@ -17,6 +17,8 @@ const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const shouldRegister = searchParams.get('register') === 'true';
   const userTypeParam = searchParams.get('type') as "founder" | "provider" | null;
+  
+  // Destructure only what we need from auth context to avoid excessive re-renders
   const { user, loading: authLoading } = useAuth();
   
   const {
@@ -32,16 +34,18 @@ const AuthPage = () => {
     loadingProviders
   } = useAuthPageController();
 
-  // Set initial values based on URL params - using useEffect with empty deps to run once
+  // Set initial values based on URL params - using useEffect with dependencies to run only when needed
   useEffect(() => {
-    if (shouldRegister) {
+    // Only set if the values don't match to avoid unnecessary state updates
+    if (shouldRegister && !isRegister) {
       setIsRegister(true);
     }
     
-    if (userTypeParam && (userTypeParam === "founder" || userTypeParam === "provider")) {
+    if (userTypeParam && userTypeParam !== userType && 
+        (userTypeParam === "founder" || userTypeParam === "provider")) {
       setUserType(userTypeParam);
     }
-  }, [shouldRegister, userTypeParam, setIsRegister, setUserType]);
+  }, [shouldRegister, userTypeParam, setIsRegister, setUserType, isRegister, userType]);
 
   // Log authentication state on render - with proper dependencies
   useEffect(() => {
@@ -57,13 +61,19 @@ const AuthPage = () => {
     setIsRegister(prev => !prev);
   }, [setIsRegister]);
 
-  // Map form data to match what AuthForm expects
-  const authFormData = {
+  // Use useMemo to prevent unnecessary re-creation of this object
+  const authFormData = useMemo(() => ({
     email: form.email,
     password: form.password,
     first_name: form.firstName || '',
     last_name: form.lastName || ''
-  };
+  }), [form.email, form.password, form.firstName, form.lastName]);
+
+  // Memoize loading state to reduce re-renders
+  const isLoading = useMemo(() => 
+    loading || authLoading || loadingProviders, 
+    [loading, authLoading, loadingProviders]
+  );
 
   return (
     <Layout>
@@ -83,7 +93,7 @@ const AuthPage = () => {
               isRegister={isRegister}
               form={authFormData}
               handleInput={handleInput}
-              loading={loading || authLoading}
+              loading={isLoading}
               handleSubmit={handleAuth}
               userType={userType}
             />
@@ -97,7 +107,7 @@ const AuthPage = () => {
               <AuthSocialDivider />
               <SocialAuthButtons 
                 handleOAuth={handleOAuth}
-                loading={loading || loadingProviders || authLoading}
+                loading={isLoading}
               />
             </div>
           </AuthCard>
