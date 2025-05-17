@@ -1,7 +1,4 @@
 
-import { fetchProfile } from "@/utils/profile/profile-api";
-import { logProfile } from "@/utils/profile/profile-logger";
-
 // Constants to configure behavior
 const MAX_RETRY_COUNT = 2;
 const RETRY_DELAY_BASE = 1000; // 1 second
@@ -30,3 +27,6 @@ export const logProfileFetchAttempt = (userId: string, retryCount: number = 0) =
 export const logProfileNotFound = (userId: string, retryCount: number) => {
   logProfile(`No profile found for user: ${userId} on attempt ${retryCount + 1}`, null, true);
 };
+
+// Import the logger function
+import { logProfile } from "./profile-logger";
