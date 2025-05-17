@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuth } from "@/utils/auth/auth-logger";
+import { useSessionRecovery } from "./auth/useSessionRecovery";
+import { useAuthStateMonitoring } from "./auth/useAuthStateMonitoring";
+import { useSessionTimeout } from "./auth/useSessionTimeout";
 
-// Threshold for detecting potential auth loops
-const AUTH_CHANGE_THRESHOLD = 10;
 // Debounce time in ms to prevent rapid state changes
 const FETCH_DEBOUNCE_TIME = 100;
 
@@ -19,79 +20,37 @@ export const useSessionMonitoring = (
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   
-  // Track auth state changes to detect potential loops
-  const authStateChangeCount = useRef(0);
-  const lastAuthChangeTime = useRef(Date.now());
-  
   // Use refs to track if operations are in progress - prevents duplicate calls
   const profileFetchInProgress = useRef(false);
-  const sessionRecoveryInProgress = useRef(false);
 
-  // Force end loading state after timeout to prevent infinite loading
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (loading && authStateChangeCount.current > AUTH_CHANGE_THRESHOLD) {
-        logAuth("Forcing end of loading state due to timeout", null, "warning");
-        setLoading(false);
-      }
-    }, 10000); // 10 seconds max loading time
-    
-    return () => clearTimeout(timeoutId);
-  }, [loading]);
+  // Reset all state when needed
+  const resetState = useCallback(() => {
+    setUser(null);
+    setSession(null);
+    onSignOut();
+    setAuthError(null);
+  }, [onSignOut, setAuthError]);
 
-  // Handle recovery from potential auth loops
-  const initiateSessionRecovery = useCallback(async () => {
-    if (sessionRecoveryInProgress.current) return;
-    
-    sessionRecoveryInProgress.current = true;
-    logAuth("Session recovery: Signing out to reset auth state", null, 'warning');
-    
-    try {
-      // Sign out completely to reset state
-      await supabase.auth.signOut({ scope: 'local' });
-      
-      // Reset all local state
-      setUser(null);
-      setSession(null);
-      onSignOut();
-      
-      // Reset counters
-      authStateChangeCount.current = 0;
-      
-      // Notify user
-      toast.warning("Your session has been reset due to an authentication issue. Please sign in again.");
-    } catch (error) {
-      logAuth("Session recovery failed:", error, 'error');
-    } finally {
-      sessionRecoveryInProgress.current = false;
-      setLoading(false);
-    }
-  }, [onSignOut]);
+  // Use the session recovery hook
+  const { 
+    recoveryAttempted, 
+    initiateSessionRecovery 
+  } = useSessionRecovery(resetState);
+
+  // Use the auth state monitoring hook
+  const { trackAuthStateChange } = useAuthStateMonitoring(
+    initiateSessionRecovery,
+    recoveryAttempted
+  );
+
+  // Use the session timeout hook
+  useSessionTimeout(loading, authInitialized);
 
   // Handle auth state change with debouncing
   const handleAuthChange = useCallback(
     async (_event: string, newSession: Session | null) => {
-      // Check for potential auth loop by measuring frequency
-      const now = Date.now();
-      const timeSinceLastChange = now - lastAuthChangeTime.current;
-      lastAuthChangeTime.current = now;
-      
-      // Count auth state changes to detect potential loops
-      authStateChangeCount.current += 1;
-      
-      // If changes are happening too rapidly, it may indicate a loop
-      if (authStateChangeCount.current > AUTH_CHANGE_THRESHOLD && timeSinceLastChange < 1000) {
-        logAuth(`Potential auth loop detected (${authStateChangeCount.current} changes)`, null, "warning");
-        
-        if (authStateChangeCount.current > 25 && !sessionRecoveryInProgress.current) {
-          // Circuit breaker: attempt recovery
-          initiateSessionRecovery();
-          return;
-        }
-      }
-      
-      // Don't update state if recovery is in progress
-      if (sessionRecoveryInProgress.current) return;
+      // Track auth state change to detect potential loops
+      trackAuthStateChange();
       
       // Update session state
       setSession(newSession);
@@ -123,7 +82,7 @@ export const useSessionMonitoring = (
         setUser(null);
       }
     },
-    [onUserAuthenticated, setAuthError, initiateSessionRecovery]
+    [onUserAuthenticated, setAuthError, trackAuthStateChange]
   );
 
   // Set up auth state listener on component mount
@@ -202,6 +161,3 @@ export const useSessionMonitoring = (
     setLoading,
   };
 };
-
-// Import toast at the top of the file
-import { toast } from "sonner";

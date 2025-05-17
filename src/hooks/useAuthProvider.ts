@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/types/auth";
