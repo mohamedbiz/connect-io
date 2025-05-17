@@ -25,8 +25,8 @@ export const AuthContext = createContext<AuthContextType>({
   loading: true,
   error: null,
   logout: async () => {},
-  login: async () => { throw new Error('Not implemented'); },
-  register: async () => { throw new Error('Not implemented'); },
+  login: async () => { throw new Error('Authentication not initialized'); },
+  register: async () => { throw new Error('Authentication not initialized'); },
   ensureProfile: async () => null,
   shouldRedirectToAcquisition: () => false,
   shouldRedirectToQualification: () => false,
@@ -39,36 +39,10 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const {
-    user,
-    session,
-    profile,
-    loading,
-    error,
-    logout,
-    login,
-    register,
-    ensureProfile,
-    shouldRedirectToAcquisition,
-    shouldRedirectToQualification
-  } = useAuthProvider();
-
-  const value = {
-    user,
-    session,
-    profile,
-    loading,
-    error,
-    logout,
-    login,
-    register,
-    ensureProfile,
-    shouldRedirectToAcquisition,
-    shouldRedirectToQualification
-  };
+  const auth = useAuthProvider();
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );

@@ -17,9 +17,10 @@ import ForFoundersPage from "@/pages/ForFoundersPage";
 import ForProvidersPage from "@/pages/ForProvidersPage";
 import ProviderApplyRedirect from "@/pages/provider/ProviderApplyRedirect";
 import PostRegisterPage from "@/pages/PostRegisterPage";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -28,9 +29,28 @@ function App() {
     if (!loading && user && location.pathname === "/auth") {
       // If user is already logged in and on the auth page, redirect to appropriate dashboard
       const from = location.state?.from || "/";
-      navigate(from, { replace: true });
+
+      logAuth("User already authenticated on auth page, redirecting", { 
+        from, 
+        hasProfile: !!profile,
+        role: profile?.role
+      });
+      
+      if (profile) {
+        // If profile exists, redirect based on role
+        if (profile.role === "founder") {
+          navigate("/founder-dashboard", { replace: true });
+        } else if (profile.role === "provider") {
+          navigate("/provider-dashboard", { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      } else {
+        // If no profile yet, redirect to post-register page
+        navigate("/post-register", { replace: true });
+      }
     }
-  }, [user, loading, location.pathname, location.state, navigate]);
+  }, [user, loading, profile, location.pathname, location.state, navigate]);
 
   return (
     <>

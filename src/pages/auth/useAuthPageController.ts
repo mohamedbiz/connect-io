@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
 import { useOAuth } from "@/hooks/useOAuth";
 import { toast } from "sonner";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 /**
  * Controller hook for the authentication page
@@ -35,7 +36,7 @@ const useAuthPageController = () => {
 
   // Submit handler for both login and registration
   const handleAuth = useCallback(async () => {
-    console.log("Auth form submission. Is registration:", isRegister);
+    logAuth("Auth form submission. Is registration:", { isRegister, userType });
     
     // Form validation
     if (!form.email || !form.password) {
@@ -51,7 +52,7 @@ const useAuthPageController = () => {
       }
 
       // For registration, we need to include the user type and name info
-      console.log("Registering new user with role:", userType);
+      logAuth("Registering new user with role:", { role: userType });
       const success = await handleRegister(form.email, form.password, {
         first_name: form.firstName,
         last_name: form.lastName,
@@ -59,7 +60,7 @@ const useAuthPageController = () => {
       });
 
       if (success) {
-        console.log("Registration successful, redirecting to post-register");
+        logAuth("Registration successful, redirecting to post-register");
         // Redirect to post-register page
         navigate("/post-register", { 
           state: { 
@@ -70,12 +71,12 @@ const useAuthPageController = () => {
       }
     } else {
       // For login
-      console.log("Logging in existing user");
+      logAuth("Logging in existing user");
       const success = await handleLogin(form.email, form.password);
       
       if (success) {
         // Redirection will be handled by useEmailPasswordAuth
-        console.log("Login successful, redirection handled by auth hook");
+        logAuth("Login successful, redirection handled by auth hook");
       }
     }
   }, [form, isRegister, userType, handleRegister, handleLogin, navigate]);

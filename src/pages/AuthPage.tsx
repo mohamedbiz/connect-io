@@ -10,11 +10,14 @@ import AuthHeader from "@/components/auth/AuthHeader";
 import AuthUserTypeSelector from "@/components/auth/AuthUserTypeSelector";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthToggle from "@/components/auth/AuthToggle";
+import { useAuth } from "@/contexts/AuthContext";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const shouldRegister = searchParams.get('register') === 'true';
   const userTypeParam = searchParams.get('type') as "founder" | "provider" | null;
+  const { user, loading: authLoading } = useAuth();
   
   const {
     isRegister,
@@ -39,6 +42,16 @@ const AuthPage = () => {
       setUserType(userTypeParam);
     }
   }, [shouldRegister, userTypeParam, setIsRegister, setUserType]);
+
+  // Log authentication state on render
+  useEffect(() => {
+    logAuth("AuthPage rendered", { 
+      isAuthenticated: !!user, 
+      loading: authLoading,
+      isRegisterMode: isRegister,
+      userType
+    });
+  }, [user, authLoading, isRegister, userType]);
 
   const toggleAuth = () => {
     setIsRegister(!isRegister);
@@ -70,7 +83,7 @@ const AuthPage = () => {
               isRegister={isRegister}
               form={authFormData}
               handleInput={handleInput}
-              loading={loading}
+              loading={loading || authLoading}
               handleSubmit={handleAuth}
               userType={userType}
             />
@@ -84,7 +97,7 @@ const AuthPage = () => {
               <AuthSocialDivider />
               <SocialAuthButtons 
                 handleOAuth={handleOAuth}
-                loading={loading || loadingProviders}
+                loading={loading || loadingProviders || authLoading}
               />
             </div>
           </AuthCard>

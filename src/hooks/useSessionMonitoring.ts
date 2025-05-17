@@ -1,161 +1,117 @@
 
-import { useState, useEffect } from "react";
-import { Session, User } from "@supabase/supabase-js";
+import { useState, useEffect, useCallback } from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { safeAuthOperation } from "@/utils/auth/rate-limiting";
-import { useSessionRecovery } from "./auth/useSessionRecovery";
 import { useAuthStateMonitoring } from "./auth/useAuthStateMonitoring";
+import { useSessionRecovery } from "./auth/useSessionRecovery";
 import { useSessionTimeout } from "./auth/useSessionTimeout";
 import { logAuth } from "@/utils/auth/auth-logger";
 
 export const useSessionMonitoring = (
-  fetchProfileAndSetState: (userId: string) => Promise<void>,
-  resetProfileState: () => void,
+  onUserAuthenticated: (userId: string) => Promise<void>,
+  onSignOut: () => void,
   setAuthError: (error: string | null) => void
 ) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const [lastProfileFetch, setLastProfileFetch] = useState(0);
 
-  // Reset state function - used in multiple places
-  const resetAllState = () => {
-    setUser(null);
-    setSession(null);
-    resetProfileState();
-    setAuthError(null);
-    setAuthStateChangeCount(0);
-  };
-
-  // Use refactored session recovery hook
+  // Use session recovery hook
   const {
     recoveryAttempted,
     sessionRecoveryInProgress,
+    setRecoveryAttempted,
     initiateSessionRecovery
-  } = useSessionRecovery(resetAllState);
+  } = useSessionRecovery(onSignOut);
 
-  // Use refactored auth state monitoring hook
-  const {
-    authStateChangeCount,
-    trackAuthStateChange,
-    setAuthStateChangeCount
-  } = useAuthStateMonitoring(initiateSessionRecovery, recoveryAttempted);
+  // Use auth state monitoring to detect potential loops
+  const { trackAuthStateChange } = useAuthStateMonitoring(
+    initiateSessionRecovery,
+    recoveryAttempted
+  );
 
-  // Use timeout hook to prevent infinite loading
-  useSessionTimeout(loading, authInitialized);
-
-  // Set up auth listener and session initialization
-  useEffect(() => {
-    logAuth("Setting up auth listener");
-    let isMounted = true;
-    let profileFetchInProgress = false;
-    
-    // Set up auth listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      logAuth("Auth state changed:", event);
-      
-      // Track auth state changes to detect potential loops
+  // Handle auth state change
+  const handleAuthChange = useCallback(
+    async (_event: string, newSession: Session | null) => {
       trackAuthStateChange();
       
-      if (isMounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
+      try {
+        setSession(newSession);
 
-        if (session?.user) {
-          // Check if we've recently fetched this profile to avoid redundant fetches
-          const now = Date.now();
-          const timeSinceLastFetch = now - lastProfileFetch;
+        if (newSession?.user) {
+          setUser(newSession.user);
+          setAuthError(null);
           
-          // Only fetch profile if enough time has passed and no fetch is in progress
-          if (timeSinceLastFetch > 3000 && !profileFetchInProgress && isMounted) {
-            profileFetchInProgress = true;
-            
-            // Defer Supabase call with setTimeout to prevent potential deadlocks
-            setTimeout(() => {
-              if (isMounted && session?.user?.id) {
-                safeAuthOperation(async () => {
-                  try {
-                    await fetchProfileAndSetState(session.user.id);
-                    setLastProfileFetch(Date.now());
-                  } finally {
-                    if (isMounted) {
-                      profileFetchInProgress = false;
-                    }
-                  }
-                }, `fetch_profile_${session.user.id}`); // Add operation key for deduplication
-              }
-            }, 300);
+          if (!sessionRecoveryInProgress) {
+            await onUserAuthenticated(newSession.user.id);
           }
         } else {
-          resetProfileState();
-          setLoading(false);
-          setAuthError(null);
-        }
-      }
-    });
-
-    // THEN check for existing session with proper rate limiting
-    safeAuthOperation(async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-        
-        logAuth("Initial session check:", session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Add delay before fetching profile to avoid race conditions
-          setTimeout(() => {
-            if (isMounted && session?.user?.id && !profileFetchInProgress) {
-              profileFetchInProgress = true;
-              
-              safeAuthOperation(async () => {
-                try {
-                  await fetchProfileAndSetState(session.user.id);
-                  setLastProfileFetch(Date.now());
-                } finally {
-                  if (isMounted) {
-                    profileFetchInProgress = false;
-                    setLoading(false);
-                    setAuthInitialized(true);
-                  }
-                }
-              }, `initial_fetch_profile_${session.user.id}`);
-            }
-          }, 300);
-        } else {
-          resetProfileState();
-          setLoading(false);
-          setAuthInitialized(true);
+          setUser(null);
         }
       } catch (error) {
-        logAuth("Error getting session:", error, 'error');
-        if (isMounted) {
-          setLoading(false);
-          setAuthError("Failed to get session");
-          setAuthInitialized(true);
-        }
+        logAuth("Error in auth state change handler:", error, "error");
+        setAuthError("Failed to process authentication change");
       }
-    }, "initial_session_check");
+    },
+    [trackAuthStateChange, onUserAuthenticated, setAuthError, sessionRecoveryInProgress]
+  );
 
+  // Set up auth state listener on component mount
+  useEffect(() => {
+    setLoading(true);
+    
+    // First, set up the auth subscription
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+
+    // Then, get the initial session
+    const initializeAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          logAuth("Error getting session:", error, "error");
+          setAuthError(error.message);
+          setLoading(false);
+          return;
+        }
+        
+        setSession(data.session);
+        setUser(data.session?.user || null);
+        
+        if (data.session?.user) {
+          try {
+            await onUserAuthenticated(data.session.user.id);
+          } catch (err) {
+            logAuth("Error fetching user profile:", err, "error");
+          }
+        }
+        
+        setAuthInitialized(true);
+      } catch (err) {
+        logAuth("Unexpected error during auth initialization:", err, "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Clean up on unmount
     return () => {
-      isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfileAndSetState, resetProfileState, setAuthError, lastProfileFetch, 
-      trackAuthStateChange, resetAllState]);
+  }, [handleAuthChange, onUserAuthenticated, setAuthError]);
+
+  // Force end loading state after timeout to prevent infinite loading
+  useSessionTimeout(loading, authInitialized);
 
   return {
     user,
     session,
     loading,
-    authInitialized,
     setUser,
     setSession,
     setLoading,
-    initiateSessionRecovery
   };
 };

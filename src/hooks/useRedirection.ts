@@ -1,118 +1,62 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { fetchProfile } from "@/utils/profile/profile-api";
 import { toast } from "sonner";
-import { useQualificationStatus } from "@/hooks/useQualificationStatus";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 export const useRedirection = () => {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { isQualified } = useQualificationStatus();
+  const location = useLocation();
 
-  const handleRedirectBasedOnRole = async (userId: string) => {
-    console.log("Handling redirect based on role for user ID:", userId);
-    
+  const handleRedirectBasedOnRole = useCallback(async (userId: string) => {
     try {
-      setLoading(true);
+      const userProfile = await fetchProfile(userId);
       
-      // Add a small delay to ensure Supabase has time to update
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Get the intended redirect location or default to home
+      const from = location.state?.from || "/";
       
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("role, onboarding_complete")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching user role:", error);
-        toast.error("Failed to fetch user profile. Please try again.");
-        navigate("/");
-        return;
-      }
-
-      if (!profileData) {
-        console.error("No profile found for user:", userId);
-        toast.error("User profile not found.");
-        navigate("/post-register");
-        return;
-      }
-
-      console.log("User role found:", profileData.role, "Onboarding complete:", profileData.onboarding_complete);
-      
-      // Check if user needs to complete onboarding first
-      if (profileData.onboarding_complete === false) {
-        console.log("User needs to complete onboarding");
-        navigate("/post-register", { state: { userType: profileData.role } });
+      if (!userProfile) {
+        // If no profile exists, redirect to post-register page
+        logAuth("No profile found, redirecting to post-registration", { userId });
+        navigate("/post-register", { replace: true });
         return;
       }
       
-      if (profileData.role === "founder") {
-        console.log("User is a founder, checking qualification status");
+      // Check if user has completed onboarding
+      if (!userProfile.onboarding_complete) {
+        logAuth("User has not completed onboarding", { userId, role: userProfile.role });
         
-        if (!isQualified) {
-          console.log("Founder not qualified, redirecting to qualification page");
-          toast("Please complete the qualification to access your dashboard.");
-          navigate("/founder-qualification");
+        // Redirect based on role for onboarding
+        if (userProfile.role === "founder") {
+          navigate("/founder-application", { replace: true });
+          return;
+        } else if (userProfile.role === "provider") {
+          navigate("/provider-application", { replace: true });
           return;
         }
-        
-        console.log("Founder is qualified, redirecting to dashboard");
-        toast.success("Welcome to your founder dashboard.");
-        navigate("/founder-dashboard");
-      } else if (profileData.role === "provider") {
-        console.log("User is a provider, checking application status");
-        
-        try {
-          const { data: providerApplication, error: appError } = await supabase
-            .from("provider_applications") 
-            .select("status")
-            .eq("user_id", userId)
-            .maybeSingle();
-          
-          if (appError) {
-            console.error("Error checking provider application:", appError);
-          }
-          
-          console.log("Provider application status:", providerApplication);
-          
-          if (!providerApplication) {
-            // No application yet, redirect to application form
-            console.log("No application found, redirecting to provider application page");
-            toast("Please complete your provider application.");
-            navigate("/provider-application");
-          } else {
-            // Has submitted an application already, go to dashboard
-            console.log("Application found, redirecting to provider dashboard");
-            toast.success("Welcome to your provider dashboard.");
-            navigate("/provider-dashboard");
-          }
-        } catch (err) {
-          console.error("Error in provider redirection:", err);
-          toast.error("Failed to check provider status. Redirecting to dashboard.");
-          // Default to provider dashboard in case of errors
-          navigate("/provider-dashboard");
-        }
-      } else if (profileData.role === "admin") {
-        console.log("Redirecting to admin dashboard");
-        toast.success("Welcome to the admin dashboard.");
-        navigate("/admin/provider-applications");
-      } else {
-        console.log("Unknown role, redirecting to home");
-        navigate("/");
       }
-    } catch (err) {
-      console.error("Role check error:", err);
-      toast.error("An error occurred during login. Please try again.");
-      navigate("/");
-    } finally {
-      setLoading(false);
+      
+      // Redirect based on role to appropriate dashboard
+      if (userProfile.role === "founder") {
+        navigate("/founder-dashboard", { replace: true });
+      } else if (userProfile.role === "provider") {
+        navigate("/provider-dashboard", { replace: true });
+      } else if (userProfile.role === "admin") {
+        navigate("/admin-dashboard", { replace: true });
+      } else {
+        // If no specific role or unknown role, redirect to the home page
+        navigate(from, { replace: true });
+      }
+      
+    } catch (error) {
+      logAuth("Error during redirect:", error, "error");
+      toast.error("Something went wrong. Please try again.");
+      navigate("/", { replace: true });
     }
-  };
-
+  }, [navigate, location.state]);
+  
   return {
-    loading,
     handleRedirectBasedOnRole
   };
 };
