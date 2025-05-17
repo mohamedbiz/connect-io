@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEmailPasswordAuth } from "@/hooks/useEmailPasswordAuth";
 import { useOAuth } from "@/hooks/useOAuth";
@@ -66,18 +66,15 @@ const useAuthPageController = () => {
           state: { 
             userType,
             isNewUser: true 
-          } 
+          },
+          replace: true
         });
       }
     } else {
       // For login
       logAuth("Logging in existing user");
-      const success = await handleLogin(form.email, form.password);
-      
-      if (success) {
-        // Redirection will be handled by useEmailPasswordAuth
-        logAuth("Login successful, redirection handled by auth hook");
-      }
+      await handleLogin(form.email, form.password);
+      // Redirection will be handled by useEmailPasswordAuth
     }
   }, [form, isRegister, userType, handleRegister, handleLogin, navigate]);
 

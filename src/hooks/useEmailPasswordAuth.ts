@@ -23,6 +23,9 @@ export const useEmailPasswordAuth = () => {
         return false;
       }
       
+      // Prevent multiple submissions
+      if (loading) return false;
+      
       setLoading(true);
       setError(null);
 
@@ -59,7 +62,7 @@ export const useEmailPasswordAuth = () => {
         setLoading(false);
       }
     },
-    [login, handleRedirectBasedOnRole]
+    [login, handleRedirectBasedOnRole, loading]
   );
 
   /**
@@ -82,6 +85,9 @@ export const useEmailPasswordAuth = () => {
         toast.error("Please enter your first and last name");
         return false;
       }
+      
+      // Prevent multiple submissions
+      if (loading) return false;
       
       setLoading(true);
       setError(null);
@@ -119,7 +125,7 @@ export const useEmailPasswordAuth = () => {
         setLoading(false);
       }
     },
-    [register]
+    [register, loading]
   );
 
   return {

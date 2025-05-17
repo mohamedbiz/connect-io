@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStateMonitoring } from "./auth/useAuthStateMonitoring";
@@ -16,6 +16,9 @@ export const useSessionMonitoring = (
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
+  
+  // Use a ref to track if profile fetch is in progress
+  const profileFetchInProgress = useRef(false);
 
   // Use session recovery hook
   const {
@@ -43,8 +46,14 @@ export const useSessionMonitoring = (
           setUser(newSession.user);
           setAuthError(null);
           
-          if (!sessionRecoveryInProgress) {
-            await onUserAuthenticated(newSession.user.id);
+          // Prevent duplicate profile fetches
+          if (!sessionRecoveryInProgress && !profileFetchInProgress.current && newSession.user.id) {
+            profileFetchInProgress.current = true;
+            try {
+              await onUserAuthenticated(newSession.user.id);
+            } finally {
+              profileFetchInProgress.current = false;
+            }
           }
         } else {
           setUser(null);
@@ -60,6 +69,7 @@ export const useSessionMonitoring = (
   // Set up auth state listener on component mount
   useEffect(() => {
     setLoading(true);
+    let isMounted = true;
     
     // First, set up the auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
@@ -71,27 +81,36 @@ export const useSessionMonitoring = (
         
         if (error) {
           logAuth("Error getting session:", error, "error");
-          setAuthError(error.message);
-          setLoading(false);
+          if (isMounted) {
+            setAuthError(error.message);
+            setLoading(false);
+          }
           return;
         }
         
-        setSession(data.session);
-        setUser(data.session?.user || null);
-        
-        if (data.session?.user) {
-          try {
-            await onUserAuthenticated(data.session.user.id);
-          } catch (err) {
-            logAuth("Error fetching user profile:", err, "error");
+        if (isMounted) {
+          setSession(data.session);
+          setUser(data.session?.user || null);
+          
+          if (data.session?.user && !profileFetchInProgress.current) {
+            profileFetchInProgress.current = true;
+            try {
+              await onUserAuthenticated(data.session.user.id);
+            } catch (err) {
+              logAuth("Error fetching user profile:", err, "error");
+            } finally {
+              profileFetchInProgress.current = false;
+            }
           }
+          
+          setAuthInitialized(true);
+          setLoading(false);
         }
-        
-        setAuthInitialized(true);
       } catch (err) {
         logAuth("Unexpected error during auth initialization:", err, "error");
-      } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -99,6 +118,7 @@ export const useSessionMonitoring = (
 
     // Clean up on unmount
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, [handleAuthChange, onUserAuthenticated, setAuthError]);

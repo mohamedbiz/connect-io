@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import useAuthPageController from "@/pages/auth/useAuthPageController";
@@ -32,7 +32,7 @@ const AuthPage = () => {
     loadingProviders
   } = useAuthPageController();
 
-  // Set initial values based on URL params
+  // Set initial values based on URL params - using useEffect with empty deps to run once
   useEffect(() => {
     if (shouldRegister) {
       setIsRegister(true);
@@ -43,7 +43,7 @@ const AuthPage = () => {
     }
   }, [shouldRegister, userTypeParam, setIsRegister, setUserType]);
 
-  // Log authentication state on render
+  // Log authentication state on render - with proper dependencies
   useEffect(() => {
     logAuth("AuthPage rendered", { 
       isAuthenticated: !!user, 
@@ -53,9 +53,9 @@ const AuthPage = () => {
     });
   }, [user, authLoading, isRegister, userType]);
 
-  const toggleAuth = () => {
-    setIsRegister(!isRegister);
-  };
+  const toggleAuth = useCallback(() => {
+    setIsRegister(prev => !prev);
+  }, [setIsRegister]);
 
   // Map form data to match what AuthForm expects
   const authFormData = {
