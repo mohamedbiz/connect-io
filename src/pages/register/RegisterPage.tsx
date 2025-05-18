@@ -6,7 +6,7 @@ import FounderRegistrationForm from "@/components/auth/FounderRegistrationForm";
 import ProviderRegistrationForm from "@/components/auth/ProviderRegistrationForm";
 import RegisterHeader from "./RegisterHeader";
 import RegisterFooter from "./RegisterFooter";
-import RegisterTabs from "./RegisterTabs";
+import RegisterTabs from "@/components/auth/RegisterTabs"; // Fixed import path
 
 const RegisterPage = () => {
   return (
@@ -17,7 +17,7 @@ const RegisterPage = () => {
             <RegisterHeader />
             <CardContent>
               <Tabs defaultValue="founder" className="mb-6">
-                <RegisterTabs />
+                <RegisterTabs value="founder" onChange={() => {}} />
                 <TabsContent value="founder">
                   <FounderRegistrationForm />
                 </TabsContent>

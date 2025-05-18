@@ -29,16 +29,17 @@ export const useAuthRedirection = () => {
     currentPath: string,
     loading: boolean,
     user: User | null,
-    profile: Profile | null
+    profile: Profile | null,
+    isQualified?: boolean
   ): boolean => {
     return shouldRedirectToQualification(
       currentPath,
-      loading || qualificationLoading,
+      loading,
       user,
       profile,
       isQualified
     );
-  }, [isQualified, qualificationLoading]);
+  }, []);
 
   return {
     handleShouldRedirectToAcquisition,

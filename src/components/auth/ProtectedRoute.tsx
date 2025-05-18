@@ -9,12 +9,14 @@ interface ProtectedRouteProps {
   children: ReactNode;
   requireAuth?: boolean; // If true, redirects to login when not authenticated
   redirectToQualification?: boolean; // If true, checks qualification status for founders
+  adminOnly?: boolean; // If true, only allows admin users
 }
 
 const ProtectedRoute = ({ 
   children, 
   requireAuth = true,
-  redirectToQualification = true
+  redirectToQualification = true,
+  adminOnly = false
 }: ProtectedRouteProps) => {
   const { user, loading, profile, shouldRedirectToQualification } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +56,13 @@ const ProtectedRoute = ({
     shouldRedirectToQualification, 
     navigate
   ]);
+
+  // Check if user is an admin when adminOnly is true
+  const isAdmin = profile?.role === "admin";
+  if (adminOnly && !loading && !isAdmin) {
+    logAuth("Non-admin attempted to access admin-only route", { path: currentPath });
+    return <Navigate to="/" replace />;
+  }
 
   // Still loading - return the children
   if (loading) {
