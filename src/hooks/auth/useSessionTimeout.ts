@@ -1,30 +1,26 @@
 
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { logAuth } from '@/utils/auth/auth-logger';
+import { useEffect } from "react";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 /**
- * Hook for managing session timeout to prevent infinite loading
+ * Hook to handle session timeout to prevent infinite loading states
  */
-export const useSessionTimeout = (loading: boolean, authInitialized: boolean) => {
+export const useSessionTimeout = (
+  loading: boolean,
+  authInitialized: boolean
+) => {
   // Force end loading state after timeout to prevent infinite loading
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!loading || authInitialized) return;
+    
+    const timeoutId = setTimeout(() => {
       if (loading) {
-        logAuth("Forcing end of loading state after timeout", null, 'warning');
-        
-        // Show toast if we had to force end loading
-        if (!authInitialized) {
-          toast.error("Authentication is taking longer than expected. You may need to refresh the page if you experience issues.");
-        }
-        
-        return true; // Signal that we force-ended loading
+        logAuth("Forcing end of loading state due to timeout", null, "warning");
+        // We don't directly update state here to avoid React sync issues
+        // This will be handled by the parent component
       }
-      return false;
-    }, 7000); // 7 seconds timeout
-
-    return () => clearTimeout(timer);
+    }, 10000); // 10 seconds max loading time
+    
+    return () => clearTimeout(timeoutId);
   }, [loading, authInitialized]);
-
-  return {};
 };

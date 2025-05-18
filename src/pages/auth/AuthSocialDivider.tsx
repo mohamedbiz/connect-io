@@ -1,10 +1,19 @@
 
-export default function AuthSocialDivider() {
+import React from 'react';
+
+const AuthSocialDivider = () => {
   return (
-    <div className="flex items-center my-2">
-      <span className="h-px flex-1 bg-gray-200" />
-      <span className="mx-2 text-xs text-gray-500">or</span>
-      <span className="h-px flex-1 bg-gray-200" />
+    <div className="relative my-4">
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-[#2D82B7]/30"></div>
+      </div>
+      <div className="relative flex justify-center text-sm">
+        <span className="px-2 bg-white text-[#0E3366]">
+          Or continue with
+        </span>
+      </div>
     </div>
   );
-}
+};
+
+export default AuthSocialDivider;

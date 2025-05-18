@@ -1,67 +1,49 @@
 
-import { useRef, useEffect } from 'react';
-import { logAuth } from '@/utils/auth/auth-logger';
+import { useRef, useCallback } from "react";
+import { logAuth } from "@/utils/auth/auth-logger";
+
+// Threshold for detecting potential auth loops
+const AUTH_CHANGE_THRESHOLD = 10;
 
 /**
- * Hook for monitoring auth state changes to detect potential loops
+ * Hook for monitoring auth state changes and detecting potential loops
  */
 export const useAuthStateMonitoring = (
-  initiateSessionRecovery: () => void,
+  initiateSessionRecovery: () => Promise<void>,
   recoveryAttempted: boolean
 ) => {
+  // Track auth state changes to detect potential loops
   const authStateChangeCount = useRef(0);
-  const lastChangeTime = useRef(Date.now());
+  const lastAuthChangeTime = useRef(Date.now());
 
-  // Monitor for potential auth refresh loops and add circuit breaker
-  useEffect(() => {
-    if (authStateChangeCount.current > 20 && !recoveryAttempted) {
-      const timeSinceLastChange = Date.now() - lastChangeTime.current;
+  /**
+   * Track and analyze auth state changes to detect potential auth loops
+   */
+  const trackAuthStateChange = useCallback(() => {
+    // Don't track changes if recovery has already been attempted
+    if (recoveryAttempted) return;
+
+    // Check for potential auth loop by measuring frequency
+    const now = Date.now();
+    const timeSinceLastChange = now - lastAuthChangeTime.current;
+    lastAuthChangeTime.current = now;
+    
+    // Count auth state changes to detect potential loops
+    authStateChangeCount.current += 1;
+    
+    // If changes are happening too rapidly, it may indicate a loop
+    if (authStateChangeCount.current > AUTH_CHANGE_THRESHOLD && timeSinceLastChange < 1000) {
+      logAuth(`Potential auth loop detected (${authStateChangeCount.current} changes)`, null, "warning");
       
-      // Only initiate recovery if changes are happening rapidly (less than 5 seconds apart)
-      if (timeSinceLastChange < 5000) {
-        logAuth(
-          "Too many auth state changes detected. Possible auth loop. Initiating recovery.", 
-          { count: authStateChangeCount.current }, 
-          'error'
-        );
+      if (authStateChangeCount.current > 25) {
+        // Circuit breaker: attempt recovery
         initiateSessionRecovery();
       }
     }
-  }, [authStateChangeCount.current, recoveryAttempted, initiateSessionRecovery]);
-
-  // Track auth state changes to detect potential loops
-  const trackAuthStateChange = () => {
-    const now = Date.now();
-    const timeSinceLastChange = now - lastChangeTime.current;
-    lastChangeTime.current = now;
-    
-    // Only increment the counter if changes are happening rapidly
-    if (timeSinceLastChange < 2000) {
-      authStateChangeCount.current += 1;
-      
-      // Log warning if too many auth state changes
-      if (authStateChangeCount.current > 10 && authStateChangeCount.current % 5 === 0) {
-        logAuth(`High frequency of auth state changes detected (${authStateChangeCount.current}). Possible auth loop.`, 
-          { timeSinceLastChange }, 
-          'warning'
-        );
-        
-        if (authStateChangeCount.current > 20 && !recoveryAttempted) {
-          logAuth("Auth state change threshold exceeded. Initiating recovery.", null, 'warning');
-          initiateSessionRecovery();
-          return; // Don't increment further during recovery
-        }
-      }
-    } else {
-      // If changes are slower, start counting again
-      // This prevents false positives from normal usage
-      authStateChangeCount.current = 0;
-    }
-  };
+  }, [initiateSessionRecovery, recoveryAttempted]);
 
   return {
-    authStateChangeCount: authStateChangeCount.current,
     trackAuthStateChange,
-    resetAuthStateChangeCount: () => { authStateChangeCount.current = 0; }
+    authStateChangeCount: authStateChangeCount.current
   };
 };
