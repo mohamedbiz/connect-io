@@ -13,7 +13,7 @@ const useAuthPageController = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [userType, setUserType] = useState<"founder" | "provider">("founder");
   const { handleLogin, handleRegister, loading, error } = useEmailPasswordAuth();
-  const { loading: loadingProviders, handleOAuth } = useOAuth();
+  const { loadingProviders, handleOAuth } = useOAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,7 +34,7 @@ const useAuthPageController = () => {
     []
   );
 
-  // Submit handler for both login and registration - optimize to reduce excessive renders
+  // Submit handler for both login and registration - optimized to reduce unnecessary renders
   const handleAuth = useCallback(async () => {
     // Simple client-side validation
     if (!form.email || !form.password) {

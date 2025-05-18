@@ -7,11 +7,17 @@ type AuthUserTypeSelectorProps = {
 };
 
 const AuthUserTypeSelector = ({ userType, setUserType }: AuthUserTypeSelectorProps) => {
+  // Added console.log to help debug user type selection
+  const handleUserTypeChange = (value: string) => {
+    console.log("User type changed to:", value);
+    setUserType(value as "founder" | "provider");
+  };
+
   return (
     <Tabs
-      defaultValue="founder"
+      defaultValue={userType}
       value={userType}
-      onValueChange={(value) => setUserType(value as "founder" | "provider")}
+      onValueChange={handleUserTypeChange}
       className="mb-6"
     >
       <TabsList className="grid grid-cols-2 w-full bg-[#BFD7ED]/30">

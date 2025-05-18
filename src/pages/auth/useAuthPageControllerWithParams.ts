@@ -31,6 +31,13 @@ export const useAuthPageControllerWithParams = () => {
 
   // Set initial values based on URL params - using useEffect with dependencies to run only when needed
   useEffect(() => {
+    logAuth("Auth page params:", { 
+      shouldRegister, 
+      userTypeParam,
+      currentIsRegister: isRegister,
+      currentUserType: userType
+    });
+
     // Only set if the values don't match to avoid unnecessary state updates
     if (shouldRegister && !isRegister) {
       setIsRegister(true);
@@ -38,6 +45,7 @@ export const useAuthPageControllerWithParams = () => {
     
     if (userTypeParam && userTypeParam !== userType && 
         (userTypeParam === "founder" || userTypeParam === "provider")) {
+      logAuth("Setting user type from URL param", { userType: userTypeParam });
       setUserType(userTypeParam);
     }
   }, [shouldRegister, userTypeParam, setIsRegister, setUserType, isRegister, userType]);
@@ -54,6 +62,7 @@ export const useAuthPageControllerWithParams = () => {
 
   // Toggle between register and login
   const toggleAuth = useCallback(() => {
+    logAuth("Toggling auth mode", { currentMode: isRegister ? "Register" : "Login" });
     setIsRegister(prev => !prev);
   }, [setIsRegister]);
 
@@ -67,7 +76,7 @@ export const useAuthPageControllerWithParams = () => {
 
   // Memoize loading state to reduce re-renders
   const isLoading = useMemo(() => 
-    loading || authLoading || loadingProviders, 
+    loading || authLoading || Object.values(loadingProviders).some(Boolean), 
     [loading, authLoading, loadingProviders]
   );
 

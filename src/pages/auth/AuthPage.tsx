@@ -1,5 +1,4 @@
 
-import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import AuthForm from "@/components/auth/AuthForm";
 import AuthSocialDivider from "@/pages/auth/AuthSocialDivider";
@@ -9,6 +8,7 @@ import AuthUserTypeSelector from "@/components/auth/AuthUserTypeSelector";
 import AuthCard from "@/components/auth/AuthCard";
 import AuthToggle from "@/components/auth/AuthToggle";
 import { useAuthPageControllerWithParams } from "./useAuthPageControllerWithParams";
+import { logAuth } from "@/utils/auth/auth-logger";
 
 const AuthPage = () => {
   const { 
@@ -27,6 +27,15 @@ const AuthPage = () => {
     isLoading
   } = useAuthPageControllerWithParams();
 
+  // Add logging to help debug user type selection
+  const handleUserTypeChange = (value: "founder" | "provider") => {
+    logAuth("AuthPage: User type selection changed", { 
+      from: userType, 
+      to: value 
+    });
+    setUserType(value);
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-16 md:py-24">
@@ -37,7 +46,7 @@ const AuthPage = () => {
             {isRegister && (
               <AuthUserTypeSelector 
                 userType={userType} 
-                setUserType={setUserType} 
+                setUserType={handleUserTypeChange} 
               />
             )}
 
