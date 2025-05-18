@@ -11,14 +11,14 @@ export const useSessionRecovery = (
   resetState: () => void
 ) => {
   const sessionRecoveryInProgress = useRef(false);
-  const recoveryAttempted = useRef(false);
+  const recoveryAttemptedRef = useRef(false);
 
   // Handle recovery from potential auth loops
   const initiateSessionRecovery = useCallback(async () => {
     if (sessionRecoveryInProgress.current) return;
     
     sessionRecoveryInProgress.current = true;
-    recoveryAttempted.current = true;
+    recoveryAttemptedRef.current = true;
     logAuth("Session recovery: Signing out to reset auth state", null, 'warning');
     
     try {
@@ -38,7 +38,7 @@ export const useSessionRecovery = (
   }, [resetState]);
 
   return {
-    recoveryAttempted: recoveryAttempted.current,
+    recoveryAttempted: recoveryAttemptedRef.current,
     initiateSessionRecovery
   };
 };

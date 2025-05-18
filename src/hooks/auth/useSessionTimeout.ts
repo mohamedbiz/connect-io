@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { logAuth } from "@/utils/auth/auth-logger";
 
 /**
@@ -7,20 +7,34 @@ import { logAuth } from "@/utils/auth/auth-logger";
  */
 export const useSessionTimeout = (
   loading: boolean,
-  authInitialized: boolean
+  authInitialized: boolean,
+  setLoading: (state: boolean) => void
 ) => {
+  const timeoutIdRef = useRef<number | null>(null);
+
   // Force end loading state after timeout to prevent infinite loading
   useEffect(() => {
-    if (!loading || authInitialized) return;
+    // Clear any existing timeout
+    if (timeoutIdRef.current) {
+      clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
+    }
     
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        logAuth("Forcing end of loading state due to timeout", null, "warning");
-        // We don't directly update state here to avoid React sync issues
-        // This will be handled by the parent component
+    // Only set timeout if we're in a loading state
+    if (loading && !authInitialized) {
+      timeoutIdRef.current = window.setTimeout(() => {
+        if (loading) {
+          logAuth("Forcing end of loading state due to timeout", null, "warning");
+          // Directly update loading state to prevent infinite loading
+          setLoading(false);
+        }
+      }, 15000); // 15 seconds max loading time
+    }
+    
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
       }
-    }, 10000); // 10 seconds max loading time
-    
-    return () => clearTimeout(timeoutId);
-  }, [loading, authInitialized]);
+    };
+  }, [loading, authInitialized, setLoading]);
 };

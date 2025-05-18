@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+
+import { useState, useCallback, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 import { Profile } from "@/types/auth";
 import { useSessionMonitoring } from "./useSessionMonitoring";
@@ -9,10 +10,12 @@ import { safeAuthOperation } from "@/utils/auth/rate-limiting";
 import { logAuth } from "@/utils/auth/auth-logger";
 import { useQualificationStatus } from "./useQualificationStatus";
 import { useCurrentPath } from "./useCurrentPath";
+import { toast } from "sonner";
 
 export const useAuthProvider = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const currentPath = useCurrentPath();
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   // Use our enhanced profile management hook
   const {
@@ -22,22 +25,32 @@ export const useAuthProvider = () => {
     fetchProfileAndSetState,
     ensureProfile,
     resetProfileState,
-    isCreatingProfile
+    isCreatingProfile,
+    initializeAttempted
   } = useProfileManagement();
 
   // Wrapper for fetchProfileAndSetState to handle void return type
   const fetchProfileWrapper = useCallback(async (userId: string): Promise<void> => {
-    await fetchProfileAndSetState(userId);
+    if (!userId) {
+      logAuth("Cannot fetch profile - invalid userId", null, "warning");
+      return;
+    }
+
+    try {
+      await fetchProfileAndSetState(userId);
+    } catch (error) {
+      logAuth("Error in fetchProfileWrapper:", error, "error");
+    }
   }, [fetchProfileAndSetState]);
 
   // Use session monitoring hook
   const {
     user,
     session,
-    loading,
+    loading: authLoading,
     setUser,
     setSession,
-    setLoading
+    setLoading: setAuthLoading
   } = useSessionMonitoring(fetchProfileWrapper, resetProfileState, setAuthError);
 
   // Use auth operations hook for login/logout
@@ -55,6 +68,37 @@ export const useAuthProvider = () => {
 
   // Check qualification status
   const { isQualified, isLoading: qualificationLoading } = useQualificationStatus();
+
+  // Attempt to ensure profile exists when user is available
+  useEffect(() => {
+    // Skip if no user or if profile exists or if we're loading
+    if (!user || profile || authLoading || profileLoading || isCreatingProfile) {
+      return;
+    }
+
+    // If we have a user but no profile, and we've tried to fetch it already,
+    // ensure the profile exists (create if needed)
+    if (initializeAttempted && !profile) {
+      logAuth("No profile found after initialization, ensuring profile exists", { userId: user.id }, "warning");
+      
+      // Delay slightly to avoid potential auth state conflicts
+      const timeoutId = setTimeout(() => {
+        ensureProfile(user).catch(error => {
+          logAuth("Failed to ensure profile exists:", error, "error");
+          toast.error("Could not load your profile. Please try refreshing the page.");
+        });
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [user, profile, authLoading, profileLoading, isCreatingProfile, initializeAttempted, ensureProfile]);
+
+  // Set auth to initialized once we've done initial loading
+  useEffect(() => {
+    if (!authInitialized && !authLoading) {
+      setAuthInitialized(true);
+    }
+  }, [authLoading, authInitialized]);
 
   // Ensure a profile exists for the current user
   const ensureUserProfile = useCallback(async (): Promise<Profile | null> => {
@@ -90,28 +134,35 @@ export const useAuthProvider = () => {
   const shouldRedirectToAcquisition = useCallback((path: string = currentPath || '') => {
     return handleShouldRedirectToAcquisition(
       path,
-      loading || profileLoading || isCreatingProfile,
+      authLoading || profileLoading || isCreatingProfile,
       user,
       profile
     );
-  }, [handleShouldRedirectToAcquisition, loading, profileLoading, isCreatingProfile, user, profile, currentPath]);
+  }, [handleShouldRedirectToAcquisition, authLoading, profileLoading, isCreatingProfile, user, profile, currentPath]);
 
   // Function to decide if we should redirect founders to qualification
   const shouldRedirectToQualification = useCallback((path: string = currentPath || '') => {
     return handleShouldRedirectToQualification(
       path,
-      loading || profileLoading || isCreatingProfile || qualificationLoading,
+      authLoading || profileLoading || isCreatingProfile || qualificationLoading,
       user,
-      profile
+      profile,
+      isQualified
     );
-  }, [handleShouldRedirectToQualification, loading, profileLoading, isCreatingProfile, qualificationLoading, user, profile, currentPath]);
+  }, [handleShouldRedirectToQualification, authLoading, profileLoading, isCreatingProfile, qualificationLoading, user, profile, isQualified, currentPath]);
+
+  // Combined loading state
+  const isLoading = authLoading || profileLoading || qualificationLoading;
+
+  // Combined error state
+  const error = authError || profileError;
 
   return {
     user,
     session,
     profile,
-    loading: loading || profileLoading || qualificationLoading,
-    error: authError || profileError,
+    loading: isLoading,
+    error,
     logout,
     shouldRedirectToAcquisition,
     shouldRedirectToQualification,

@@ -12,6 +12,9 @@ import {
 } from "@/utils/profile/profileFetching";
 import { createUserProfile } from "@/utils/profile/profileCreation";
 
+// Maximum retries reduced to avoid excessive retries
+const MAX_RETRY_COUNT = 1;
+
 export const useProfileFetching = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -59,8 +62,8 @@ export const useProfileFetching = () => {
       if (!profileData) {
         logProfileNotFound(userId, retryCount);
         
-        // Implement limited retries (max 2)
-        if (retryCount < 2) {
+        // Implement limited retries
+        if (retryCount < MAX_RETRY_COUNT) {
           // Use exponential backoff for retries
           const delay = getBackoffDelay(retryCount);
           logProfile(`Retrying profile fetch in ${delay}ms...`, null, true);
@@ -77,8 +80,9 @@ export const useProfileFetching = () => {
           }, delay) as unknown as number;
           
           return null;
-        } else if (retryCount === 2) {
+        } else {
           // After final retry - attempt to auto-create profile
+          logProfile("Max retries reached, attempting to create profile", null, true);
           return await createUserProfile(userId, setProfile, setProfileError, setProfileLoading);
         }
       } else {
@@ -92,7 +96,7 @@ export const useProfileFetching = () => {
     } catch (err) {
       logProfile("Error fetching profile:", err, false, true);
       
-      if (retryCount < 2) {
+      if (retryCount < MAX_RETRY_COUNT) {
         // Use exponential backoff for retries
         const delay = getBackoffDelay(retryCount);
         logProfile(`Error occurred, retrying profile fetch in ${delay}ms...`, null, true);

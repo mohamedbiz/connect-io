@@ -7,8 +7,8 @@ import { useSessionRecovery } from "./auth/useSessionRecovery";
 import { useAuthStateMonitoring } from "./auth/useAuthStateMonitoring";
 import { useSessionTimeout } from "./auth/useSessionTimeout";
 
-// Debounce time in ms to prevent rapid state changes
-const FETCH_DEBOUNCE_TIME = 100;
+// Increased debounce time to prevent multiple rapid profile fetches
+const FETCH_DEBOUNCE_TIME = 300;
 
 export const useSessionMonitoring = (
   onUserAuthenticated: (userId: string) => Promise<void>,
@@ -22,6 +22,7 @@ export const useSessionMonitoring = (
   
   // Use refs to track if operations are in progress - prevents duplicate calls
   const profileFetchInProgress = useRef(false);
+  const lastProfileFetchTime = useRef(0);
 
   // Reset all state when needed
   const resetState = useCallback(() => {
@@ -29,6 +30,7 @@ export const useSessionMonitoring = (
     setSession(null);
     onSignOut();
     setAuthError(null);
+    profileFetchInProgress.current = false;
   }, [onSignOut, setAuthError]);
 
   // Use the session recovery hook
@@ -43,12 +45,35 @@ export const useSessionMonitoring = (
     recoveryAttempted
   );
 
-  // Use the session timeout hook
-  useSessionTimeout(loading, authInitialized);
+  // Use the session timeout hook with proper loading setter
+  useSessionTimeout(loading, authInitialized, setLoading);
 
-  // Handle auth state change with debouncing
+  // Function to safely fetch user profile with rate limiting
+  const fetchUserProfile = useCallback(async (userId: string) => {
+    const now = Date.now();
+    
+    // Skip if fetch is in progress or if we've fetched recently
+    if (profileFetchInProgress.current || (now - lastProfileFetchTime.current < FETCH_DEBOUNCE_TIME)) {
+      return;
+    }
+    
+    profileFetchInProgress.current = true;
+    lastProfileFetchTime.current = now;
+    
+    try {
+      logAuth("Fetching user profile", { userId });
+      await onUserAuthenticated(userId);
+      logAuth("Profile fetch completed", { userId });
+    } catch (error) {
+      logAuth("Error fetching user profile:", error, "error");
+    } finally {
+      profileFetchInProgress.current = false;
+    }
+  }, [onUserAuthenticated]);
+
+  // Handle auth state change
   const handleAuthChange = useCallback(
-    async (_event: string, newSession: Session | null) => {
+    (_event: string, newSession: Session | null) => {
       // Track auth state change to detect potential loops
       trackAuthStateChange();
       
@@ -60,29 +85,16 @@ export const useSessionMonitoring = (
         setUser(newSession.user);
         setAuthError(null);
         
-        // Prevent duplicate profile fetches with debouncing
-        if (!profileFetchInProgress.current && newSession.user.id) {
-          // Set the flag before the async operation
-          profileFetchInProgress.current = true;
-          
-          // Use setTimeout to debounce profile fetching
-          setTimeout(async () => {
-            try {
-              await onUserAuthenticated(newSession.user.id);
-            } catch (error) {
-              logAuth("Error fetching user profile:", error, "error");
-            } finally {
-              // Clear the flag after completion
-              profileFetchInProgress.current = false;
-            }
-          }, FETCH_DEBOUNCE_TIME);
-        }
+        // Use setTimeout to safely defer profile fetching
+        setTimeout(() => {
+          fetchUserProfile(newSession.user.id);
+        }, 0);
       } else {
         // No session - reset user
         setUser(null);
       }
     },
-    [onUserAuthenticated, setAuthError, trackAuthStateChange]
+    [fetchUserProfile, setAuthError, trackAuthStateChange]
   );
 
   // Set up auth state listener on component mount
@@ -90,10 +102,13 @@ export const useSessionMonitoring = (
     let isMounted = true;
     setLoading(true);
     
+    logAuth("Setting up auth state listener", null);
+    
     // Set up the auth subscription first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (isMounted) {
+          logAuth(`Auth state changed: ${event}`, { userId: session?.user?.id });
           handleAuthChange(event, session);
         }
       }
@@ -102,6 +117,7 @@ export const useSessionMonitoring = (
     // Then, get the initial session
     const initializeAuth = async () => {
       try {
+        logAuth("Initializing auth - getting session", null);
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -114,21 +130,18 @@ export const useSessionMonitoring = (
         }
         
         if (isMounted) {
+          logAuth("Initial session retrieved", { userId: data.session?.user?.id });
           setSession(data.session);
           setUser(data.session?.user || null);
           
-          // Fetch profile only if we have a session and no fetch is in progress
-          if (data.session?.user && !profileFetchInProgress.current) {
-            profileFetchInProgress.current = true;
-            try {
-              await onUserAuthenticated(data.session.user.id);
-            } catch (err) {
-              logAuth("Error fetching user profile:", err, "error");
-            } finally {
-              if (isMounted) {
-                profileFetchInProgress.current = false;
+          // Fetch profile only if we have a session
+          if (data.session?.user) {
+            // Use setTimeout to avoid potential auth state deadlocks
+            setTimeout(() => {
+              if (isMounted && !profileFetchInProgress.current) {
+                fetchUserProfile(data.session.user.id);
               }
-            }
+            }, 50);
           }
           
           setAuthInitialized(true);
@@ -150,7 +163,7 @@ export const useSessionMonitoring = (
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [handleAuthChange, onUserAuthenticated, setAuthError]);
+  }, [handleAuthChange, fetchUserProfile, setAuthError]);
 
   return {
     user,
