@@ -17,6 +17,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   ensureProfile: () => Promise<Profile | null>;
+  retryAuth: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -178,7 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       setRetryCount(0);
 
-      // Cleanup function
+      // Return cleanup function
       return () => {
         subscription.unsubscribe();
       };
@@ -189,19 +190,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Retry if network error
       if (error.message?.includes('fetch') && handleRetry('initialization')) {
         // Retry is scheduled
-        return () => {}; // Return empty cleanup function
+        return () => {
+          // Empty cleanup function for retry case
+        };
       }
       
-      return () => {}; // Return empty cleanup function for consistency
+      return () => {
+        // Empty cleanup function for error case
+      };
     } finally {
       setLoading(false);
     }
   };
 
+  // Manual retry function that users can trigger
+  const retryAuth = () => {
+    setError(null);
+    setRetryCount(0);
+    initializeAuth();
+  };
+
   useEffect(() => {
     const cleanup = initializeAuth();
     return () => {
-      if (cleanup && typeof cleanup === 'function') {
+      if (cleanup) {
         cleanup();
       }
     };
@@ -218,7 +230,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) {
         logAuth('Login error:', error, false, true);
-        toast.error(error.message);
+        
+        // Special handling for network errors
+        if (error.message?.includes('fetch')) {
+          setError('Network connection error. Please check your internet connection.');
+          toast.error('Network connection error. Please check your internet connection and try again.');
+        } else {
+          toast.error(error.message);
+        }
+        
         return { error };
       }
 
@@ -230,6 +250,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Network error handling
       if (error.message?.includes('fetch')) {
+        setError('Network connection error');
         toast.error('Network error. Please check your connection and try again.');
       } else {
         toast.error('An error occurred during login');
@@ -261,7 +282,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (error) {
         logAuth('Registration error:', error, false, true);
-        toast.error(error.message);
+        
+        // Special handling for network errors
+        if (error.message?.includes('fetch')) {
+          setError('Network connection error');
+          toast.error('Network connection error. Please check your internet connection and try again.');
+        } else {
+          toast.error(error.message);
+        }
+        
         return { error };
       }
 
@@ -273,6 +302,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Network error handling
       if (error.message?.includes('fetch')) {
+        setError('Network connection error');
         toast.error('Network error. Please check your connection and try again.');
       } else {
         toast.error('An error occurred during registration');
@@ -304,7 +334,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     register,
     logout,
     refreshProfile,
-    ensureProfile
+    ensureProfile,
+    retryAuth
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

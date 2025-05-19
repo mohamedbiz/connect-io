@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Building, User, Mail, Lock, WifiOff } from 'lucide-react';
+import { Eye, EyeOff, Building, User, Mail, Lock, WifiOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import Layout from '@/components/layout/Layout';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const AuthPage = () => {
   // URL params
@@ -34,7 +34,7 @@ const AuthPage = () => {
   });
 
   // Auth context and navigation
-  const { login, register, error: authError } = useAuth();
+  const { login, register, error: authError, retryAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -107,8 +107,19 @@ const AuthPage = () => {
           {isConnectionError && (
             <Alert variant="destructive" className="mb-4">
               <WifiOff className="h-4 w-4 mr-2" />
-              <AlertDescription>
-                Network connection error. Please check your internet connection and try again.
+              <AlertTitle>Network Connection Error</AlertTitle>
+              <AlertDescription className="space-y-4">
+                <p>
+                  We're having trouble connecting to our servers. Please check your internet connection.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => retryAuth()}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Connection
+                </Button>
               </AlertDescription>
             </Alert>
           )}

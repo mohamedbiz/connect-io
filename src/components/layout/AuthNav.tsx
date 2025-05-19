@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogIn, LogOut, User, RefreshCw } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const AuthNav = () => {
-  const { user, profile, logout, loading, error } = useAuth();
+  const { user, profile, logout, loading, error, retryAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -35,8 +35,8 @@ export const AuthNav = () => {
   // Connection error state
   if (error && error.includes('fetch')) {
     return (
-      <Button variant="ghost" size="sm" className="text-amber-600" onClick={() => window.location.reload()}>
-        <span className="h-2 w-2 mr-2 rounded-full bg-amber-600"></span>
+      <Button variant="ghost" size="sm" className="text-amber-600" onClick={retryAuth}>
+        <RefreshCw className="h-4 w-4 mr-2" />
         Reconnect
       </Button>
     );
