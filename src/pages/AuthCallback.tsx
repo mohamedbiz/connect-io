@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,10 +34,23 @@ const AuthCallback = () => {
             // Check if the user is new or returning
             const { data: userData } = await supabase.auth.getUser();
             
-            if (userData.user?.user_metadata?.role) {
-              // Existing user with role - redirect to appropriate dashboard
-              const role = userData.user.user_metadata.role;
+            // Get role from URL if present
+            const url = new URL(window.location.href);
+            const roleFromUrl = url.searchParams.get('role');
+            
+            // Check for role in user metadata or URL parameter
+            const role = userData.user?.user_metadata?.role || roleFromUrl;
+            
+            if (role) {
+              // If we have a role, update user metadata if needed
+              if (roleFromUrl && !userData.user?.user_metadata?.role) {
+                // Update the user's metadata with the role
+                await supabase.auth.updateUser({
+                  data: { role: roleFromUrl }
+                });
+              }
               
+              // Redirect based on role
               if (role === 'founder') {
                 navigate('/founder-dashboard', { replace: true });
               } else if (role === 'provider') {

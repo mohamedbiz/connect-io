@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -95,7 +94,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     try {
       setOAuthLoading(true);
       
-      // Add user_type to OAuth options to store role in metadata
+      // Fixed: Move 'role' from data to queryParams
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -104,10 +103,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
             // Pass the user type as a query param to be handled on callback
             access_type: 'offline',
             prompt: 'consent',
-          },
-          // Add custom user metadata
-          data: {
-            role: userType
+            role: userType // Add role as a query parameter
           }
         }
       });
