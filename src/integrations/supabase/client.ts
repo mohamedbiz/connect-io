@@ -15,26 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     // This reduces unnecessary auth state changes in development
     detectSessionInUrl: true,
     flowType: 'implicit',
-    // Add network handling configuration
-    fetch: (url, options) => {
-      const controller = new AbortController();
-      const { signal } = controller;
-      
-      // Set a timeout for fetch requests
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
-      
-      return fetch(url, { ...options, signal })
-        .then(response => {
-          clearTimeout(timeoutId);
-          return response;
-        })
-        .catch(error => {
-          clearTimeout(timeoutId);
-          console.error('Network error:', error);
-          throw error;
-        });
-    }
-  },
+  }
 })
 
 // For debugging in development

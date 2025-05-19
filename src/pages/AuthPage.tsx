@@ -29,7 +29,7 @@ const AuthPage = () => {
   const isConnectionError = authError && authError.includes('fetch');
 
   return (
-    <Layout>
+    <Layout hideAuth={true}>
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
           {/* Display offline alert at the top */}

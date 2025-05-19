@@ -5,12 +5,13 @@ import Footer from "./Footer";
 
 interface LayoutProps {
   children: ReactNode;
+  hideAuth?: boolean; // Add option to hide auth components for auth pages
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ children, hideAuth = false }: LayoutProps) => {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <Header hideAuth={hideAuth} />
       <main className="flex-1">
         {children}
       </main>

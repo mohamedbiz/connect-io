@@ -1,15 +1,29 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Briefcase, MenuIcon, X, BookOpen } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-const Header = () => {
+
+interface HeaderProps {
+  hideAuth?: boolean;
+}
+
+const Header = ({ hideAuth = false }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const {
-    user,
-    profile,
-    logout
-  } = useAuth();
+  
+  // Try to use auth context but handle the case when it's not available
+  let authData = { user: null, profile: null, logout: async () => {} };
+  
+  try {
+    authData = useAuth();
+  } catch (error) {
+    // Auth context not available, using default values
+    console.log("Auth context not available in Header");
+  }
+  
+  const { user, profile, logout } = authData;
+  
   const handleLogout = async () => {
     await logout();
     setIsMenuOpen(false);
@@ -23,7 +37,9 @@ const Header = () => {
 
   // Conditionally render resources link for providers
   const isProvider = profile?.role === "provider";
-  return <header className="bg-[#0A2342] border-b border-[#2D82B7]/30">
+  
+  return (
+    <header className="bg-[#0A2342] border-b border-[#2D82B7]/30">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
@@ -55,26 +71,28 @@ const Header = () => {
         </nav>
 
         {/* Desktop Auth Buttons */}
-        <div className="hidden lg:flex items-center gap-4">
-          {!user ? <>
-              <Button variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
-                <Link to="/auth">Login</Link>
-              </Button>
-              <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild>
-                <Link to="/auth">Get Started</Link>
-              </Button>
-            </> : <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
-                <Link to={getDashboardLink()}>My Dashboard</Link>
-              </Button>
-              <span className="text-sm font-medium text-[#BFD7ED]">
-                {profile?.first_name || user.email}
-              </span>
-              <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>}
-        </div>
+        {!hideAuth && (
+          <div className="hidden lg:flex items-center gap-4">
+            {!user ? <>
+                <Button variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
+                  <Link to="/auth">Login</Link>
+                </Button>
+                <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild>
+                  <Link to="/auth">Get Started</Link>
+                </Button>
+              </> : <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
+                  <Link to={getDashboardLink()}>My Dashboard</Link>
+                </Button>
+                <span className="text-sm font-medium text-[#BFD7ED]">
+                  {profile?.first_name || user.email}
+                </span>
+                <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>}
+          </div>
+        )}
       </div>
 
       {/* Mobile Menu */}
@@ -92,23 +110,28 @@ const Header = () => {
                 <span>Resources</span>
               </Link>}
             <hr className="border-[#2D82B7]/30" />
-            {!user ? <>
-                <Link to="/auth" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                  Login
-                </Link>
-                <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild onClick={() => setIsMenuOpen(false)}>
-                  <Link to="/auth">Get Started</Link>
-                </Button>
-              </> : <>
-                <Link to={getDashboardLink()} className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                  My Dashboard
-                </Link>
-                <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </>}
+            
+            {!hideAuth && (
+              !user ? <>
+                  <Link to="/auth" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
+                    Login
+                  </Link>
+                  <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth">Get Started</Link>
+                  </Button>
+                </> : <>
+                  <Link to={getDashboardLink()} className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
+                    My Dashboard
+                  </Link>
+                  <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                </>
+            )}
           </div>
         </div>}
-    </header>;
+    </header>
+  );
 };
+
 export default Header;
