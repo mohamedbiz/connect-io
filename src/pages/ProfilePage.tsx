@@ -5,12 +5,15 @@ import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 const ProfilePage = () => {
   const { user, profile, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
+    navigate('/');
   };
 
   return (
@@ -43,6 +46,12 @@ const ProfilePage = () => {
                   <p className="text-sm text-gray-500">Role</p>
                   <p className="font-medium capitalize">{profile.role}</p>
                 </div>
+                {profile.business_name && (
+                  <div>
+                    <p className="text-sm text-gray-500">Business</p>
+                    <p className="font-medium">{profile.business_name}</p>
+                  </div>
+                )}
               </>
             )}
             

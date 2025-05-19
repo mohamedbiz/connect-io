@@ -11,7 +11,7 @@ import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
 import ForFoundersPage from "./pages/ForFoundersPage";
 import ForProvidersPage from "./pages/ForProvidersPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
-import AuthPage from "./pages/auth/AuthPage";
+import AuthPage from "./pages/AuthPage";
 import ProviderApplyRedirect from "./pages/provider/ProviderApplyRedirect";
 import PostRegisterPage from "./pages/PostRegisterPage";
 import FounderQualificationPage from "./pages/FounderQualificationPage";
@@ -20,6 +20,7 @@ import PaymentCanceledPage from "./pages/payment/PaymentCanceledPage";
 import PaymentsDashboardPage from "./pages/payment/PaymentsDashboardPage";
 import ProviderApplicationsPage from "./pages/admin/ProviderApplicationsPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ProfilePage from "./pages/ProfilePage";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -28,17 +29,25 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/for-founders" element={<ForFoundersPage />} />
         <Route path="/for-providers" element={<ForProvidersPage />} />
         <Route path="/post-register" element={<PostRegisterPage />} />
         <Route path="/apply" element={<ProviderApplyRedirect />} />
+        
+        {/* Semi-protected routes - still accessible but will show login prompts */}
         <Route path="/founder-application" element={<FounderApplicationPage />} />
         <Route path="/provider-application" element={<ProviderApplicationPage />} />
         <Route path="/founder-qualification" element={<FounderQualificationPage />} />
         
-        {/* Protected routes */}
+        {/* Protected routes - require authentication */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        } />
         <Route path="/founder-dashboard" element={
           <ProtectedRoute>
             <FounderDashboardPage />
