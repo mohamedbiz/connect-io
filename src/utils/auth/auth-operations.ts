@@ -82,11 +82,15 @@ export const loginWithEmailAndPassword = async (email: string, password: string)
     if (error) {
       logAuth('Login error:', error, false, true);
       
-      // Special handling for network errors
+      // Enhanced error handling
       if (error.message?.includes('fetch')) {
         toast.error('Network connection error. Please check your internet connection and try again.');
+      } else if (error.message?.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('rate limit')) {
+        toast.error('Too many login attempts. Please try again later.');
       } else {
-        toast.error(error.message);
+        toast.error(error.message || 'Login failed');
       }
       
       return { error };
@@ -132,17 +136,29 @@ export const registerWithEmailAndPassword = async (
     if (error) {
       logAuth('Registration error:', error, false, true);
       
-      // Special handling for network errors
+      // Enhanced error handling
       if (error.message?.includes('fetch')) {
         toast.error('Network connection error. Please check your internet connection and try again.');
+      } else if (error.message?.includes('already registered')) {
+        toast.error('This email is already registered. Please sign in instead.');
+      } else if (error.message?.includes('password')) {
+        toast.error('Password must be at least 6 characters long.');
+      } else if (error.message?.includes('rate limit')) {
+        toast.error('Too many signup attempts. Please try again later.');
       } else {
-        toast.error(error.message);
+        toast.error(error.message || 'Registration failed');
       }
       
       return { error };
     }
 
     logAuth('Registration successful', { user: data.user });
+    
+    // Create a profile for the new user
+    if (data.user) {
+      await ensureProfileExists(data.user);
+    }
+    
     toast.success('Registration successful!');
     return { error: null };
   } catch (error: any) {
@@ -168,5 +184,22 @@ export const logoutUser = async () => {
   } catch (error) {
     logAuth('Logout error:', error, false, true);
     toast.error('Error during logout');
+  }
+};
+
+// Get the current session
+export const getCurrentSession = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      logAuth('Error getting session:', error, false, true);
+      return { session: null, error };
+    }
+    
+    return { session: data.session, error: null };
+  } catch (error) {
+    logAuth('Exception getting session:', error, false, true);
+    return { session: null, error };
   }
 };

@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Google } from 'lucide-react';
 import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RegisterFormProps {
   userType: 'founder' | 'provider';
@@ -15,6 +17,7 @@ interface RegisterFormProps {
 
 const RegisterForm = ({ userType }: RegisterFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -70,11 +73,53 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
           state: { userType, isNewUser: true },
           replace: true 
         });
+      } else {
+        // Enhanced error messages
+        if (error.message?.includes('already registered')) {
+          toast.error('This email is already registered. Please sign in instead.');
+        } else if (error.message?.includes('password')) {
+          toast.error('Password must be at least 6 characters long.');
+        } else {
+          toast.error(error.message || 'Registration failed');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Google Sign In with userType metadata
+  const handleGoogleSignIn = async () => {
+    try {
+      setOAuthLoading(true);
+      
+      // Add user_type to OAuth options to store role in metadata
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth-callback`,
+          queryParams: {
+            // Pass the user type as a query param to be handled on callback
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          // Add custom user metadata
+          data: {
+            role: userType
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast.error('Failed to sign in with Google. Please try again.');
+    } finally {
+      setOAuthLoading(false);
     }
   };
 
@@ -192,6 +237,28 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
         ) : (
           'Create Account'
         )}
+      </Button>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-2 text-xs text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <Button 
+        type="button" 
+        variant="outline" 
+        className="w-full flex items-center justify-center gap-2"
+        onClick={handleGoogleSignIn}
+        disabled={oauthLoading || isConnectionError}
+      >
+        <Google className="h-4 w-4" />
+        {oauthLoading ? 'Connecting...' : 'Sign up with Google'}
       </Button>
     </form>
   );

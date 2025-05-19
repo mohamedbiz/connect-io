@@ -5,11 +5,14 @@ import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Google } from 'lucide-react';
 import { toast } from 'sonner';
+import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -46,11 +49,42 @@ const LoginForm = () => {
       const { error } = await login(formData.email, formData.password);
       if (!error) {
         navigate(from, { replace: true });
+      } else {
+        // Enhanced error messages
+        if (error.message?.includes('credentials')) {
+          toast.error('Incorrect email or password');
+        } else if (error.message?.includes('rate limit')) {
+          toast.error('Too many login attempts. Please try again later');
+        } else {
+          toast.error(error.message || 'Login failed');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle Google Sign In
+  const handleGoogleSignIn = async () => {
+    try {
+      setOAuthLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth-callback`
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast.error('Failed to sign in with Google. Please try again.');
+    } finally {
+      setOAuthLoading(false);
     }
   };
 
@@ -117,6 +151,28 @@ const LoginForm = () => {
         ) : (
           'Sign In'
         )}
+      </Button>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <Separator className="w-full" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-background px-2 text-xs text-muted-foreground">
+            Or continue with
+          </span>
+        </div>
+      </div>
+
+      <Button 
+        type="button" 
+        variant="outline" 
+        className="w-full flex items-center justify-center gap-2"
+        onClick={handleGoogleSignIn}
+        disabled={oauthLoading || isConnectionError}
+      >
+        <Google className="h-4 w-4" />
+        {oauthLoading ? 'Connecting...' : 'Sign in with Google'}
       </Button>
     </form>
   );

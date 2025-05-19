@@ -12,6 +12,7 @@ import ForFoundersPage from "./pages/ForFoundersPage";
 import ForProvidersPage from "./pages/ForProvidersPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import AuthPage from "./pages/AuthPage";
+import AuthCallback from "./pages/AuthCallback";
 import ProviderApplyRedirect from "./pages/provider/ProviderApplyRedirect";
 import PostRegisterPage from "./pages/PostRegisterPage";
 import FounderQualificationPage from "./pages/FounderQualificationPage";
@@ -32,6 +33,7 @@ function App() {
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth-callback" element={<AuthCallback />} />
         <Route path="/for-founders" element={<ForFoundersPage />} />
         <Route path="/for-providers" element={<ForProvidersPage />} />
         <Route path="/post-register" element={<PostRegisterPage />} />
