@@ -189,8 +189,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Retry if network error
       if (error.message?.includes('fetch') && handleRetry('initialization')) {
         // Retry is scheduled
-        return;
+        return () => {}; // Return empty cleanup function
       }
+      
+      return () => {}; // Return empty cleanup function for consistency
     } finally {
       setLoading(false);
     }
