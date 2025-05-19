@@ -1,6 +1,6 @@
 
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 import { toast } from 'sonner';
 import { logAuth } from '@/utils/auth/auth-logger';
@@ -9,6 +9,14 @@ import { logAuth } from '@/utils/auth/auth-logger';
 export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     logAuth(`Fetching profile for user: ${userId}`);
+    
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected when fetching profile', null, true);
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -33,6 +41,14 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
   if (!user) return null;
   
   try {
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected when ensuring profile exists', null, true);
+      toast.error('Network connection issue. Please check your internet and try again.');
+      return null;
+    }
+    
     // First try to fetch existing profile
     let userProfile = await fetchProfile(user.id);
     
@@ -73,6 +89,13 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
 // Login with email and password
 export const loginWithEmailAndPassword = async (email: string, password: string) => {
   try {
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected during login', null, true);
+      return { error: { message: 'You appear to be offline. Please check your internet connection and try again.' } };
+    }
+    
     logAuth('Attempting login', { email });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -120,6 +143,13 @@ export const registerWithEmailAndPassword = async (
   userData: Partial<Profile>
 ) => {
   try {
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected during registration', null, true);
+      return { error: { message: 'You appear to be offline. Please check your internet connection and try again.' } };
+    }
+    
     logAuth('Attempting registration', { email, userData });
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -178,6 +208,16 @@ export const registerWithEmailAndPassword = async (
 // Logout
 export const logoutUser = async () => {
   try {
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected during logout', null, true);
+      // We still want to clear local session even if offline
+      localStorage.removeItem('sb-mohamedbiz-auth-token');
+      toast.warning('Logged out locally. Some features may not work until you reconnect.');
+      return;
+    }
+    
     await supabase.auth.signOut();
     logAuth('Logged out successfully');
     toast.success('Logged out successfully');
@@ -190,6 +230,13 @@ export const logoutUser = async () => {
 // Get the current session
 export const getCurrentSession = async () => {
   try {
+    // Check network connectivity first
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      logAuth('Network connectivity issue detected when getting session', null, true);
+      return { session: null, error: new Error('You appear to be offline. Please check your internet connection.') };
+    }
+    
     const { data, error } = await supabase.auth.getSession();
     
     if (error) {

@@ -10,6 +10,7 @@ import ConnectionError from '@/components/auth/ConnectionError';
 import AuthCardHeader from '@/components/auth/AuthCardHeader';
 import AuthCardFooter from '@/components/auth/AuthCardFooter';
 import UserTypeSelector from '@/components/auth/UserTypeSelector';
+import OfflineAlert from '@/components/auth/OfflineAlert';
 
 const AuthPage = () => {
   // URL params
@@ -31,6 +32,10 @@ const AuthPage = () => {
     <Layout>
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
+          {/* Display offline alert at the top */}
+          <OfflineAlert onRetry={retryAuth} />
+          
+          {/* Display connection error if present */}
           {isConnectionError && <ConnectionError retryAuth={retryAuth} />}
 
           <Card className="border border-[#2D82B7]/30 shadow-sm">
