@@ -1,40 +1,70 @@
 
-import { useEffect, useRef } from "react";
-import { logAuth } from "@/utils/auth/auth-logger";
+import { useEffect, useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { logAuth } from '@/utils/auth/auth-logger';
 
 /**
- * Hook to handle session timeout to prevent infinite loading states
+ * Monitors for session timeouts and refreshes token automatically
  */
-export const useSessionTimeout = (
-  loading: boolean,
-  authInitialized: boolean,
-  setLoading: (state: boolean) => void
-) => {
-  const timeoutIdRef = useRef<number | null>(null);
-
-  // Force end loading state after timeout to prevent infinite loading
+export function useSessionTimeout(userId: string | undefined) {
+  const [lastActivity, setLastActivity] = useState<Date>(new Date());
+  const timerRef = useRef<number | null>(null);
+  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  
+  // Update last activity on user interactions
   useEffect(() => {
-    // Clear any existing timeout
-    if (timeoutIdRef.current) {
-      clearTimeout(timeoutIdRef.current);
-      timeoutIdRef.current = null;
-    }
+    const updateLastActivity = () => {
+      setLastActivity(new Date());
+    };
     
-    // Only set timeout if we're in a loading state
-    if (loading && !authInitialized) {
-      timeoutIdRef.current = window.setTimeout(() => {
-        if (loading) {
-          logAuth("Forcing end of loading state due to timeout", null, "warning");
-          // Directly update loading state to prevent infinite loading
-          setLoading(false);
-        }
-      }, 15000); // 15 seconds max loading time
-    }
+    // Listen for user activity
+    window.addEventListener('mousemove', updateLastActivity);
+    window.addEventListener('keydown', updateLastActivity);
+    window.addEventListener('click', updateLastActivity);
+    window.addEventListener('scroll', updateLastActivity);
     
     return () => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
+      window.removeEventListener('mousemove', updateLastActivity);
+      window.removeEventListener('keydown', updateLastActivity);
+      window.removeEventListener('click', updateLastActivity);
+      window.removeEventListener('scroll', updateLastActivity);
+    };
+  }, []);
+  
+  // Check for session timeout and refresh tokens
+  useEffect(() => {
+    // Only run if we have a user
+    if (!userId) return;
+    
+    const checkSessionTimeout = async () => {
+      const now = new Date();
+      const timeSinceLastActivity = now.getTime() - lastActivity.getTime();
+      
+      if (timeSinceLastActivity < SESSION_TIMEOUT) {
+        try {
+          // Refresh session if needed
+          const { data, error } = await supabase.auth.refreshSession();
+          
+          if (error) {
+            logAuth('Error refreshing session:', error, false, true);
+          } else if (data && data.session) {
+            logAuth('Session refreshed successfully', { userId });
+          }
+        } catch (err) {
+          logAuth('Exception when refreshing session:', err, false, true);
+        }
       }
     };
-  }, [loading, authInitialized, setLoading]);
-};
+    
+    timerRef.current = window.setInterval(checkSessionTimeout, REFRESH_INTERVAL);
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [userId, lastActivity]);
+  
+  return { lastActivity };
+}

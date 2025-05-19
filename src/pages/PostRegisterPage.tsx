@@ -5,7 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { WifiOff } from "lucide-react";
 
 const PostRegisterPage = () => {
   const { user, profile, loading, error } = useAuth();
@@ -14,9 +16,12 @@ const PostRegisterPage = () => {
   
   const userType = location.state?.userType || (profile?.role || "founder");
   const isNewUser = location.state?.isNewUser || false;
+  
+  // Connection error
+  const isConnectionError = error && error.includes('fetch');
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !isConnectionError) {
       // If not authenticated, redirect to auth page
       if (!user) {
         toast.error("You must be logged in to access this page");
@@ -48,7 +53,7 @@ const PostRegisterPage = () => {
       
       updateOnboardingStatus();
     }
-  }, [user, loading, navigate, isNewUser, userType, profile]);
+  }, [user, loading, navigate, isNewUser, userType, profile, isConnectionError]);
 
   const redirectToOnboarding = () => {
     if (userType === "founder") {
@@ -67,6 +72,28 @@ const PostRegisterPage = () => {
           <div className="flex flex-col items-center justify-center min-h-[50vh]">
             <p className="text-xl text-[#0E3366] mb-4">Loading your profile...</p>
           </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (isConnectionError) {
+    return (
+      <Layout>
+        <div className="container mx-auto py-16 px-4">
+          <Alert variant="destructive" className="max-w-2xl mx-auto">
+            <WifiOff className="h-5 w-5 mr-2" />
+            <AlertTitle>Network Connection Error</AlertTitle>
+            <AlertDescription className="space-y-4">
+              <p>We're having trouble connecting to our service. Please check your internet connection.</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
         </div>
       </Layout>
     );

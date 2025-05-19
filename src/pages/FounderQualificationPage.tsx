@@ -7,9 +7,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import QualificationPageLoader from "@/components/qualification/QualificationPageLoader";
-import ProfileCreationSection from "@/components/qualification/ProfileCreationSection";
 import QualificationErrorSection from "@/components/qualification/QualificationErrorSection";
 import QualificationWelcomeAlert from "@/components/qualification/QualificationWelcomeAlert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { WifiOff } from "lucide-react";
 
 const FounderQualificationPage = () => {
   const { user, profile, loading, error, ensureProfile } = useAuth();
@@ -20,28 +22,31 @@ const FounderQualificationPage = () => {
   const [creatingProfile, setCreatingProfile] = useState(false);
   const isLoading = loading || qualificationLoading || creatingProfile;
 
+  // Connection error
+  const isConnectionError = error && error.includes('fetch');
+
   // Check if user is authenticated
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isConnectionError) {
       toast.error("You must be logged in to access this page");
       navigate("/auth", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isConnectionError]);
   
   // Redirect to dashboard if already qualified
   useEffect(() => {
-    if (!isLoading && user && profile?.role === "founder" && isQualified) {
+    if (!isLoading && user && profile?.role === "founder" && isQualified && !isConnectionError) {
       console.log("User already qualified, redirecting to dashboard");
       navigate("/founder-dashboard", { replace: true });
     }
-  }, [user, profile, isLoading, isQualified, navigate]);
+  }, [user, profile, isLoading, isQualified, navigate, isConnectionError]);
 
   // Check if profile exists, if not, try to create it
   useEffect(() => {
     let mounted = true;
     
     const tryCreateProfile = async () => {
-      if (!user || profile || retryCount >= 2 || creatingProfile || loading) {
+      if (!user || profile || retryCount >= 2 || creatingProfile || loading || isConnectionError) {
         return;
       }
       
@@ -71,7 +76,7 @@ const FounderQualificationPage = () => {
       }
     };
     
-    if (!loading && user && !profile) {
+    if (!loading && user && !profile && !isConnectionError) {
       const timer = setTimeout(() => {
         tryCreateProfile();
       }, 800); // Reasonable wait before trying to create profile
@@ -85,7 +90,7 @@ const FounderQualificationPage = () => {
     return () => {
       mounted = false;
     };
-  }, [user, profile, retryCount, loading, creatingProfile, ensureProfile]);
+  }, [user, profile, retryCount, loading, creatingProfile, ensureProfile, isConnectionError]);
 
   const handleManualProfileCreation = async () => {
     if (!user) return;
@@ -106,6 +111,29 @@ const FounderQualificationPage = () => {
       setCreatingProfile(false);
     }
   };
+
+  // Connection error state
+  if (isConnectionError) {
+    return (
+      <Layout>
+        <div className="container py-10">
+          <Alert variant="destructive" className="mb-4">
+            <WifiOff className="h-5 w-5 mr-2" />
+            <AlertTitle>Network Connection Error</AlertTitle>
+            <AlertDescription className="space-y-4">
+              <p>We're having trouble connecting to our service. Please check your internet connection.</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </Layout>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -128,10 +156,17 @@ const FounderQualificationPage = () => {
     return (
       <Layout>
         <div className="container py-10">
-          <ProfileCreationSection 
-            handleManualProfileCreation={handleManualProfileCreation}
-            creatingProfile={creatingProfile}
-          />
+          <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg border border-gray-200">
+            <h2 className="text-xl font-semibold text-red-600 mb-4">Profile Missing</h2>
+            <p className="mb-4">We couldn't find your profile information. This is needed to continue.</p>
+            <Button 
+              onClick={handleManualProfileCreation}
+              disabled={creatingProfile}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {creatingProfile ? 'Creating Profile...' : 'Create Profile Now'}
+            </Button>
+          </div>
         </div>
       </Layout>
     );

@@ -1,63 +1,61 @@
-
-import { useRef, useCallback } from "react";
-import { logAuth } from "@/utils/auth/auth-logger";
-
-// Increased threshold for detecting potential auth loops
-const AUTH_CHANGE_THRESHOLD = 20;
-// Minimum time between changes to consider as a potential loop
-const MIN_CHANGE_INTERVAL = 500; // milliseconds
+import { useState, useEffect, useRef } from 'react';
+import { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { logAuth } from '@/utils/auth/auth-logger';
 
 /**
- * Hook for monitoring auth state changes and detecting potential loops
+ * Hook to monitor authentication state changes
  */
-export const useAuthStateMonitoring = (
-  initiateSessionRecovery: () => Promise<void>,
-  recoveryAttempted: boolean
-) => {
-  // Track auth state changes to detect potential loops
-  const authStateChangeCount = useRef(0);
-  const lastAuthChangeTime = useRef(Date.now());
-  const authChangeSequenceStartTime = useRef(Date.now());
+export function useAuthStateMonitoring() {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  /**
-   * Track and analyze auth state changes to detect potential auth loops
-   */
-  const trackAuthStateChange = useCallback(() => {
-    // Don't track changes if recovery has already been attempted
-    if (recoveryAttempted) return;
+  // Keep a reference to the auth subscription
+  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null);
 
-    // Check for potential auth loop by measuring frequency
-    const now = Date.now();
-    const timeSinceLastChange = now - lastAuthChangeTime.current;
-    lastAuthChangeTime.current = now;
-    
-    // If this change happened after a significant delay, reset the counter
-    if (timeSinceLastChange > 5000) {
-      authStateChangeCount.current = 0;
-      authChangeSequenceStartTime.current = now;
-      return;
-    }
-    
-    // Count auth state changes to detect potential loops
-    authStateChangeCount.current += 1;
-    
-    // Calculate average frequency across the entire sequence
-    const averageInterval = (now - authChangeSequenceStartTime.current) / authStateChangeCount.current;
-    
-    // Only consider it a loop if changes are happening too rapidly and we've seen enough of them
-    if (authStateChangeCount.current > AUTH_CHANGE_THRESHOLD && averageInterval < MIN_CHANGE_INTERVAL) {
-      logAuth(`Potential auth loop detected (${authStateChangeCount.current} changes, avg interval: ${averageInterval.toFixed(2)}ms)`, null, "warning");
+  useEffect(() => {
+    // Set up auth state listener
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, currentSession) => {
+          logAuth(`Auth state changed: ${event}`, { userId: currentSession?.user?.id });
+          
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          // Don't set loading to false on the auth change event
+          // This will be handled after initial session check
+        }
+      );
       
-      // Circuit breaker with higher threshold
-      if (authStateChangeCount.current > 30) {
-        logAuth("Auth loop circuit breaker triggered - initiating session recovery", null, "warning");
-        initiateSessionRecovery();
-      }
+      authSubscriptionRef.current = subscription;
+      
+      // Check for existing session
+      supabase.auth.getSession().then(({ data, error: sessionError }) => {
+        if (sessionError) {
+          logAuth('Error getting session:', sessionError, false, true);
+          setError(sessionError.message);
+        } else {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+        }
+        setLoading(false);
+      });
+    } catch (err: any) {
+      logAuth('Auth monitoring initialization error:', err, false, true);
+      setError(err.message || 'Error monitoring auth state');
+      setLoading(false);
     }
-  }, [initiateSessionRecovery, recoveryAttempted]);
 
-  return {
-    trackAuthStateChange,
-    authStateChangeCount: authStateChangeCount.current
-  };
-};
+    // Clean up subscription on unmount
+    return () => {
+      if (authSubscriptionRef.current) {
+        authSubscriptionRef.current.unsubscribe();
+      }
+    };
+  }, []);
+
+  return { user, session, loading, error };
+}

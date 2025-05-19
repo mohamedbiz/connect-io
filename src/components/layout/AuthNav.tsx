@@ -14,13 +14,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const AuthNav = () => {
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <span className="h-4 w-4 mr-2 animate-pulse rounded-full bg-gray-300"></span>
+        Loading...
+      </Button>
+    );
+  }
+
+  // Connection error state
+  if (error && error.includes('fetch')) {
+    return (
+      <Button variant="ghost" size="sm" className="text-amber-600" onClick={() => window.location.reload()}>
+        <span className="h-2 w-2 mr-2 rounded-full bg-amber-600"></span>
+        Reconnect
+      </Button>
+    );
+  }
 
   // Not logged in - show login button
   if (!user) {

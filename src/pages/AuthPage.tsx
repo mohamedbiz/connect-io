@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Building, User, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Building, User, Mail, Lock, WifiOff } from 'lucide-react';
+import { toast } from 'sonner';
 import Layout from '@/components/layout/Layout';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const AuthPage = () => {
   // URL params
@@ -31,13 +33,16 @@ const AuthPage = () => {
     acceptTerms: false
   });
 
-  // Hooks
-  const { login, register } = useAuth();
+  // Auth context and navigation
+  const { login, register, error: authError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get redirect path after login
   const from = location.state?.from || '/';
+
+  // Connection error
+  const isConnectionError = authError && authError.includes('fetch');
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -49,6 +54,12 @@ const AuthPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isConnectionError) {
+      toast.error('Please check your internet connection and try again');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -59,7 +70,7 @@ const AuthPage = () => {
         }
       } else {
         if (!formData.acceptTerms) {
-          alert('Please accept the terms and conditions');
+          toast.error('Please accept the terms and conditions');
           setLoading(false);
           return;
         }
@@ -93,6 +104,15 @@ const AuthPage = () => {
     <Layout>
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
+          {isConnectionError && (
+            <Alert variant="destructive" className="mb-4">
+              <WifiOff className="h-4 w-4 mr-2" />
+              <AlertDescription>
+                Network connection error. Please check your internet connection and try again.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Card className="border border-[#2D82B7]/30 shadow-sm">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-2">
@@ -249,7 +269,7 @@ const AuthPage = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-primary hover:bg-primary/90" 
-                  disabled={loading}
+                  disabled={loading || isConnectionError}
                 >
                   {loading ? (
                     <div className="flex items-center">
