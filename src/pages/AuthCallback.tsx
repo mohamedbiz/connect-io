@@ -52,7 +52,9 @@ const AuthCallback = () => {
               
               // Redirect based on role
               if (role === 'founder') {
-                navigate('/founder-dashboard', { replace: true });
+                // Check if qualification is needed for founder (assume it is always needed for first login)
+                // For subsequent logins, this will be checked in the dashboard page
+                navigate('/founder-qualification?new=true', { replace: true });
               } else if (role === 'provider') {
                 navigate('/provider-dashboard', { replace: true });
               } else {
