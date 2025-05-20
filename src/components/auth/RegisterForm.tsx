@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface RegisterFormProps {
   userType: 'founder' | 'provider';
@@ -18,6 +20,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [networkAvailable, setNetworkAvailable] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,10 +30,34 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     acceptTerms: false
   });
 
-  const { register, error: authError } = useAuth();
+  const { register, error: authError, retryAuth } = useAuth();
   const navigate = useNavigate();
   
-  const isConnectionError = authError && authError.includes('fetch');
+  // Check network status on component mount
+  useEffect(() => {
+    const checkNetwork = async () => {
+      const isOnline = await checkNetworkConnection();
+      setNetworkAvailable(isOnline);
+      
+      if (!isOnline) {
+        toast.error('Network connection unavailable');
+      }
+    };
+    
+    checkNetwork();
+    
+    // Also check when browser reports online status changes
+    const handleOnline = () => setNetworkAvailable(true);
+    const handleOffline = () => setNetworkAvailable(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -43,8 +70,11 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isConnectionError) {
-      toast.error('Please check your internet connection and try again');
+    // Verify network availability before attempting registration
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      toast.error('Network connection is unavailable. Please check your internet connection and try again.');
+      setNetworkAvailable(false);
       return;
     }
     
@@ -56,6 +86,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     setLoading(true);
 
     try {
+      console.log('Attempting registration with:', formData.email, 'as', userType);
       const { error } = await register(
         formData.email, 
         formData.password, 
@@ -78,12 +109,16 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
           toast.error('This email is already registered. Please sign in instead.');
         } else if (error.message?.includes('password')) {
           toast.error('Password must be at least 6 characters long.');
+        } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+          toast.error('Network error. Please check your connection and try again.');
+          setNetworkAvailable(false);
         } else {
           toast.error(error.message || 'Registration failed');
         }
       }
     } catch (error) {
       console.error('Registration error:', error);
+      toast.error('An unexpected error occurred during registration');
     } finally {
       setLoading(false);
     }
@@ -91,10 +126,18 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
 
   // Handle Google Sign In with userType metadata
   const handleGoogleSignIn = async () => {
+    // Check network connection before attempting OAuth
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      toast.error('Network connection is unavailable. Please check your internet connection and try again.');
+      setNetworkAvailable(false);
+      return;
+    }
+    
     try {
       setOAuthLoading(true);
+      console.log('Attempting Google sign-up as:', userType);
       
-      // Fixed: Move 'role' from data to queryParams
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -113,14 +156,55 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
-      toast.error('Failed to sign in with Google. Please try again.');
+      if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        toast.error('Network error. Please check your connection and try again.');
+        setNetworkAvailable(false);
+      } else {
+        toast.error('Failed to sign in with Google. Please try again.');
+      }
     } finally {
       setOAuthLoading(false);
     }
   };
 
+  // Handle retry for network connectivity
+  const handleRetryConnection = async () => {
+    const isOnline = await checkNetworkConnection();
+    setNetworkAvailable(isOnline);
+    
+    if (isOnline) {
+      toast.success('Connection restored!');
+      retryAuth();
+    } else {
+      toast.error('Still offline. Please check your internet connection.');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {!networkAvailable && (
+        <Alert variant="destructive" className="mb-4">
+          <WifiOff className="h-4 w-4 mr-2" />
+          <AlertTitle>Network Connection Error</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>We're having trouble connecting to our servers. This could be due to:</p>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>Your internet connection is down</li>
+              <li>Your network might be blocking the connection</li>
+              <li>Our servers might be temporarily unavailable</li>
+            </ul>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRetryConnection}
+              className="mt-2"
+            >
+              Retry Connection
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="firstName" className="text-sm font-medium">First Name</label>
@@ -223,7 +307,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       <Button 
         type="submit" 
         className="w-full bg-primary hover:bg-primary/90" 
-        disabled={loading || isConnectionError}
+        disabled={loading || !networkAvailable}
       >
         {loading ? (
           <div className="flex items-center">
@@ -251,7 +335,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
         variant="outline" 
         className="w-full flex items-center justify-center gap-2"
         onClick={handleGoogleSignIn}
-        disabled={oauthLoading || isConnectionError}
+        disabled={oauthLoading || !networkAvailable}
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path

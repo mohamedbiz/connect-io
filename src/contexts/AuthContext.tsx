@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react';
 import { useAuthInitialize } from '@/hooks/auth/useAuthInitialize';
 import { 
   fetchProfile, 
@@ -9,6 +9,8 @@ import {
   logoutUser
 } from '@/utils/auth/auth-operations';
 import { AuthContextType } from '@/types/auth-context';
+import { toast } from 'sonner';
+import { checkNetworkConnection, testApiConnection } from '@/integrations/supabase/client';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -27,9 +29,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     profile,
     loading,
     error,
-    retryAuth,
+    retryAuth: initialRetryAuth,
     setProfile
   } = useAuthInitialize();
+  
+  const [isRetryingAuth, setIsRetryingAuth] = useState(false);
 
   // Refresh user profile
   const refreshProfile = useCallback(async () => {
@@ -68,12 +72,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = useCallback(async () => {
     await logoutUser();
   }, []);
+  
+  // Improved retry function with network check
+  const retryAuth = useCallback(async () => {
+    setIsRetryingAuth(true);
+    
+    try {
+      // First check basic connectivity
+      const isConnected = await checkNetworkConnection();
+      if (!isConnected) {
+        toast.error('Cannot retry authentication. Network is still unavailable.');
+        return;
+      }
+      
+      // Then check Supabase API connectivity
+      const apiConnected = await testApiConnection();
+      if (!apiConnected) {
+        toast.error('Cannot connect to authentication service. Please try again later.');
+        return;
+      }
+      
+      // Run the original retry
+      initialRetryAuth();
+      toast.success('Reconnected to authentication service');
+    } catch (error) {
+      console.error('Error during auth retry:', error);
+      toast.error('Failed to retry authentication');
+    } finally {
+      setIsRetryingAuth(false);
+    }
+  }, [initialRetryAuth]);
 
   const value: AuthContextType = {
     user,
     session,
     profile,
-    loading,
+    loading: loading || isRetryingAuth,
     error,
     login,
     register,

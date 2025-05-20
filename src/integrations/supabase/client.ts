@@ -26,22 +26,57 @@ if (import.meta.env.DEV) {
   });
 }
 
-// Helper function to check network connectivity
+// Improved helper function to check network connectivity
 export const checkNetworkConnection = async (): Promise<boolean> => {
   try {
+    // Create an abort controller to handle timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    const response = await fetch('https://www.google.com', { 
-      method: 'HEAD',
-      mode: 'no-cors',
-      signal: controller.signal
+    // Try to ping the Supabase endpoint directly instead of Google
+    // This gives us a more accurate reading on whether the API we actually need is available
+    const response = await fetch(`${supabaseUrl}/rest/v1/`, { 
+      method: 'HEAD', 
+      headers: {
+        'apikey': supabaseAnonKey,
+      },
+      signal: controller.signal,
+      // Use no-cors mode as fallback
+      mode: 'no-cors'
     });
     
     clearTimeout(timeoutId);
+    console.log('Network connectivity check successful');
+    
     return true;
   } catch (error) {
     console.error('Network connectivity check failed:', error);
+    
+    // Try a secondary check with Google as fallback
+    try {
+      await fetch('https://www.google.com', { 
+        method: 'HEAD',
+        mode: 'no-cors',
+        // Short timeout for secondary check
+        signal: AbortSignal.timeout(3000)
+      });
+      
+      console.log('Secondary network check successful');
+      return true;
+    } catch (secondaryError) {
+      console.error('Secondary network check failed:', secondaryError);
+      return false;
+    }
+  }
+};
+
+// Export a function to test API connectivity specifically
+export const testApiConnection = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.from('profiles').select('count').limit(1).single();
+    return !error;
+  } catch (error) {
+    console.error('API connection test failed:', error);
     return false;
   }
 };

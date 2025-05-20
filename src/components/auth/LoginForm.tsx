@@ -1,31 +1,59 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, WifiOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [networkAvailable, setNetworkAvailable] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
-  const { login, error: authError } = useAuth();
+  const { login, error: authError, retryAuth } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Get redirect path after login
   const from = location.state?.from || '/';
   const isConnectionError = authError && authError.includes('fetch');
+
+  // Check network status on component mount
+  useEffect(() => {
+    const checkNetwork = async () => {
+      const isOnline = await checkNetworkConnection();
+      setNetworkAvailable(isOnline);
+      
+      if (!isOnline) {
+        toast.error('Network connection unavailable');
+      }
+    };
+    
+    checkNetwork();
+    
+    // Also check when browser reports online status changes
+    const handleOnline = () => setNetworkAvailable(true);
+    const handleOffline = () => setNetworkAvailable(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,29 +66,37 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isConnectionError) {
-      toast.error('Please check your internet connection and try again');
+    // Check network connection again right before login attempt
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      toast.error('Network connection is unavailable. Please check your internet connection and try again.');
+      setNetworkAvailable(false);
       return;
     }
     
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', formData.email);
       const { error } = await login(formData.email, formData.password);
       if (!error) {
-        navigate(from, { replace: true });
+        // Login successful, will be redirected by auth system
       } else {
         // Enhanced error messages
         if (error.message?.includes('credentials')) {
           toast.error('Incorrect email or password');
         } else if (error.message?.includes('rate limit')) {
           toast.error('Too many login attempts. Please try again later');
+        } else if (error.message?.includes('fetch') || error.message?.includes('network')) {
+          toast.error('Network error. Please check your connection and try again.');
+          setNetworkAvailable(false);
         } else {
           toast.error(error.message || 'Login failed');
         }
       }
     } catch (error) {
       console.error('Login error:', error);
+      toast.error('An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -68,8 +104,17 @@ const LoginForm = () => {
 
   // Handle Google Sign In
   const handleGoogleSignIn = async () => {
+    // Check network connection before attempting OAuth
+    const isOnline = await checkNetworkConnection();
+    if (!isOnline) {
+      toast.error('Network connection is unavailable. Please check your internet connection and try again.');
+      setNetworkAvailable(false);
+      return;
+    }
+    
     try {
       setOAuthLoading(true);
+      console.log('Attempting Google sign-in');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -82,14 +127,55 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       console.error('Google sign-in error:', error);
-      toast.error('Failed to sign in with Google. Please try again.');
+      if (error.message?.includes('fetch') || error.message?.includes('network')) {
+        toast.error('Network error. Please check your connection and try again.');
+        setNetworkAvailable(false);
+      } else {
+        toast.error('Failed to sign in with Google. Please try again.');
+      }
     } finally {
       setOAuthLoading(false);
     }
   };
 
+  // Display network error banner
+  const handleRetryConnection = async () => {
+    const isOnline = await checkNetworkConnection();
+    setNetworkAvailable(isOnline);
+    
+    if (isOnline) {
+      toast.success('Connection restored!');
+      retryAuth();
+    } else {
+      toast.error('Still offline. Please check your internet connection.');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {!networkAvailable && (
+        <Alert variant="destructive" className="mb-4">
+          <WifiOff className="h-4 w-4 mr-2" />
+          <AlertTitle>Network Connection Error</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>We're having trouble connecting to our servers. This could be due to:</p>
+            <ul className="list-disc ml-5 space-y-1">
+              <li>Your internet connection is down</li>
+              <li>Your network might be blocking the connection</li>
+              <li>Our servers might be temporarily unavailable</li>
+            </ul>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRetryConnection}
+              className="mt-2"
+            >
+              Retry Connection
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-2">
         <label htmlFor="email" className="text-sm font-medium">Email</label>
         <div className="relative">
@@ -141,7 +227,7 @@ const LoginForm = () => {
       <Button 
         type="submit" 
         className="w-full bg-primary hover:bg-primary/90" 
-        disabled={loading || isConnectionError}
+        disabled={loading || !networkAvailable}
       >
         {loading ? (
           <div className="flex items-center">
@@ -169,7 +255,7 @@ const LoginForm = () => {
         variant="outline" 
         className="w-full flex items-center justify-center gap-2"
         onClick={handleGoogleSignIn}
-        disabled={oauthLoading || isConnectionError}
+        disabled={oauthLoading || !networkAvailable}
       >
         <svg className="h-4 w-4" viewBox="0 0 24 24">
           <path
