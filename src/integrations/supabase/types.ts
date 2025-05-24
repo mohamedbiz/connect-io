@@ -9,503 +9,162 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      direct_messages: {
+      conversations: {
         Row: {
-          content: string
           created_at: string
+          founder_id: string
           id: string
-          match_id: string
-          read: boolean
-          receiver_id: string
-          sender_id: string
+          provider_id: string
           updated_at: string
         }
         Insert: {
-          content: string
           created_at?: string
+          founder_id: string
           id?: string
-          match_id: string
-          read?: boolean
-          receiver_id: string
-          sender_id: string
+          provider_id: string
           updated_at?: string
         }
         Update: {
-          content?: string
           created_at?: string
+          founder_id?: string
           id?: string
-          match_id?: string
-          read?: boolean
-          receiver_id?: string
-          sender_id?: string
+          provider_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "direct_messages_match_id_fkey"
-            columns: ["match_id"]
+            foreignKeyName: "conversations_founder_id_fkey"
+            columns: ["founder_id"]
             isOneToOne: false
-            referencedRelation: "matches"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      email_diagnostics: {
+      messages: {
         Row: {
-          created_at: string | null
-          current_conversion_rate: number | null
-          estimated_list_growth: number | null
-          forms: Json | null
-          id: string
-          industry_average: number | null
-          overall_score: number
-          potential_conversion_rate: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          current_conversion_rate?: number | null
-          estimated_list_growth?: number | null
-          forms?: Json | null
-          id?: string
-          industry_average?: number | null
-          overall_score: number
-          potential_conversion_rate?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          current_conversion_rate?: number | null
-          estimated_list_growth?: number | null
-          forms?: Json | null
-          id?: string
-          industry_average?: number | null
-          overall_score?: number
-          potential_conversion_rate?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      founder_applications: {
-        Row: {
-          application_data: Json
+          content: string
+          conversation_id: string
           created_at: string
           id: string
-          reviewed_at: string | null
-          reviewer_notes: string | null
-          status: string
-          submitted_at: string
-          user_id: string
+          read: boolean
+          sender_id: string
         }
         Insert: {
-          application_data: Json
+          content: string
+          conversation_id: string
           created_at?: string
           id?: string
-          reviewed_at?: string | null
-          reviewer_notes?: string | null
-          status?: string
-          submitted_at?: string
-          user_id: string
+          read?: boolean
+          sender_id: string
         }
         Update: {
-          application_data?: Json
+          content?: string
+          conversation_id?: string
           created_at?: string
           id?: string
-          reviewed_at?: string | null
-          reviewer_notes?: string | null
-          status?: string
-          submitted_at?: string
-          user_id?: string
+          read?: boolean
+          sender_id?: string
         }
-        Relationships: []
-      }
-      founder_onboarding: {
-        Row: {
-          accepts_performance_based: boolean | null
-          accepts_timeframe: boolean | null
-          acquisition_completed: boolean | null
-          acquisition_completed_at: string | null
-          allows_portfolio_use: boolean | null
-          created_at: string | null
-          ecommerce_platform: string | null
-          growth_mindset: boolean | null
-          id: string
-          is_decision_maker: boolean | null
-          monthly_traffic: number | null
-          product_margins: string | null
-          project_scope: string | null
-          qualification_completed: boolean | null
-          qualification_completed_at: string | null
-          revenue_threshold: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          accepts_performance_based?: boolean | null
-          accepts_timeframe?: boolean | null
-          acquisition_completed?: boolean | null
-          acquisition_completed_at?: string | null
-          allows_portfolio_use?: boolean | null
-          created_at?: string | null
-          ecommerce_platform?: string | null
-          growth_mindset?: boolean | null
-          id?: string
-          is_decision_maker?: boolean | null
-          monthly_traffic?: number | null
-          product_margins?: string | null
-          project_scope?: string | null
-          qualification_completed?: boolean | null
-          qualification_completed_at?: string | null
-          revenue_threshold?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          accepts_performance_based?: boolean | null
-          accepts_timeframe?: boolean | null
-          acquisition_completed?: boolean | null
-          acquisition_completed_at?: string | null
-          allows_portfolio_use?: boolean | null
-          created_at?: string | null
-          ecommerce_platform?: string | null
-          growth_mindset?: boolean | null
-          id?: string
-          is_decision_maker?: boolean | null
-          monthly_traffic?: number | null
-          product_margins?: string | null
-          project_scope?: string | null
-          qualification_completed?: boolean | null
-          qualification_completed_at?: string | null
-          revenue_threshold?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      matches: {
-        Row: {
-          created_at: string | null
-          founder_id: string
-          id: string
-          message: string | null
-          provider_id: string
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          founder_id: string
-          id?: string
-          message?: string | null
-          provider_id: string
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          founder_id?: string
-          id?: string
-          message?: string | null
-          provider_id?: string
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      payment_analytics: {
-        Row: {
-          id: string
-          period_end: string
-          period_start: string
-          total_fees: number
-          total_revenue: number
-          transaction_count: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          period_end: string
-          period_start: string
-          total_fees?: number
-          total_revenue?: number
-          transaction_count?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          period_end?: string
-          period_start?: string
-          total_fees?: number
-          total_revenue?: number
-          transaction_count?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string
-          currency: string | null
-          fee_amount: number
-          id: string
-          metadata: Json | null
-          payment_intent_id: string | null
-          payment_method: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          currency?: string | null
-          fee_amount: number
-          id?: string
-          metadata?: Json | null
-          payment_intent_id?: string | null
-          payment_method?: string | null
-          status: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          currency?: string | null
-          fee_amount?: number
-          id?: string
-          metadata?: Json | null
-          payment_intent_id?: string | null
-          payment_method?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      payout_requests: {
-        Row: {
-          amount: number
-          id: string
-          notes: string | null
-          processed_at: string | null
-          provider_id: string
-          requested_at: string
-          status: string
-        }
-        Insert: {
-          amount: number
-          id?: string
-          notes?: string | null
-          processed_at?: string | null
-          provider_id: string
-          requested_at?: string
-          status?: string
-        }
-        Update: {
-          amount?: number
-          id?: string
-          notes?: string | null
-          processed_at?: string | null
-          provider_id?: string
-          requested_at?: string
-          status?: string
-        }
-        Relationships: []
-      }
-      post_purchase_diagnostics: {
-        Row: {
-          created_at: string | null
-          current_repeat_rate: number | null
-          estimated_revenue_lift: number | null
-          id: string
-          industry_average: number | null
-          overall_score: number
-          potential_repeat_rate: number | null
-          sequences: Json | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          current_repeat_rate?: number | null
-          estimated_revenue_lift?: number | null
-          id?: string
-          industry_average?: number | null
-          overall_score: number
-          potential_repeat_rate?: number | null
-          sequences?: Json | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          current_repeat_rate?: number | null
-          estimated_revenue_lift?: number | null
-          id?: string
-          industry_average?: number | null
-          overall_score?: number
-          potential_repeat_rate?: number | null
-          sequences?: Json | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
-          about: string | null
+          approach_description: string | null
+          approved: boolean | null
           avatar_url: string | null
+          biggest_challenge: string | null
           business_name: string | null
+          business_website: string | null
           created_at: string | null
           email: string
-          expertise: string | null
+          email_platform: string | null
           first_name: string | null
+          headline: string | null
           id: string
+          industries_served: string[] | null
+          industry: string | null
           last_name: string | null
-          linkedin_url: string | null
+          marketing_goal: string | null
+          monthly_revenue: string | null
           onboarding_complete: boolean | null
           portfolio_url: string | null
+          primary_esp: string | null
+          profile_picture_url: string | null
           role: Database["public"]["Enums"]["user_role"]
+          years_experience: string | null
         }
         Insert: {
-          about?: string | null
+          approach_description?: string | null
+          approved?: boolean | null
           avatar_url?: string | null
+          biggest_challenge?: string | null
           business_name?: string | null
+          business_website?: string | null
           created_at?: string | null
           email: string
-          expertise?: string | null
+          email_platform?: string | null
           first_name?: string | null
+          headline?: string | null
           id: string
+          industries_served?: string[] | null
+          industry?: string | null
           last_name?: string | null
-          linkedin_url?: string | null
+          marketing_goal?: string | null
+          monthly_revenue?: string | null
           onboarding_complete?: boolean | null
           portfolio_url?: string | null
+          primary_esp?: string | null
+          profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          years_experience?: string | null
         }
         Update: {
-          about?: string | null
+          approach_description?: string | null
+          approved?: boolean | null
           avatar_url?: string | null
+          biggest_challenge?: string | null
           business_name?: string | null
+          business_website?: string | null
           created_at?: string | null
           email?: string
-          expertise?: string | null
+          email_platform?: string | null
           first_name?: string | null
+          headline?: string | null
           id?: string
+          industries_served?: string[] | null
+          industry?: string | null
           last_name?: string | null
-          linkedin_url?: string | null
+          marketing_goal?: string | null
+          monthly_revenue?: string | null
           onboarding_complete?: boolean | null
           portfolio_url?: string | null
+          primary_esp?: string | null
+          profile_picture_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
-        }
-        Relationships: []
-      }
-      provider_applications: {
-        Row: {
-          accepted: boolean | null
-          application_data: Json
-          created_at: string
-          id: string
-          interview_notes: string | null
-          reviewed_at: string | null
-          reviewer_notes: string | null
-          status: string
-          submitted_at: string
-          technical_assessment_score: number | null
-          user_id: string
-        }
-        Insert: {
-          accepted?: boolean | null
-          application_data: Json
-          created_at?: string
-          id?: string
-          interview_notes?: string | null
-          reviewed_at?: string | null
-          reviewer_notes?: string | null
-          status?: string
-          submitted_at?: string
-          technical_assessment_score?: number | null
-          user_id: string
-        }
-        Update: {
-          accepted?: boolean | null
-          application_data?: Json
-          created_at?: string
-          id?: string
-          interview_notes?: string | null
-          reviewed_at?: string | null
-          reviewer_notes?: string | null
-          status?: string
-          submitted_at?: string
-          technical_assessment_score?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      providers: {
-        Row: {
-          avatar: string | null
-          average_order_value: number | null
-          created_at: string | null
-          description: string | null
-          email: string
-          expertise: Json | null
-          id: string
-          is_featured: boolean | null
-          name: string
-          platform_experience: string[] | null
-          projects_completed: number | null
-          rating: number | null
-          specialties: string[] | null
-          success_metrics: Json | null
-          title: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          avatar?: string | null
-          average_order_value?: number | null
-          created_at?: string | null
-          description?: string | null
-          email: string
-          expertise?: Json | null
-          id?: string
-          is_featured?: boolean | null
-          name: string
-          platform_experience?: string[] | null
-          projects_completed?: number | null
-          rating?: number | null
-          specialties?: string[] | null
-          success_metrics?: Json | null
-          title?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          avatar?: string | null
-          average_order_value?: number | null
-          created_at?: string | null
-          description?: string | null
-          email?: string
-          expertise?: Json | null
-          id?: string
-          is_featured?: boolean | null
-          name?: string
-          platform_experience?: string[] | null
-          projects_completed?: number | null
-          rating?: number | null
-          specialties?: string[] | null
-          success_metrics?: Json | null
-          title?: string | null
-          updated_at?: string | null
-          user_id?: string
+          years_experience?: string | null
         }
         Relationships: []
       }

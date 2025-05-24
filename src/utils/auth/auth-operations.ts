@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
@@ -9,7 +10,6 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   try {
     logAuth(`Fetching profile for user: ${userId}`);
     
-    // Check network connectivity first
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected when fetching profile', null, true);
@@ -36,12 +36,68 @@ export const fetchProfile = async (userId: string): Promise<Profile | null> => {
   }
 };
 
+// Create profile for new user
+export const createProfile = async (
+  userId: string,
+  email: string,
+  firstName: string,
+  lastName: string,
+  role: 'founder' | 'provider' = 'founder'
+): Promise<Profile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role,
+        onboarding_complete: false,
+        approved: role === 'founder' ? true : false // Founders auto-approved, providers need manual approval
+      })
+      .select()
+      .single();
+      
+    if (error) {
+      logAuth('Error creating profile:', error, false, true);
+      return null;
+    }
+    
+    return data as Profile;
+  } catch (error) {
+    logAuth('Error creating profile:', error, false, true);
+    return null;
+  }
+};
+
+// Update profile
+export const updateProfile = async (userId: string, updates: Partial<Profile>): Promise<Profile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+      
+    if (error) {
+      logAuth('Error updating profile:', error, false, true);
+      return null;
+    }
+    
+    return data as Profile;
+  } catch (error) {
+    logAuth('Error updating profile:', error, false, true);
+    return null;
+  }
+};
+
 // Ensure a profile exists or create one if it doesn't
 export const ensureProfileExists = async (user: User | null): Promise<Profile | null> => {
   if (!user) return null;
   
   try {
-    // Check network connectivity first
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected when ensuring profile exists', null, true);
@@ -56,26 +112,19 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
     if (!userProfile) {
       logAuth('No profile found, creating one', { userId: user.id });
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          first_name: user.user_metadata?.first_name || '',
-          last_name: user.user_metadata?.last_name || '',
-          role: user.user_metadata?.role || 'founder'
-        })
-        .select()
-        .single();
-        
-      if (error) {
-        logAuth('Error creating profile:', error, false, true);
-        toast.error('Could not create user profile');
-        return null;
-      }
+      userProfile = await createProfile(
+        user.id,
+        user.email || '',
+        user.user_metadata?.first_name || '',
+        user.user_metadata?.last_name || '',
+        user.user_metadata?.role || 'founder'
+      );
       
-      userProfile = data as Profile;
-      toast.success('Profile created successfully');
+      if (userProfile) {
+        toast.success('Profile created successfully');
+      } else {
+        toast.error('Could not create user profile');
+      }
     }
     
     return userProfile;
@@ -89,7 +138,6 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
 // Login with email and password
 export const loginWithEmailAndPassword = async (email: string, password: string) => {
   try {
-    // Check network connectivity first with a more thorough check
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected during login', null, true);
@@ -98,65 +146,21 @@ export const loginWithEmailAndPassword = async (email: string, password: string)
     
     logAuth('Attempting login', { email });
     
-    // Add a retry mechanism for network flakiness
-    let attempt = 0;
-    const maxAttempts = 2;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
     
-    while (attempt < maxAttempts) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          logAuth('Login error:', error, false, true);
-          
-          // If it's not a network error, don't retry
-          if (!error.message?.includes('fetch')) {
-            return { error };
-          }
-          
-          // If it's the last attempt, return the error
-          if (attempt === maxAttempts - 1) {
-            return { error };
-          }
-          
-          // Otherwise, wait and retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-          attempt++;
-          continue;
-        }
-        
-        logAuth('Login successful', { user: data.user });
-        toast.success('Logged in successfully');
-        return { error: null };
-      } catch (innerError: any) {
-        // If it's not a network error or last attempt, don't retry
-        if (!innerError.message?.includes('fetch') || attempt === maxAttempts - 1) {
-          logAuth('Login exception:', innerError, false, true);
-          return { error: innerError };
-        }
-        
-        // Wait and retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-        attempt++;
-      }
+    if (error) {
+      logAuth('Login error:', error, false, true);
+      return { error };
     }
     
-    // This should never be reached due to the return statements above,
-    // but TypeScript requires a return statement
-    return { error: { message: 'All login attempts failed' } };
+    logAuth('Login successful', { user: data.user });
+    toast.success('Logged in successfully');
+    return { error: null };
   } catch (error: any) {
     logAuth('Login exception:', error, false, true);
-    
-    // Network error handling
-    if (error.message?.includes('fetch')) {
-      toast.error('Network error. Please check your connection and try again.');
-    } else {
-      toast.error('An error occurred during login');
-    }
-    
     return { error };
   }
 };
@@ -165,10 +169,9 @@ export const loginWithEmailAndPassword = async (email: string, password: string)
 export const registerWithEmailAndPassword = async (
   email: string, 
   password: string, 
-  userData: Partial<Profile>
+  userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }
 ) => {
   try {
-    // Check network connectivity first with a more robust check
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected during registration', null, true);
@@ -177,77 +180,28 @@ export const registerWithEmailAndPassword = async (
     
     logAuth('Attempting registration', { email, userData });
     
-    // Add a retry mechanism for network flakiness
-    let attempt = 0;
-    const maxAttempts = 2;
-    
-    while (attempt < maxAttempts) {
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              first_name: userData.first_name,
-              last_name: userData.last_name,
-              role: userData.role || 'founder'
-            },
-          }
-        });
-        
-        if (error) {
-          logAuth('Registration error:', error, false, true);
-          
-          // If it's not a network error, don't retry
-          if (!error.message?.includes('fetch')) {
-            return { error };
-          }
-          
-          // If it's the last attempt, return the error
-          if (attempt === maxAttempts - 1) {
-            return { error };
-          }
-          
-          // Otherwise, wait and retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-          attempt++;
-          continue;
-        }
-        
-        logAuth('Registration successful', { user: data.user });
-        
-        // Create a profile for the new user
-        if (data.user) {
-          await ensureProfileExists(data.user);
-        }
-        
-        toast.success('Registration successful!');
-        return { error: null };
-      } catch (innerError: any) {
-        // If it's not a network error or last attempt, don't retry
-        if (!innerError.message?.includes('fetch') || attempt === maxAttempts - 1) {
-          logAuth('Registration exception:', innerError, false, true);
-          return { error: innerError };
-        }
-        
-        // Wait and retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-        attempt++;
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          role: userData.role
+        },
       }
+    });
+    
+    if (error) {
+      logAuth('Registration error:', error, false, true);
+      return { error };
     }
     
-    // This should never be reached
-    return { error: { message: 'All registration attempts failed' } };
+    logAuth('Registration successful', { user: data.user });
+    toast.success('Registration successful!');
+    return { error: null };
   } catch (error: any) {
     logAuth('Registration exception:', error, false, true);
-    
-    // Network error handling
-    if (error.message?.includes('fetch')) {
-      toast.error('Network error. Please check your connection and try again.');
-    } else {
-      toast.error('An error occurred during registration');
-    }
-    
     return { error };
   }
 };
@@ -255,12 +209,10 @@ export const registerWithEmailAndPassword = async (
 // Logout
 export const logoutUser = async () => {
   try {
-    // Check network connectivity first
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected during logout', null, true);
-      // We still want to clear local session even if offline
-      localStorage.removeItem('sb-mohamedbiz-auth-token');
+      localStorage.removeItem('sb-lhlxhnhbfgmrwfirihxg-auth-token');
       toast.warning('Logged out locally. Some features may not work until you reconnect.');
       return;
     }
@@ -277,7 +229,6 @@ export const logoutUser = async () => {
 // Get the current session
 export const getCurrentSession = async () => {
   try {
-    // Check network connectivity first
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected when getting session', null, true);
