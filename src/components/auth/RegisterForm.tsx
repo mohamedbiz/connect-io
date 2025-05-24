@@ -93,7 +93,6 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
         {
           first_name: formData.firstName,
           last_name: formData.lastName,
-          business_name: formData.companyName,
           role: userType
         }
       );
