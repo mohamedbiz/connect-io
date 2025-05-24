@@ -9,7 +9,7 @@ export type AuthContextType = {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<{ error: any | null }>;
-  register: (email: string, password: string, userData: Partial<Profile>) => Promise<{ error: any | null }>;
+  register: (email: string, password: string, userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }) => Promise<{ error: any | null }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   ensureProfile: () => Promise<Profile | null>;

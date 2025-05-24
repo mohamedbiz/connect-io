@@ -1,4 +1,6 @@
 
+import { Profile } from './auth';
+
 export interface Conversation {
   id: string;
   founder_id: string;

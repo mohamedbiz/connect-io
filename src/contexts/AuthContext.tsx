@@ -59,11 +59,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return await loginWithEmailAndPassword(email, password);
   }, []);
 
-  // Register
+  // Register - fix the type signature
   const register = useCallback(async (
     email: string, 
     password: string, 
-    userData: Partial<import('@/types/auth').Profile>
+    userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }
   ) => {
     return await registerWithEmailAndPassword(email, password, userData);
   }, []);
