@@ -114,6 +114,7 @@ export const useProviderApplications = () => {
     allApplications: allApplicationsQuery.data || [],
     isLoadingAllApplications: allApplicationsQuery.isLoading,
     loadAllApplications: () => allApplicationsQuery.refetch(),
+    refetch: () => allApplicationsQuery.refetch(),
     
     updateApplicationStatus: updateStatusMutation.mutate,
     isUpdating: updateStatusMutation.isPending
