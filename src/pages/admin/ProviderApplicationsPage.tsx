@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import ReviewDialog from "@/components/admin/provider-applications/ReviewDialog";
 import ApplicationTabs from "@/components/admin/provider-applications/ApplicationTabs";
+import { supabase } from "@/lib/supabase";
 
 const ProviderApplicationsPage = () => {
   const { user, profile, loading } = useAuth();
@@ -24,7 +24,8 @@ const ProviderApplicationsPage = () => {
     isLoadingAllApplications, 
     updateApplicationStatus, 
     isUpdating, 
-    loadAllApplications 
+    loadAllApplications, 
+    refetch 
   } = useProviderApplications();
   
   // Load applications on mount if user is admin
@@ -68,6 +69,51 @@ const ProviderApplicationsPage = () => {
     });
     
     setReviewDialogOpen(false);
+  };
+
+  const handleReview = async (
+    applicationId: string,
+    status: "approved" | "rejected",
+    reviewerNotes?: string,
+    technicalScore?: number
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('provider_applications')
+        .update({
+          status,
+          reviewer_notes: reviewerNotes,
+          technical_score: technicalScore,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: user?.id
+        })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      toast.success(`Application ${status} successfully`);
+      refetch();
+    } catch (error) {
+      console.error("Error updating application:", error);
+      toast.error("Failed to update application");
+    }
+  };
+
+  const handleToggleFeatured = async (profileId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_featured: !currentStatus })
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      toast.success(`Provider ${!currentStatus ? 'featured' : 'unfeatured'} successfully`);
+      refetch();
+    } catch (error) {
+      console.error("Error updating featured status:", error);
+      toast.error("Failed to update featured status");
+    }
   };
 
   if (loading || isLoadingAllApplications) {
