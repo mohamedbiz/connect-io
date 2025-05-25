@@ -60,11 +60,17 @@ export const useProviders = () => {
           averageOrderValue: p.average_order_value || 2000,
           expertise: expertiseArray,
           successMetrics: successMetricsArray,
-          platformExperience: p.platform_experience || []
+          platformExperience: p.platform_experience || [],
+          featured: p.is_featured || false
         };
       }) || [];
       
-      return providers;
+      // Sort providers with featured ones first
+      return providers.sort((a, b) => {
+        if (a.featured && !b.featured) return -1;
+        if (!a.featured && b.featured) return 1;
+        return 0;
+      });
     }
   });
 };

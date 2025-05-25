@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import FeaturedBadge from "@/components/ui/featured-badge";
 
 interface ProvidersListProps {
   providers: ServiceProvider[];
@@ -61,21 +62,34 @@ const ProvidersList = ({ providers, onCompare }: ProvidersListProps) => {
     setSelectedProvider(null);
   };
 
+  // Sort providers with featured ones first
+  const sortedProviders = [...providers].sort((a, b) => {
+    if (a.featured && !b.featured) return -1;
+    if (!a.featured && b.featured) return 1;
+    return 0;
+  });
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {providers.map((provider) => {
+        {sortedProviders.map((provider) => {
           const alreadyMatched = isMatched(provider.id);
           
           return (
-            <Card key={provider.id}>
+            <Card 
+              key={provider.id}
+              className={provider.featured ? 'ring-2 ring-yellow-400 border-yellow-200' : ''}
+            >
               <CardHeader>
                 <div className="flex items-start gap-4">
                   <Avatar className="h-12 w-12">
                     <img src={provider.avatar} alt={provider.name} />
                   </Avatar>
                   <div className="flex-1">
-                    <h3 className="font-semibold">{provider.name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold">{provider.name}</h3>
+                      {provider.featured && <FeaturedBadge />}
+                    </div>
                     <p className="text-sm text-muted-foreground">{provider.title}</p>
                   </div>
                   <div className="flex gap-2">

@@ -5,19 +5,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile } from '@/types/auth';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Star, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import FeaturedBadge from '@/components/ui/featured-badge';
 
 const ProviderDirectoryPage = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch approved providers
+  // Fetch approved providers with featured status
   const { data: providers, isLoading } = useQuery({
     queryKey: ['providers'],
     queryFn: async () => {
@@ -32,20 +33,28 @@ const ProviderDirectoryPage = () => {
     },
   });
 
-  // Filter providers based on search term
-  const filteredProviders = useMemo(() => {
-    if (!providers) return [];
-    if (!searchTerm) return providers;
+  // Filter and sort providers based on search term and featured status
+  const { featuredProviders, regularProviders } = useMemo(() => {
+    if (!providers) return { featuredProviders: [], regularProviders: [] };
+    
+    let filteredProviders = providers;
+    
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filteredProviders = providers.filter(provider => 
+        provider.headline?.toLowerCase().includes(term) ||
+        provider.approach_description?.toLowerCase().includes(term) ||
+        provider.industries_served?.some(industry => 
+          industry.toLowerCase().includes(term)
+        ) ||
+        provider.primary_esp?.toLowerCase().includes(term)
+      );
+    }
 
-    const term = searchTerm.toLowerCase();
-    return providers.filter(provider => 
-      provider.headline?.toLowerCase().includes(term) ||
-      provider.approach_description?.toLowerCase().includes(term) ||
-      provider.industries_served?.some(industry => 
-        industry.toLowerCase().includes(term)
-      ) ||
-      provider.primary_esp?.toLowerCase().includes(term)
-    );
+    const featured = filteredProviders.filter(provider => provider.is_featured);
+    const regular = filteredProviders.filter(provider => !provider.is_featured);
+    
+    return { featuredProviders: featured, regularProviders: regular };
   }, [providers, searchTerm]);
 
   const handleProviderClick = (providerId: string) => {
@@ -63,6 +72,73 @@ const ProviderDirectoryPage = () => {
       </div>
     );
   }
+
+  const ProviderCard = ({ provider, isFeatured = false }: { provider: Profile; isFeatured?: boolean }) => (
+    <Card 
+      className={`hover:shadow-lg transition-shadow cursor-pointer ${
+        isFeatured ? 'ring-2 ring-yellow-400 border-yellow-200' : ''
+      }`}
+      onClick={() => handleProviderClick(provider.id)}
+    >
+      <CardContent className="p-6">
+        <div className="flex items-center space-x-4 mb-4">
+          <Avatar className="w-12 h-12">
+            <AvatarImage src={provider.profile_picture_url} />
+            <AvatarFallback>
+              {provider.first_name?.[0]}{provider.last_name?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-lg">
+                {provider.first_name} {provider.last_name}
+              </h3>
+              {provider.is_featured && <FeaturedBadge />}
+            </div>
+            <p className="text-sm text-gray-600">{provider.headline}</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {provider.primary_esp && (
+            <div>
+              <span className="text-sm font-medium text-gray-700">Primary Platform:</span>
+              <Badge variant="secondary" className="ml-2">
+                {provider.primary_esp}
+              </Badge>
+            </div>
+          )}
+
+          {provider.years_experience && (
+            <div>
+              <span className="text-sm font-medium text-gray-700">Experience:</span>
+              <span className="ml-2 text-sm text-gray-600">
+                {provider.years_experience} years
+              </span>
+            </div>
+          )}
+
+          {provider.industries_served && provider.industries_served.length > 0 && (
+            <div>
+              <span className="text-sm font-medium text-gray-700">Industries:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {provider.industries_served.slice(0, 3).map((industry, index) => (
+                  <Badge key={index} variant="outline" className="text-xs">
+                    {industry}
+                  </Badge>
+                ))}
+                {provider.industries_served.length > 3 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{provider.industries_served.length - 3} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <ProtectedRoute>
@@ -85,7 +161,7 @@ const ProviderDirectoryPage = () => {
           </div>
         </div>
 
-        {/* Providers Grid */}
+        {/* Providers Content */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -107,79 +183,46 @@ const ProviderDirectoryPage = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProviders.map((provider) => (
-              <Card 
-                key={provider.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleProviderClick(provider.id)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={provider.profile_picture_url} />
-                      <AvatarFallback>
-                        {provider.first_name?.[0]}{provider.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-lg">
-                        {provider.first_name} {provider.last_name}
-                      </h3>
-                      <p className="text-sm text-gray-600">{provider.headline}</p>
-                    </div>
-                  </div>
+          <div className="space-y-8">
+            {/* Featured Providers Section */}
+            {featuredProviders.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <Star className="h-5 w-5 text-yellow-500 fill-current" />
+                  <h2 className="text-xl font-semibold text-gray-900">Featured Providers</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {featuredProviders.map((provider) => (
+                    <ProviderCard key={provider.id} provider={provider} isFeatured={true} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  <div className="space-y-3">
-                    {provider.primary_esp && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Primary Platform:</span>
-                        <Badge variant="secondary" className="ml-2">
-                          {provider.primary_esp}
-                        </Badge>
-                      </div>
-                    )}
+            {/* Regular Providers Section */}
+            {regularProviders.length > 0 && (
+              <div>
+                {featuredProviders.length > 0 && (
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">All Providers</h2>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {regularProviders.map((provider) => (
+                    <ProviderCard key={provider.id} provider={provider} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    {provider.years_experience && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Experience:</span>
-                        <span className="ml-2 text-sm text-gray-600">
-                          {provider.years_experience} years
-                        </span>
-                      </div>
-                    )}
-
-                    {provider.industries_served && provider.industries_served.length > 0 && (
-                      <div>
-                        <span className="text-sm font-medium text-gray-700">Industries:</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {provider.industries_served.slice(0, 3).map((industry, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {industry}
-                            </Badge>
-                          ))}
-                          {provider.industries_served.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{provider.industries_served.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {filteredProviders.length === 0 && !isLoading && (
-          <div className="text-center py-12">
-            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No providers found</h3>
-            <p className="text-gray-600">
-              {searchTerm ? 'Try adjusting your search terms' : 'No approved providers available yet'}
-            </p>
+            {/* No Results */}
+            {featuredProviders.length === 0 && regularProviders.length === 0 && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No providers found</h3>
+                <p className="text-gray-600">
+                  {searchTerm ? 'Try adjusting your search terms' : 'No approved providers available yet'}
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

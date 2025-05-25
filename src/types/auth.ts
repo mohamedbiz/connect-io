@@ -9,6 +9,7 @@ export interface Profile {
   email: string;
   role: UserRole;
   onboarding_complete?: boolean;
+  is_featured?: boolean;
   
   // Founder fields
   business_name?: string;

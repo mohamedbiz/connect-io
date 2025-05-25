@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, MessageCircle, ExternalLink, Star, Clock, Building } from 'lucide-react';
 import { toast } from 'sonner';
+import FeaturedBadge from '@/components/ui/featured-badge';
 
 const ProviderProfilePage = () => {
   const { providerId } = useParams();
@@ -123,7 +124,7 @@ const ProviderProfilePage = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Profile Header */}
-          <Card>
+          <Card className={provider.is_featured ? 'ring-2 ring-yellow-400 border-yellow-200' : ''}>
             <CardContent className="p-6">
               <div className="flex items-start space-x-6">
                 <Avatar className="w-24 h-24">
@@ -133,9 +134,12 @@ const ProviderProfilePage = () => {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {provider.first_name} {provider.last_name}
-                  </h1>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {provider.first_name} {provider.last_name}
+                    </h1>
+                    {provider.is_featured && <FeaturedBadge size="md" />}
+                  </div>
                   {provider.headline && (
                     <h2 className="text-xl text-gray-600 mb-4">{provider.headline}</h2>
                   )}

@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ReviewDialogProps {
   open: boolean;
@@ -18,6 +19,8 @@ interface ReviewDialogProps {
   setReviewerNotes: (notes: string) => void;
   technicalScore: number;
   setTechnicalScore: (score: number) => void;
+  isFeatured: boolean;
+  setIsFeatured: (featured: boolean) => void;
   onUpdateStatus: (status: 'in_review' | 'approved' | 'rejected') => void;
   isUpdating: boolean;
 }
@@ -29,6 +32,8 @@ const ReviewDialog = ({
   setReviewerNotes,
   technicalScore,
   setTechnicalScore,
+  isFeatured,
+  setIsFeatured,
   onUpdateStatus,
   isUpdating
 }: ReviewDialogProps) => {
@@ -53,6 +58,17 @@ const ReviewDialog = ({
               onChange={(e) => setTechnicalScore(Number(e.target.value))}
               className="w-full p-2 border rounded-md"
             />
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="featured"
+              checked={isFeatured}
+              onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
+            />
+            <label htmlFor="featured" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Mark as Featured Provider
+            </label>
           </div>
           
           <div>

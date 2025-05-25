@@ -106,6 +106,7 @@ export type Database = {
           id: string
           industries_served: string[] | null
           industry: string | null
+          is_featured: boolean
           last_name: string | null
           marketing_goal: string | null
           monthly_revenue: string | null
@@ -131,6 +132,7 @@ export type Database = {
           id: string
           industries_served?: string[] | null
           industry?: string | null
+          is_featured?: boolean
           last_name?: string | null
           marketing_goal?: string | null
           monthly_revenue?: string | null
@@ -156,6 +158,7 @@ export type Database = {
           id?: string
           industries_served?: string[] | null
           industry?: string | null
+          is_featured?: boolean
           last_name?: string | null
           marketing_goal?: string | null
           monthly_revenue?: string | null
