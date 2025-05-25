@@ -2,18 +2,20 @@
 import React from 'react';
 import Layout from "@/components/layout/Layout";
 import Hero from "@/components/home/Hero";
+import ProblemSection from "@/components/home/ProblemSection";
+import SolutionSection from "@/components/home/SolutionSection";
 import HowItWorks from "@/components/home/HowItWorks";
-import ForFounders from "@/components/home/ForFounders";
-import ForProviders from "@/components/home/ForProviders";
+import BenefitsSection from "@/components/home/BenefitsSection";
 import CTASection from "@/components/home/CTASection";
 
 const IndexPage = () => {
   return (
     <Layout>
       <Hero />
+      <ProblemSection />
+      <SolutionSection />
       <HowItWorks />
-      <ForFounders />
-      <ForProviders />
+      <BenefitsSection />
       <CTASection />
     </Layout>
   );

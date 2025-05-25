@@ -17,6 +17,7 @@ const ProviderApplicationsPage = () => {
   const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [reviewerNotes, setReviewerNotes] = useState('');
   const [technicalScore, setTechnicalScore] = useState<number>(0);
+  const [isFeatured, setIsFeatured] = useState<boolean>(false);
 
   const { 
     allApplications, 
@@ -51,6 +52,7 @@ const ProviderApplicationsPage = () => {
     setSelectedApplicationId(applicationId);
     setReviewerNotes(application?.reviewer_notes || '');
     setTechnicalScore(application?.technical_assessment_score || 0);
+    setIsFeatured(application?.is_featured || false);
     setReviewDialogOpen(true);
   };
 
@@ -61,7 +63,8 @@ const ProviderApplicationsPage = () => {
       applicationId: selectedApplicationId,
       status,
       reviewerNotes: reviewerNotes.trim() || undefined,
-      technicalScore: technicalScore || undefined
+      technicalScore: technicalScore || undefined,
+      isFeatured: isFeatured
     });
     
     setReviewDialogOpen(false);
@@ -109,6 +112,8 @@ const ProviderApplicationsPage = () => {
         setReviewerNotes={setReviewerNotes}
         technicalScore={technicalScore}
         setTechnicalScore={setTechnicalScore}
+        isFeatured={isFeatured}
+        setIsFeatured={setIsFeatured}
         onUpdateStatus={handleUpdateStatus}
         isUpdating={isUpdating}
       />
