@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 
 interface RegisterFormProps {
   userType: 'founder' | 'provider';
@@ -30,8 +31,19 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     acceptTerms: false
   });
 
-  const { register, error: authError, retryAuth } = useAuth();
+  const { register, error: authError, retryAuth, user, profile } = useAuth();
   const navigate = useNavigate();
+  const { redirectAfterLogin } = usePostLoginRedirection();
+
+  // Handle redirection after successful registration
+  useEffect(() => {
+    if (user && profile) {
+      console.log('New user registered, triggering redirection');
+      setTimeout(() => {
+        redirectAfterLogin(user, profile);
+      }, 1000); // Small delay to show success message
+    }
+  }, [user, profile, redirectAfterLogin]);
   
   // Check network status on component mount
   useEffect(() => {
@@ -98,10 +110,8 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       );
 
       if (!error) {
-        navigate('/post-register', { 
-          state: { userType, isNewUser: true },
-          replace: true 
-        });
+        // Registration successful - redirection will be handled by useEffect
+        console.log('Registration successful, waiting for profile data');
       } else {
         // Enhanced error messages
         if (error.message?.includes('already registered')) {

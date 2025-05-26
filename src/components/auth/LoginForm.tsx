@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -10,6 +9,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -21,13 +21,24 @@ const LoginForm = () => {
     password: '',
   });
 
-  const { login, error: authError, retryAuth } = useAuth();
+  const { login, error: authError, retryAuth, user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { redirectAfterLogin } = usePostLoginRedirection();
   
   // Get redirect path after login
   const from = location.state?.from || '/';
   const isConnectionError = authError && authError.includes('fetch');
+
+  // Handle redirection after successful authentication
+  useEffect(() => {
+    if (user && profile) {
+      console.log('User and profile available, triggering redirection');
+      setTimeout(() => {
+        redirectAfterLogin(user, profile);
+      }, 1000); // Small delay to show success message
+    }
+  }, [user, profile, redirectAfterLogin]);
 
   // Check network status on component mount
   useEffect(() => {
@@ -80,7 +91,8 @@ const LoginForm = () => {
       console.log('Attempting login with:', formData.email);
       const { error } = await login(formData.email, formData.password);
       if (!error) {
-        // Login successful, will be redirected by auth system
+        // Login successful - redirection will be handled by useEffect
+        console.log('Login successful, waiting for profile data');
       } else {
         // Enhanced error messages
         if (error.message?.includes('credentials')) {

@@ -5,11 +5,15 @@ import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const { redirectAfterLogin } = usePostLoginRedirection();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -49,24 +53,11 @@ const AuthCallback = () => {
                   data: { role: roleFromUrl }
                 });
               }
-              
-              // Redirect based on role
-              if (role === 'founder') {
-                // Check if qualification is needed for founder (assume it is always needed for first login)
-                // For subsequent logins, this will be checked in the dashboard page
-                navigate('/founder-qualification?new=true', { replace: true });
-              } else if (role === 'provider') {
-                navigate('/provider-dashboard', { replace: true });
-              } else {
-                navigate('/', { replace: true });
-              }
-            } else {
-              // New user or no role - redirect to post-register
-              navigate('/post-register', { 
-                state: { isNewUser: true },
-                replace: true 
-              });
             }
+            
+            // Wait for profile to be available and then redirect
+            // The redirection will be handled by the auth context and redirect hook
+            console.log('OAuth login successful, waiting for profile data to redirect');
           } else {
             // No session found, redirect to sign in
             navigate('/auth', { replace: true });
@@ -90,6 +81,16 @@ const AuthCallback = () => {
 
     handleAuthCallback();
   }, [navigate]);
+
+  // Handle redirection when user and profile become available
+  useEffect(() => {
+    if (user && profile && !loading && !error) {
+      console.log('OAuth callback: User and profile available, triggering redirection');
+      setTimeout(() => {
+        redirectAfterLogin(user, profile);
+      }, 1000);
+    }
+  }, [user, profile, loading, error, redirectAfterLogin]);
 
   return (
     <Layout>
