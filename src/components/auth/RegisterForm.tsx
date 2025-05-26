@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -35,15 +34,32 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
   const navigate = useNavigate();
   const { redirectAfterLogin } = usePostLoginRedirection();
 
-  // Handle redirection after successful registration
+  // Handle redirection after successful registration with fallback
   useEffect(() => {
     if (user && profile) {
-      console.log('New user registered, triggering redirection');
+      console.log('New user registered with profile, triggering redirection');
       setTimeout(() => {
         redirectAfterLogin(user, profile);
       }, 1000); // Small delay to show success message
+    } else if (user && !profile) {
+      // Fallback: If user exists but profile is not yet available, set a timeout
+      console.log('User registered but profile not yet available, setting fallback redirection');
+      const fallbackTimer = setTimeout(() => {
+        console.log(`Fallback redirection triggered for ${userType}`);
+        // Redirect based on userType as fallback
+        if (userType === 'founder') {
+          navigate('/founder-application', { replace: true });
+        } else if (userType === 'provider') {
+          navigate('/provider-application', { replace: true });
+        }
+      }, 3000); // Wait 3 seconds for profile, then use fallback
+
+      // Clean up timer if profile becomes available
+      return () => {
+        clearTimeout(fallbackTimer);
+      };
     }
-  }, [user, profile, redirectAfterLogin]);
+  }, [user, profile, redirectAfterLogin, userType, navigate]);
   
   // Check network status on component mount
   useEffect(() => {
@@ -110,8 +126,9 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       );
 
       if (!error) {
-        // Registration successful - redirection will be handled by useEffect
-        console.log('Registration successful, waiting for profile data');
+        // Registration successful - redirection will be handled by useEffect with fallback
+        console.log('Registration successful, waiting for profile data or using fallback');
+        toast.success('Registration successful! Redirecting...');
       } else {
         // Enhanced error messages
         if (error.message?.includes('already registered')) {
