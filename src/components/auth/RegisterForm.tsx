@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
+import { ensureProfileExists } from '@/utils/auth/auth-operations';
 
 interface RegisterFormProps {
   userType: 'founder' | 'provider';
@@ -34,7 +35,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
   const navigate = useNavigate();
   const { redirectAfterLogin } = usePostLoginRedirection();
 
-  // Handle redirection after successful registration with fallback
+  // Handle redirection after successful registration
   useEffect(() => {
     if (user && profile) {
       console.log('New user registered with profile, triggering redirection');
@@ -42,24 +43,14 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
         redirectAfterLogin(user, profile);
       }, 1000); // Small delay to show success message
     } else if (user && !profile) {
-      // Fallback: If user exists but profile is not yet available, set a timeout
-      console.log('User registered but profile not yet available, setting fallback redirection');
-      const fallbackTimer = setTimeout(() => {
-        console.log(`Fallback redirection triggered for ${userType}`);
-        // Redirect based on userType as fallback
-        if (userType === 'founder') {
-          navigate('/founder-application', { replace: true });
-        } else if (userType === 'provider') {
-          navigate('/provider-application', { replace: true });
-        }
-      }, 3000); // Wait 3 seconds for profile, then use fallback
-
-      // Clean up timer if profile becomes available
-      return () => {
-        clearTimeout(fallbackTimer);
-      };
+      // Immediate fallback redirection for new registrations
+      console.log('User registered but profile not yet available, using immediate fallback redirection');
+      setTimeout(() => {
+        console.log(`Immediate fallback redirection triggered for ${userType}`);
+        redirectAfterLogin(user, null, userType);
+      }, 1500); // Short delay to allow profile creation
     }
-  }, [user, profile, redirectAfterLogin, userType, navigate]);
+  }, [user, profile, redirectAfterLogin, userType]);
   
   // Check network status on component mount
   useEffect(() => {
@@ -114,7 +105,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     setLoading(true);
 
     try {
-      console.log('Attempting registration with:', formData.email, 'as', userType);
+      console.log(`Attempting registration with: ${formData.email} as ${userType}`);
       const { error } = await register(
         formData.email, 
         formData.password, 
@@ -126,9 +117,20 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       );
 
       if (!error) {
-        // Registration successful - redirection will be handled by useEffect with fallback
-        console.log('Registration successful, waiting for profile data or using fallback');
+        console.log('Registration successful, profile creation will be handled automatically');
         toast.success('Registration successful! Redirecting...');
+        
+        // Try to ensure profile exists with correct role if automatic creation fails
+        setTimeout(async () => {
+          try {
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (currentUser) {
+              await ensureProfileExists(currentUser);
+            }
+          } catch (profileError) {
+            console.error('Profile creation fallback error:', profileError);
+          }
+        }, 2000);
       } else {
         // Enhanced error messages
         if (error.message?.includes('already registered')) {
@@ -222,7 +224,16 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={handleRetryConnection}
+              onClick={async () => {
+                const isOnline = await checkNetworkConnection();
+                setNetworkAvailable(isOnline);
+                if (isOnline) {
+                  toast.success('Connection restored!');
+                  retryAuth();
+                } else {
+                  toast.error('Still offline. Please check your internet connection.');
+                }
+              }}
               className="mt-2"
             >
               Retry Connection

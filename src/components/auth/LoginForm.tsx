@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -93,6 +94,7 @@ const LoginForm = () => {
       if (!error) {
         // Login successful - redirection will be handled by useEffect
         console.log('Login successful, waiting for profile data');
+        toast.success('Login successful! Redirecting...');
       } else {
         // Enhanced error messages
         if (error.message?.includes('credentials')) {

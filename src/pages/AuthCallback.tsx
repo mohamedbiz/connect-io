@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
+import { ensureProfileExists } from '@/utils/auth/auth-operations';
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
@@ -40,18 +41,25 @@ const AuthCallback = () => {
             
             // Get role from URL if present
             const url = new URL(window.location.href);
-            const roleFromUrl = url.searchParams.get('role');
+            const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
             
             // Check for role in user metadata or URL parameter
             const role = userData.user?.user_metadata?.role || roleFromUrl;
             
-            if (role) {
+            if (role && userData.user) {
               // If we have a role, update user metadata if needed
               if (roleFromUrl && !userData.user?.user_metadata?.role) {
                 // Update the user's metadata with the role
                 await supabase.auth.updateUser({
                   data: { role: roleFromUrl }
                 });
+              }
+              
+              // Ensure profile exists with correct role
+              try {
+                await ensureProfileExists(userData.user);
+              } catch (profileError) {
+                console.error('Profile creation error in OAuth callback:', profileError);
               }
             }
             
