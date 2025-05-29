@@ -37,20 +37,14 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
 
   // Handle redirection after successful registration
   useEffect(() => {
-    if (user && profile) {
-      console.log('New user registered with profile, triggering redirection');
+    if (user && !loading) {
+      console.log('Registration complete, triggering redirection with userType:', userType);
+      // Always use userType as the primary source for new registrations
       setTimeout(() => {
-        redirectAfterLogin(user, profile);
-      }, 1000); // Small delay to show success message
-    } else if (user && !profile) {
-      // Immediate fallback redirection for new registrations
-      console.log('User registered but profile not yet available, using immediate fallback redirection');
-      setTimeout(() => {
-        console.log(`Immediate fallback redirection triggered for ${userType}`);
-        redirectAfterLogin(user, null, userType);
-      }, 1500); // Short delay to allow profile creation
+        redirectAfterLogin(user, profile, userType);
+      }, 500); // Short delay to allow any profile creation to complete
     }
-  }, [user, profile, redirectAfterLogin, userType]);
+  }, [user, loading, redirectAfterLogin, userType, profile]);
   
   // Check network status on component mount
   useEffect(() => {
@@ -112,25 +106,13 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
         {
           first_name: formData.firstName,
           last_name: formData.lastName,
-          role: userType
+          role: userType // This ensures the role is set in user metadata
         }
       );
 
       if (!error) {
-        console.log('Registration successful, profile creation will be handled automatically');
+        console.log('Registration successful, waiting for redirection');
         toast.success('Registration successful! Redirecting...');
-        
-        // Try to ensure profile exists with correct role if automatic creation fails
-        setTimeout(async () => {
-          try {
-            const { data: { user: currentUser } } = await supabase.auth.getUser();
-            if (currentUser) {
-              await ensureProfileExists(currentUser);
-            }
-          } catch (profileError) {
-            console.error('Profile creation fallback error:', profileError);
-          }
-        }, 2000);
       } else {
         // Enhanced error messages
         if (error.message?.includes('already registered')) {
@@ -169,12 +151,10 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth-callback`,
+          redirectTo: `${window.location.origin}/auth-callback?role=${userType}`,
           queryParams: {
-            // Pass the user type as a query param to be handled on callback
             access_type: 'offline',
-            prompt: 'consent',
-            role: userType // Add role as a query parameter
+            prompt: 'consent'
           }
         }
       });

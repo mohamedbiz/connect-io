@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,13 +42,16 @@ const AuthCallback = () => {
             const url = new URL(window.location.href);
             const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
             
+            console.log('OAuth callback - role from URL:', roleFromUrl);
+            console.log('OAuth callback - user metadata role:', userData.user?.user_metadata?.role);
+            
             // Check for role in user metadata or URL parameter
             const role = userData.user?.user_metadata?.role || roleFromUrl;
             
             if (role && userData.user) {
-              // If we have a role, update user metadata if needed
+              // If we have a role from URL, update user metadata if needed
               if (roleFromUrl && !userData.user?.user_metadata?.role) {
-                // Update the user's metadata with the role
+                console.log('Updating user metadata with role from URL:', roleFromUrl);
                 await supabase.auth.updateUser({
                   data: { role: roleFromUrl }
                 });
@@ -64,7 +66,6 @@ const AuthCallback = () => {
             }
             
             // Wait for profile to be available and then redirect
-            // The redirection will be handled by the auth context and redirect hook
             console.log('OAuth login successful, waiting for profile data to redirect');
           } else {
             // No session found, redirect to sign in
@@ -92,10 +93,17 @@ const AuthCallback = () => {
 
   // Handle redirection when user and profile become available
   useEffect(() => {
-    if (user && profile && !loading && !error) {
-      console.log('OAuth callback: User and profile available, triggering redirection');
+    if (user && !loading && !error) {
+      console.log('OAuth callback: User available, triggering redirection');
+      const url = new URL(window.location.href);
+      const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
+      const userRole = user.user_metadata?.role || roleFromUrl;
+      
+      console.log('OAuth callback redirection - user role:', userRole);
+      console.log('OAuth callback redirection - profile:', profile);
+      
       setTimeout(() => {
-        redirectAfterLogin(user, profile);
+        redirectAfterLogin(user, profile, userRole as 'founder' | 'provider');
       }, 1000);
     }
   }, [user, profile, loading, error, redirectAfterLogin]);

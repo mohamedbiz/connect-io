@@ -13,13 +13,46 @@ export const usePostLoginRedirection = () => {
       return;
     }
 
-    // If we have a profile, use it for redirection
+    console.log('=== REDIRECTION DEBUG ===');
+    console.log('User metadata:', user.user_metadata);
+    console.log('Profile:', profile);
+    console.log('Fallback userType:', fallbackUserType);
+
+    // First priority: Use fallbackUserType (from registration flow)
+    if (fallbackUserType) {
+      console.log(`Using fallback userType: ${fallbackUserType}`);
+      if (fallbackUserType === 'provider') {
+        console.log('Redirecting to provider application via fallback');
+        navigate('/provider-application', { replace: true });
+        return;
+      } else if (fallbackUserType === 'founder') {
+        console.log('Redirecting to founder application via fallback');
+        navigate('/founder-application', { replace: true });
+        return;
+      }
+    }
+
+    // Second priority: Use user metadata role
+    const userMetadataRole = user.user_metadata?.role;
+    if (userMetadataRole && !profile) {
+      console.log(`Using user metadata role: ${userMetadataRole}`);
+      if (userMetadataRole === 'provider') {
+        console.log('Redirecting to provider application via user metadata');
+        navigate('/provider-application', { replace: true });
+        return;
+      } else if (userMetadataRole === 'founder') {
+        console.log('Redirecting to founder application via user metadata');
+        navigate('/founder-application', { replace: true });
+        return;
+      }
+    }
+
+    // Third priority: Use profile data
     if (profile) {
-      console.log(`Redirecting user with role: ${profile.role}, onboarding: ${profile.onboarding_complete}, approved: ${profile.approved}`);
+      console.log(`Using profile role: ${profile.role}, onboarding: ${profile.onboarding_complete}, approved: ${profile.approved}`);
 
       switch (profile.role) {
         case 'founder':
-          // Check if founder has completed onboarding
           if (!profile.onboarding_complete) {
             console.log('Founder needs to complete onboarding, redirecting to application');
             navigate('/founder-application', { replace: true });
@@ -30,7 +63,6 @@ export const usePostLoginRedirection = () => {
           break;
 
         case 'provider':
-          // Check if provider is approved
           if (!profile.approved) {
             console.log('Provider not approved, redirecting to application');
             navigate('/provider-application', { replace: true });
@@ -50,18 +82,8 @@ export const usePostLoginRedirection = () => {
           navigate('/', { replace: true });
           break;
       }
-    } else if (fallbackUserType) {
-      // Use fallback userType when profile is not available
-      console.log(`Using fallback redirection for ${fallbackUserType}`);
-      if (fallbackUserType === 'founder') {
-        navigate('/founder-application', { replace: true });
-      } else if (fallbackUserType === 'provider') {
-        navigate('/provider-application', { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
     } else {
-      console.log('No profile or fallback userType available, redirecting to home');
+      console.log('No profile available, redirecting to home');
       navigate('/', { replace: true });
     }
   }, [navigate]);
