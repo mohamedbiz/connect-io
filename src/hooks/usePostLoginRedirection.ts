@@ -32,7 +32,7 @@ export const usePostLoginRedirection = () => {
       }
     }
 
-    // Second priority: Use user metadata role
+    // Second priority: Use user metadata role (for users without profiles yet)
     const userMetadataRole = user.user_metadata?.role;
     if (userMetadataRole && !profile) {
       console.log(`Using user metadata role: ${userMetadataRole}`);
@@ -47,7 +47,7 @@ export const usePostLoginRedirection = () => {
       }
     }
 
-    // Third priority: Use profile data
+    // Third priority: Use profile data if it exists
     if (profile) {
       console.log(`Using profile role: ${profile.role}, onboarding: ${profile.onboarding_complete}, approved: ${profile.approved}`);
 

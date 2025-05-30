@@ -1,121 +1,135 @@
 
-import React, { createContext, useContext, useCallback, ReactNode, useState } from 'react';
-import { useAuthInitialize } from '@/hooks/auth/useAuthInitialize';
-import { 
-  fetchProfile, 
-  ensureProfileExists,
-  loginWithEmailAndPassword,
-  registerWithEmailAndPassword,
-  logoutUser
-} from '@/utils/auth/auth-operations';
-import { AuthContextType } from '@/types/auth-context';
-import { toast } from 'sonner';
-import { checkNetworkConnection, testApiConnection } from '@/integrations/supabase/client';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { Profile } from '@/types/auth';
+import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 
-const AuthContext = createContext<AuthContextType | null>(null);
+interface AuthContextType {
+  user: User | null;
+  profile: Profile | null;
+  loading: boolean;
+  error: string | null;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { redirectAfterLogin } = usePostLoginRedirection();
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // Not found error
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+      return null;
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setError('Error signing out');
+    }
+  };
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+
+        if (session?.user) {
+          setUser(session.user);
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+          
+          // Trigger redirection after setting user and profile
+          setTimeout(() => {
+            redirectAfterLogin(session.user, userProfile);
+          }, 100);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setError('Authentication error');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        
+        if (session?.user) {
+          setUser(session.user);
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+          
+          // Only redirect on sign in events, not on token refresh
+          if (event === 'SIGNED_IN') {
+            console.log('User signed in, triggering redirection');
+            setTimeout(() => {
+              redirectAfterLogin(session.user, userProfile);
+            }, 100);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+        }
+        
+        setLoading(false);
+        setError(null);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [redirectAfterLogin]);
+
+  const value = {
     user,
-    session,
     profile,
     loading,
     error,
-    retryAuth: initialRetryAuth,
-    setProfile
-  } = useAuthInitialize();
-  
-  const [isRetryingAuth, setIsRetryingAuth] = useState(false);
-
-  // Refresh user profile
-  const refreshProfile = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      const userProfile = await fetchProfile(user.id);
-      if (userProfile) {
-        setProfile(userProfile);
-      }
-    } catch (error) {
-      console.error('Error refreshing profile:', error);
-    }
-  }, [user, setProfile]);
-
-  // Ensure a profile exists
-  const ensureProfile = useCallback(async () => {
-    return await ensureProfileExists(user);
-  }, [user]);
-
-  // Login
-  const login = useCallback(async (email: string, password: string) => {
-    return await loginWithEmailAndPassword(email, password);
-  }, []);
-
-  // Register - fix the type signature
-  const register = useCallback(async (
-    email: string, 
-    password: string, 
-    userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }
-  ) => {
-    return await registerWithEmailAndPassword(email, password, userData);
-  }, []);
-
-  // Logout
-  const logout = useCallback(async () => {
-    await logoutUser();
-  }, []);
-  
-  // Improved retry function with network check
-  const retryAuth = useCallback(async () => {
-    setIsRetryingAuth(true);
-    
-    try {
-      // First check basic connectivity
-      const isConnected = await checkNetworkConnection();
-      if (!isConnected) {
-        toast.error('Cannot retry authentication. Network is still unavailable.');
-        return;
-      }
-      
-      // Then check Supabase API connectivity
-      const apiConnected = await testApiConnection();
-      if (!apiConnected) {
-        toast.error('Cannot connect to authentication service. Please try again later.');
-        return;
-      }
-      
-      // Run the original retry
-      initialRetryAuth();
-      toast.success('Reconnected to authentication service');
-    } catch (error) {
-      console.error('Error during auth retry:', error);
-      toast.error('Failed to retry authentication');
-    } finally {
-      setIsRetryingAuth(false);
-    }
-  }, [initialRetryAuth]);
-
-  const value: AuthContextType = {
-    user,
-    session,
-    profile,
-    loading: loading || isRetryingAuth,
-    error,
-    login,
-    register,
-    logout,
-    refreshProfile,
-    ensureProfile,
-    retryAuth
+    signOut,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
