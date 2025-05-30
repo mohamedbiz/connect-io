@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -20,6 +19,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [networkAvailable, setNetworkAvailable] = useState(true);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   const { formData, handleInput, updateAcceptTerms } = useRegisterFormData();
   const { register, error: authError, retryAuth, user, profile } = useAuth();
@@ -27,13 +27,20 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
 
   // Handle redirection after successful registration
   useEffect(() => {
-    if (user && !loading) {
+    if (user && registrationComplete && !loading) {
       console.log('Registration complete, triggering redirection with userType:', userType);
-      setTimeout(() => {
+      
+      // Clear the registration complete flag to prevent multiple redirections
+      setRegistrationComplete(false);
+      
+      // Use a timeout to ensure all auth state has settled
+      const redirectTimer = setTimeout(() => {
         redirectAfterLogin(user, profile, userType);
-      }, 500);
+      }, 1000);
+      
+      return () => clearTimeout(redirectTimer);
     }
-  }, [user, loading, redirectAfterLogin, userType, profile]);
+  }, [user, registrationComplete, loading, redirectAfterLogin, userType, profile]);
   
   // Check network status on component mount
   useEffect(() => {
@@ -90,8 +97,9 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
       );
 
       if (!error) {
-        console.log('Registration successful, waiting for redirection');
+        console.log('Registration successful, setting flag for redirection');
         toast.success('Registration successful! Redirecting...');
+        setRegistrationComplete(true);
       } else {
         if (error.message?.includes('already registered')) {
           toast.error('This email is already registered. Please sign in instead.');
