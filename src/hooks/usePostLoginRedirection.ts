@@ -83,8 +83,18 @@ export const usePostLoginRedirection = () => {
           break;
       }
     } else {
-      console.log('No profile available, redirecting to home');
-      navigate('/', { replace: true });
+      // Handle case where there's no profile yet - check user metadata for role
+      const role = user.user_metadata?.role;
+      if (role === 'provider') {
+        console.log('No profile found but user metadata indicates provider, redirecting to application');
+        navigate('/provider-application', { replace: true });
+      } else if (role === 'founder') {
+        console.log('No profile found but user metadata indicates founder, redirecting to application');
+        navigate('/founder-application', { replace: true });
+      } else {
+        console.log('No profile or role information available, redirecting to home');
+        navigate('/', { replace: true });
+      }
     }
   }, [navigate]);
 

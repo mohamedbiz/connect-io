@@ -2,13 +2,16 @@
 import Layout from "@/components/layout/Layout";
 import ProviderApplicationForm from "@/components/provider/ProviderApplicationForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useProviderApplications } from "@/hooks/useProviderApplications";
 
 const ProviderApplicationPage = () => {
   const { user, profile, loading, error } = useAuth();
+  const { myApplication, isLoadingMyApplication } = useProviderApplications();
+  const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
   
   // Let auth state settle before checking access
@@ -19,9 +22,30 @@ const ProviderApplicationPage = () => {
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Check if provider should be redirected based on their application status
+  useEffect(() => {
+    if (!loading && !isLoadingMyApplication && !isChecking && user && profile) {
+      console.log('Checking provider application status:', { myApplication, profile });
+      
+      // If provider is already approved, redirect to dashboard
+      if (profile.role === 'provider' && profile.approved) {
+        console.log('Provider is approved, redirecting to dashboard');
+        navigate('/provider-dashboard', { replace: true });
+        return;
+      }
+      
+      // If they have a submitted application, show status instead of form
+      if (myApplication && myApplication.status === 'approved') {
+        console.log('Application is approved, redirecting to dashboard');
+        navigate('/provider-dashboard', { replace: true });
+        return;
+      }
+    }
+  }, [loading, isLoadingMyApplication, isChecking, user, profile, myApplication, navigate]);
   
   // If still loading or checking, show loading state
-  if (loading || isChecking) {
+  if (loading || isChecking || isLoadingMyApplication) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[60vh]">
@@ -39,7 +63,7 @@ const ProviderApplicationPage = () => {
   }
   
   // If logged in as a user with wrong role, show message and redirect
-  if (!loading && !isChecking && user && profile && profile.role !== "provider") {
+  if (!loading && !isChecking && user && profile && profile.role !== "provider" && profile.role !== "founder") {
     toast.error("This page is only for provider accounts");
     return <Navigate to="/" replace />;
   }

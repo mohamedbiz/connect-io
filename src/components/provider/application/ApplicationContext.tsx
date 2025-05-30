@@ -53,6 +53,7 @@ type ApplicationContextType = {
   setCurrentStep: (step: number) => void;
   formData: ProviderApplicationFormData;
   setFormData: (data: ProviderApplicationFormData | ((prev: ProviderApplicationFormData) => ProviderApplicationFormData)) => void;
+  updateFormData: (data: Partial<ProviderApplicationFormData>) => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
   applicationScore: ApplicationScore | null;
@@ -88,6 +89,10 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
     } catch (error) {
       console.error('Error calculating score:', error);
     }
+  };
+
+  const updateFormData = (updates: Partial<ProviderApplicationFormData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
   };
 
   const validateCurrentStep = (): { isValid: boolean; errors: string[] } => {
@@ -146,6 +151,7 @@ export const ApplicationProvider = ({ children }: { children: React.ReactNode })
     setCurrentStep,
     formData,
     setFormData,
+    updateFormData,
     isSubmitting,
     setIsSubmitting,
     applicationScore,

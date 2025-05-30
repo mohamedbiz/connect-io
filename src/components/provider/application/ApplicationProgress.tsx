@@ -3,7 +3,7 @@ import React from 'react';
 import { useApplicationContext } from './ApplicationContext';
 import ApplicationScoreIndicator from './ApplicationScoreIndicator';
 
-const steps = [
+export const steps = [
   'Personal Information',
   'Professional Experience', 
   'Expertise & Specialization',
@@ -11,6 +11,9 @@ const steps = [
   'Work Approach',
   'Review & Submit'
 ];
+
+// Export for use in other components
+export const STEPS = steps;
 
 export const ApplicationProgress = () => {
   const { currentStep, applicationScore } = useApplicationContext();
