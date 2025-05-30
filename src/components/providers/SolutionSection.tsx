@@ -5,19 +5,14 @@ const SolutionSection = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#0A2342]">
-            Connect: Your Direct Channel to High-Value eCommerce Clients
+            Connect: Your Bridge to Premium Clients & Predictable Workflow
           </h2>
           <p className="text-lg text-[#0E3366] mb-8 leading-relaxed">
-            Connect is an exclusive, curated marketplace designed for elite email marketing specialists like you. 
-            We partner with growth-focused eCommerce Founders who understand the power of expert email marketing 
-            and are ready to invest in achieving significant results. We handle the initial qualification, 
-            so you only connect with serious prospects.
+            Connect is the exclusive marketplace built for elite eCommerce email specialists. 
+            We attract and pre-qualify serious DTC Founders who understand the value of strategic 
+            email marketing and are ready to invest in achieving significant results. We bring the 
+            right opportunities to you, eliminating the noise and inefficiency of traditional lead generation.
           </p>
-          <div className="bg-[#F5F9FF] rounded-lg p-8 border border-[#BFD7ED]">
-            <p className="text-xl font-bold text-[#2D82B7]">
-              Spend less time selling, more time delivering impactful results.
-            </p>
-          </div>
         </div>
       </div>
     </section>

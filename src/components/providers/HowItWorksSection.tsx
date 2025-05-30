@@ -3,28 +3,28 @@ const HowItWorksSection = () => {
   const howItWorksSteps = [
     {
       number: 1,
-      title: "Apply & Showcase Expertise",
-      description: "Submit your application detailing your experience, skills (especially Klaviyo), and results."
+      title: "Apply & Showcase Results",
+      description: "Demonstrate your eCommerce email expertise and track record."
     },
     {
       number: 2,
-      title: "Pass Our Vetting",
-      description: "Our team reviews your application, case studies, and may conduct an interview to verify your expertise."
+      title: "Pass Our Expert Vetting",
+      description: "We verify your skills, strategic approach, and client success stories."
     },
     {
       number: 3,
-      title: "Create Your Profile",
-      description: "Once approved, build your detailed profile to attract ideal clients."
+      title: "Get Profile Approved",
+      description: "Join our curated network and create your expert profile."
     },
     {
       number: 4,
-      title: "Receive Direct Connections",
-      description: "Get notified when qualified Founders initiate contact via our platform."
+      title: "Receive Qualified Connections",
+      description: "Get notified when matched Founders reach out directly."
     },
     {
       number: 5,
-      title: "Deliver & Grow",
-      description: "Focus on delivering outstanding results and building long-term client relationships."
+      title: "Deliver & Earn",
+      description: "Focus on delivering exceptional results for appreciative clients."
     }
   ];
 
@@ -33,7 +33,7 @@ const HowItWorksSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-            Join Our Network of Vetted Experts
+            Your Simple Path to Better Clients
           </h2>
         </div>
         <div className="max-w-4xl mx-auto">

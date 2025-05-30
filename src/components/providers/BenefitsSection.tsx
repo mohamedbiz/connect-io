@@ -5,28 +5,28 @@ const BenefitsSection = () => {
   const benefits = [
     {
       icon: <Users className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Qualified Client Flow",
-      description: "Gain access to a steady stream of pre-vetted eCommerce Founders actively seeking your expertise."
+      title: "Quality Client Flow",
+      description: "Receive direct introductions to vetted Founders actively seeking expert help."
     },
     {
       icon: <Target className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Reduce Sales Overhead",
-      description: "Minimize unpaid time spent on lead generation, filtering, and proposal writing."
+      title: "Command Your Value", 
+      description: "Connect with clients who respect expertise and are focused on ROI, not just the lowest price."
     },
     {
       icon: <Award className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Premium Positioning",
-      description: "Join a curated network where expertise is valued over low cost."
+      title: "Predictable Opportunities",
+      description: "Gain access to a more consistent stream of high-potential projects."
     },
     {
       icon: <TrendingUp className="h-8 w-8 text-[#2D82B7]" />,
-      title: "High-Value Engagements",
-      description: "Connect with businesses ready to invest in strategies that drive significant ROI."
+      title: "Maximize Billable Hours",
+      description: "Drastically reduce unpaid time spent on sales and lead filtering."
     },
     {
       icon: <Shield className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Focus on Your Craft",
-      description: "Spend your valuable time delivering exceptional results for clients who appreciate it."
+      title: "Join an Elite Network",
+      description: "Position yourself among the best in eCommerce email marketing."
     }
   ];
 
@@ -35,7 +35,7 @@ const BenefitsSection = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-            Why Top Email Experts Choose Connect
+            Focus on Results, Not Chasing Leads
           </h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">

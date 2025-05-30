@@ -9,11 +9,11 @@ const CTASection = () => {
       <div className="container mx-auto px-4">
         <div className="bg-[#0E3366] rounded-lg border border-[#2D82B7]/50 p-8 md:p-12 text-center transition-all duration-300 hover:border-[#2D82B7] max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-            Ready to Connect with Better eCommerce Clients?
+            Ready to Work With Better Clients and Earn What You Deserve?
           </h2>
           <p className="text-xl max-w-3xl mx-auto mb-8 text-[#BFD7ED]">
-            If you are a results-driven email marketing expert specializing in eCommerce, 
-            apply to join the exclusive Connect network today and start receiving qualified client opportunities.
+            Stop competing, start connecting. Apply to join the exclusive Connect network today 
+            and gain access to qualified eCommerce Founders seeking your expertise.
           </p>
           <Button 
             size="lg" 
@@ -21,7 +21,7 @@ const CTASection = () => {
             asChild
           >
             <Link to="/provider-application">
-              Apply Now
+              Apply to Join Connect Now
               <ArrowRight className="ml-1 h-5 w-5" />
             </Link>
           </Button>

@@ -9,13 +9,13 @@ const Hero = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-            Access Qualified eCommerce Founders
-            <span className="text-[#2D82B7]"> Ready to Invest in Results</span>
+            Finally. A Steady Stream of Qualified eCommerce Clients
+            <span className="text-[#2D82B7]"> Who Value Your Expertise</span>
           </h1>
           <p className="text-xl text-[#BFD7ED] mb-8 max-w-3xl mx-auto">
-            Stop wasting time on low-quality leads and endless proposals. Connect delivers 
-            pre-vetted, growth-focused DTC brands directly to your inbox, allowing you to 
-            focus on what you do best – driving revenue.
+            Stop wasting hours filtering low-quality leads on generic platforms. Connect delivers 
+            pre-vetted, growth-focused DTC Founders directly to you, so you can focus on 
+            delivering results, not endless selling.
           </p>
           <Button 
             size="lg" 
@@ -23,7 +23,7 @@ const Hero = () => {
             asChild
           >
             <Link to="/provider-application">
-              Apply to Join Connect
+              Apply for Qualified Leads
               <ArrowRight className="ml-1 h-5 w-5" />
             </Link>
           </Button>
