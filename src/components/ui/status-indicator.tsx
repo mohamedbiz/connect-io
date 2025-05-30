@@ -119,9 +119,7 @@ function StatusIndicator({
       )} 
       {...props}
     >
-      {variant !== "dot" && (
-        <div className={cn(dotVariants({ size: "sm", status }))} />
-      )}
+      <div className={cn(dotVariants({ size: "sm", status }))} />
       {label}
     </div>
   )
