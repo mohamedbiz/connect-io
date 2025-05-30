@@ -103,6 +103,8 @@
   }
 }
 
+/* ... keep existing code (Enhanced Card Styling Utilities and all other CSS rules) */
+
 /* Enhanced Card Styling Utilities */
 .card-glow {
   @apply relative;
