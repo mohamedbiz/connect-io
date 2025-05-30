@@ -1,5 +1,5 @@
 
-import { Check, users } from "lucide-react";
+import { Check, Users } from "lucide-react";
 
 const BenefitsSection = () => {
   return (
@@ -16,7 +16,7 @@ const BenefitsSection = () => {
             {/* For Founders */}
             <div className="bg-[#F5F9FF] rounded-lg p-8 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors">
               <div className="flex items-center gap-3 mb-4">
-                <users className="h-8 w-8 text-[#2D82B7]" />
+                <Users className="h-8 w-8 text-[#2D82B7]" />
                 <h3 className="text-xl font-semibold text-[#0A2342]">For Founders</h3>
               </div>
               <p className="text-lg text-[#0E3366] font-medium mb-2">

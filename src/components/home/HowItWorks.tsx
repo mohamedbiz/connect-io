@@ -1,5 +1,5 @@
 
-import { UserPlus, Check, users, ArrowRight } from "lucide-react";
+import { UserPlus, Check, Users, ArrowRight } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
@@ -14,7 +14,7 @@ const HowItWorks = () => {
       description: "Founders browse vetted experts; Providers access qualified leads."
     },
     {
-      icon: <users className="h-8 w-8 text-[#2D82B7]" />,
+      icon: <Users className="h-8 w-8 text-[#2D82B7]" />,
       title: "Connect Directly",
       description: "Initiate secure conversations via the platform."
     },

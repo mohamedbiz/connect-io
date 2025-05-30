@@ -1,66 +1,66 @@
 
 import Layout from "@/components/layout/Layout";
-import { ArrowRight, CheckCircle, Clock, Search, ShieldCheck, Target, TrendingUp, Users, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle, Clock, ShieldCheck, Target, TrendingUp, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const ForFoundersPage = () => {
   const benefits = [
     {
-      icon: <Clock className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Hire Faster, Smarter",
-      description: "Connect with vetted experts in days, not weeks or months. Skip the endless interviews and screening calls."
+      icon: <TrendingUp className="h-8 w-8 text-[#2D82B7]" />,
+      title: "Predictable Performance",
+      description: "Hire experts focused on delivering measurable ROI, not just completing tasks."
     },
     {
       icon: <ShieldCheck className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Reduce Hiring Risk",
-      description: "Eliminate the fear of bad hires. Our vetting process ensures you only engage with proven professionals."
+      title: "Hire with Confidence",
+      description: "Eliminate risk with access only to pre-vetted, proven professionals."
     },
     {
-      icon: <TrendingUp className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Results-Driven Providers",
-      description: "Our experts are focused on achieving tangible outcomes – like the 200% revenue & LTV increases Connect aims for."
+      icon: <Clock className="h-8 w-8 text-[#2D82B7]" />,
+      title: "Reclaim Your Time",
+      description: "Drastically cut hiring time and focus on strategic growth, not endless interviews."
     },
     {
       icon: <Target className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Access Elite Talent",
-      description: "Gain access to specialists you won't find wading through generic freelance pools."
+      title: "Access Elite Strategists",
+      description: "Connect with top-tier talent dedicated to eCommerce email success."
     },
     {
       icon: <Zap className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Save Valuable Time",
-      description: "Focus on running your business while we handle the expert sourcing and initial vetting."
+      title: "Achieve Scalable Growth",
+      description: "Implement strategies designed to consistently increase sales, LTV, and profitability."
     }
   ];
 
   const howItWorksSteps = [
     {
       number: 1,
-      title: "Sign Up Free & Share Your Goals",
-      description: "Briefly tell us about your business, challenges, and what you want to achieve with email."
+      title: "Define Your Growth Goals (Free)",
+      description: "Tell us what success looks like for your brand."
     },
     {
       number: 2,
-      title: "Browse Vetted Profiles",
-      description: "Explore detailed profiles of pre-screened experts whose skills and experience match your needs."
+      title: "Browse Matched Experts",
+      description: "Review profiles of vetted specialists aligned with your needs."
     },
     {
       number: 3,
-      title: "Connect Directly",
-      description: "Initiate a conversation instantly through our secure messaging platform."
+      title: "Connect & Strategize",
+      description: "Initiate direct conversations and outline your path to results."
     },
     {
       number: 4,
-      title: "Collaborate & Grow",
-      description: "Work with your chosen expert and watch your email channel transform into a major revenue driver."
+      title: "Execute & Scale",
+      description: "Collaborate with your expert partner and achieve predictable email revenue."
     }
   ];
 
   const qualityPoints = [
-    "Deep eCommerce Acumen: They understand DTC metrics, funnels, and growth levers.",
-    "Platform Mastery: Expertise in key ESPs like Klaviyo is standard.",
-    "Proven Results: Demonstrated ability to increase sales, LTV, and retention via email.",
-    "Professionalism: Strong communication and reliable collaboration."
+    "Driving Revenue: Deep understanding of DTC funnels and conversion strategies.",
+    "Mastering Technology: Proven expertise in platforms like Klaviyo.",
+    "Delivering ROI: Track record of measurable results for brands like yours.",
+    "Clear Communication: Professional, reliable collaboration."
   ];
 
   return (
@@ -70,12 +70,12 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-              Hire Vetted Email Experts Who Drive
-              <span className="text-[#2D82B7]"> Real eCommerce Revenue</span>
+              Finally. Predictable eCommerce Growth Fueled by
+              <span className="text-[#2D82B7]"> Vetted Email Experts</span>
             </h1>
             <p className="text-xl text-[#BFD7ED] mb-8 max-w-3xl mx-auto">
-              Stop wasting time and money on guesswork. Connect provides exclusive access to 
-              pre-vetted email marketers laser-focused on increasing your sales, boosting customer LTV, and slashing churn.
+              Stop gambling with freelancers and agencies. Connect delivers pre-vetted email marketing 
+              specialists focused only on scaling your revenue, boosting LTV, and giving you back your time.
             </p>
             <Button 
               size="lg" 
@@ -83,7 +83,7 @@ const ForFoundersPage = () => {
               asChild
             >
               <Link to="/auth?register=true&type=founder">
-                Find Your Expert Now
+                Find Your Growth Partner Now
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
@@ -96,17 +96,16 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#0A2342]">
-              Tired of the Freelancer Gamble?
+              Chasing Growth Shouldn't Feel Like Burning Cash
             </h2>
             <div className="bg-white rounded-lg p-8 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors">
               <p className="text-lg text-[#0E3366] leading-relaxed mb-6">
-                Does this sound familiar? You spend weeks searching platforms like Upwork or Fiverr, interviewing 
-                candidates who talk a good game, only to hire someone who disappears, delivers mediocre results, 
-                or doesn't truly understand eCommerce email strategy. You've wasted precious time and budget, 
-                and your email revenue is still flat.
+                You know email should be a major revenue driver, but finding the right talent feels impossible. 
+                Are you tired of pouring money into campaigns that flop? Frustrated by generic freelancers 
+                who don't understand DTC? Wasting precious hours vetting candidates instead of scaling your brand?
               </p>
               <p className="text-xl font-semibold text-[#2D82B7]">
-                You need reliable experts, not just hopeful applicants.
+                That struggle ends here.
               </p>
             </div>
           </div>
@@ -118,22 +117,14 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#0A2342]">
-              Connect Eliminates the Risk & Delivers the Experts
+              Connect: Your Bridge to Vetted Experts & Measurable Results
             </h2>
             <p className="text-lg text-[#0E3366] mb-8 leading-relaxed">
-              We built Connect because we know the struggle. We rigorously vet every single provider on our platform. 
-              Our multi-step process evaluates their technical skills (especially Klaviyo), strategic thinking for eCommerce, 
-              communication abilities, and most importantly, their proven track record of delivering measurable results 
-              for businesses like yours.
+              Connect isn't another crowded freelance platform. We are a curated network built for Founders 
+              like you who demand results. We meticulously vet every provider for deep eCommerce email expertise 
+              (especially Klaviyo), strategic thinking, and a verifiable history of driving significant growth. 
+              We filter out the noise, so you only connect with specialists capable of transforming your email channel.
             </p>
-            <div className="bg-[#F5F9FF] rounded-lg p-8 border border-[#BFD7ED]">
-              <p className="text-xl font-bold text-[#2D82B7] mb-2">
-                Only the top ~5% of applicants make it through.
-              </p>
-              <p className="text-lg text-[#0A2342]">
-                You get direct access to the best.
-              </p>
-            </div>
           </div>
         </div>
       </section>
@@ -143,7 +134,7 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-              Why Founders Choose Connect
+              Gain Control, Confidence, and Freedom
             </h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -167,7 +158,7 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-              Your Simple Path to Email Marketing ROI
+              Your Simple Path to Stress-Free Email Growth
             </h2>
           </div>
           <div className="max-w-4xl mx-auto">
@@ -194,10 +185,10 @@ const ForFoundersPage = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-                Meet Your Growth Partner, Not Just Another Freelancer
+                Partners Invested in Your Success
               </h2>
               <p className="text-lg text-[#0E3366] mb-8">
-                Connect providers are more than just task-doers. They are strategic partners verified for:
+                Connect providers are verified strategic partners focused on:
               </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
@@ -217,11 +208,11 @@ const ForFoundersPage = () => {
         <div className="container mx-auto px-4">
           <div className="bg-[#0E3366] rounded-lg border border-[#2D82B7]/50 p-8 md:p-12 text-center transition-all duration-300 hover:border-[#2D82B7] max-w-4xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-              Ready to Unlock Predictable Growth From Your Email List?
+              Ready to Turn Email Into Your Most Profitable Channel?
             </h2>
             <p className="text-xl max-w-3xl mx-auto mb-8 text-[#BFD7ED]">
-              Stop leaving money on the table. Sign up free today and connect with the vetted email marketing 
-              expert who can take your eCommerce brand to the next level.
+              Stop searching, start scaling. Sign up free today and connect with the vetted email marketing 
+              expert who will help you achieve predictable growth and reclaim your time.
             </p>
             <Button 
               size="lg" 
@@ -229,7 +220,7 @@ const ForFoundersPage = () => {
               asChild
             >
               <Link to="/auth?register=true&type=founder">
-                Sign Up & Find Your Expert
+                Find My Expert & Grow
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
