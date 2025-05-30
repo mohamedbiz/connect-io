@@ -1,110 +1,163 @@
-
-import { createContext, useContext, useState } from "react";
-import { ProviderApplicationFormData } from "../ProviderApplicationForm";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ProviderApplicationFormData } from '../ProviderApplicationForm';
+import { automationService, ApplicationScore } from '@/services/providerApplicationAutomation';
 
 // Initial form state with all fields needed across all steps
-const initialFormState = {
+const initialFormData: ProviderApplicationFormData = {
   // Personal Information
-  full_name: "",
-  phone_number: "",
-  location: "",
-  linkedin_url: "",
-  portfolio_url: "",
+  full_name: '',
+  phone_number: '',
+  location: '',
+  linkedin_url: '',
+  portfolio_url: '',
   
   // Professional Experience
-  years_experience: "",
-  email_platforms: [] as string[],
-  email_platforms_other: "",
-  ecommerce_platforms: [] as string[],
-  ecommerce_platforms_other: "",
+  years_experience: '',
+  email_platforms: [],
+  email_platforms_other: '',
+  ecommerce_platforms: [],
+  ecommerce_platforms_other: '',
   
   // Expertise & Specialization
-  expertise_areas: [] as string[],
-  expertise_other: "",
-  industries: [] as string[],
-  industries_other: "",
-  average_revenue_increase: "",
-  average_conversion_increase: "",
-  average_churn_reduction: "",
+  expertise_areas: [],
+  expertise_other: '',
+  industries: [],
+  industries_other: '',
+  average_revenue_increase: '',
+  average_conversion_increase: '',
+  average_churn_reduction: '',
   
-  // Case Studies (array of objects)
-  case_studies: [
-    {
-      client_industry: "",
-      project_duration: "",
-      initial_situation: "",
-      implemented_solutions: "",
-      results_achieved: "",
-      reference_contact: ""
-    },
-    {
-      client_industry: "",
-      project_duration: "",
-      initial_situation: "",
-      implemented_solutions: "",
-      results_achieved: "",
-      reference_contact: ""
-    }
-  ],
+  // Case Studies
+  case_studies: [],
   
   // Work Approach
-  availability: "",
-  typical_timeline: "",
-  communication_preferences: "",
-  project_management_tools: "",
-  performance_guarantee: "yes" as "yes" | "no" | "conditional", // yes, no, conditional
-  performance_guarantee_conditions: "",
+  availability: '',
+  typical_timeline: '',
+  communication_preferences: '',
+  project_management_tools: '',
+  performance_guarantee: 'no' as const, // yes, no, conditional
+  performance_guarantee_conditions: '',
   
   // Sample Work
-  sample_work: ["", "", ""] as string[],
+  sample_work: [],
   
   // Additional Information
-  technical_assessment: true,
-  additional_information: "",
-  referral_source: "",
-  referral_details: ""
+  technical_assessment: false,
+  additional_information: '',
+  referral_source: '',
+  referral_details: ''
 };
 
 type ApplicationContextType = {
-  formData: ProviderApplicationFormData;
   currentStep: number;
   setCurrentStep: (step: number) => void;
-  updateFormData: (data: Partial<ProviderApplicationFormData>) => void;
+  formData: ProviderApplicationFormData;
+  setFormData: (data: ProviderApplicationFormData | ((prev: ProviderApplicationFormData) => ProviderApplicationFormData)) => void;
   isSubmitting: boolean;
-  setIsSubmitting: (isSubmitting: boolean) => void;
+  setIsSubmitting: (submitting: boolean) => void;
+  applicationScore: ApplicationScore | null;
+  updateScore: () => void;
+  validateCurrentStep: () => { isValid: boolean; errors: string[] };
 };
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
 export const useApplicationContext = () => {
   const context = useContext(ApplicationContext);
-  if (!context) {
-    throw new Error("useApplicationContext must be used within an ApplicationProvider");
+  if (context === undefined) {
+    throw new Error('useApplicationContext must be used within an ApplicationProvider');
   }
   return context;
 };
 
 export const ApplicationProvider = ({ children }: { children: React.ReactNode }) => {
-  const [formData, setFormData] = useState<ProviderApplicationFormData>(initialFormState);
   const [currentStep, setCurrentStep] = useState(0);
+  const [formData, setFormData] = useState<ProviderApplicationFormData>(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const updateFormData = (newData: Partial<ProviderApplicationFormData>) => {
-    setFormData(prev => ({ ...prev, ...newData }));
+  const [applicationScore, setApplicationScore] = useState<ApplicationScore | null>(null);
+
+  // Update score whenever form data changes
+  useEffect(() => {
+    updateScore();
+  }, [formData]);
+
+  const updateScore = () => {
+    try {
+      const score = automationService.calculateScore(formData);
+      setApplicationScore(score);
+    } catch (error) {
+      console.error('Error calculating score:', error);
+    }
   };
-  
+
+  const validateCurrentStep = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    switch (currentStep) {
+      case 0: // Personal Information
+        if (!formData.full_name.trim()) errors.push('Full name is required');
+        if (!formData.phone_number.trim()) errors.push('Phone number is required');
+        if (!formData.location.trim()) errors.push('Location is required');
+        break;
+
+      case 1: // Professional Experience
+        if (!formData.years_experience) errors.push('Years of experience is required');
+        if (formData.email_platforms.length === 0) errors.push('At least one email platform is required');
+        if (formData.ecommerce_platforms.length === 0) errors.push('At least one eCommerce platform is required');
+        break;
+
+      case 2: // Expertise & Specialization
+        if (formData.expertise_areas.length === 0) errors.push('At least one expertise area is required');
+        if (formData.industries.length === 0) errors.push('At least one industry is required');
+        break;
+
+      case 3: // Case Studies
+        if (formData.case_studies.length === 0) {
+          errors.push('At least one case study is required');
+        } else {
+          formData.case_studies.forEach((study, index) => {
+            if (!study.client_industry.trim()) errors.push(`Case study ${index + 1}: Client industry is required`);
+            if (!study.initial_situation.trim()) errors.push(`Case study ${index + 1}: Initial situation is required`);
+            if (!study.implemented_solutions.trim()) errors.push(`Case study ${index + 1}: Implemented solutions is required`);
+            if (!study.results_achieved.trim()) errors.push(`Case study ${index + 1}: Results achieved is required`);
+          });
+        }
+        break;
+
+      case 4: // Work Approach
+        if (!formData.availability.trim()) errors.push('Availability is required');
+        if (!formData.typical_timeline.trim()) errors.push('Typical timeline is required');
+        if (!formData.communication_preferences.trim()) errors.push('Communication preferences is required');
+        break;
+
+      case 5: // Final Review
+        // All validation is done in previous steps
+        break;
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  const value: ApplicationContextType = {
+    currentStep,
+    setCurrentStep,
+    formData,
+    setFormData,
+    isSubmitting,
+    setIsSubmitting,
+    applicationScore,
+    updateScore,
+    validateCurrentStep
+  };
+
   return (
-    <ApplicationContext.Provider value={{ 
-      formData, 
-      currentStep, 
-      setCurrentStep, 
-      updateFormData, 
-      isSubmitting, 
-      setIsSubmitting 
-    }}>
+    <ApplicationContext.Provider value={value}>
       {children}
     </ApplicationContext.Provider>
   );
 };
 
-export { initialFormState };
+export { initialFormData };

@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_reviews: {
+        Row: {
+          action: string
+          application_id: string | null
+          automated: boolean | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          reviewer_id: string | null
+        }
+        Insert: {
+          action: string
+          application_id?: string | null
+          automated?: boolean | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reviewer_id?: string | null
+        }
+        Update: {
+          action?: string
+          application_id?: string | null
+          automated?: boolean | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          reviewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_reviews_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "provider_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -171,11 +216,184 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_applications: {
+        Row: {
+          accepted: boolean | null
+          application_data: Json
+          approval_tier: string | null
+          auto_approved: boolean | null
+          automated_score: number | null
+          created_at: string | null
+          id: string
+          interview_notes: string | null
+          notification_sent: boolean | null
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: string | null
+          submitted_at: string | null
+          technical_assessment_score: number | null
+          user_id: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          accepted?: boolean | null
+          application_data: Json
+          approval_tier?: string | null
+          auto_approved?: boolean | null
+          automated_score?: number | null
+          created_at?: string | null
+          id?: string
+          interview_notes?: string | null
+          notification_sent?: boolean | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          technical_assessment_score?: number | null
+          user_id?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          accepted?: boolean | null
+          application_data?: Json
+          approval_tier?: string | null
+          auto_approved?: boolean | null
+          automated_score?: number | null
+          created_at?: string | null
+          id?: string
+          interview_notes?: string | null
+          notification_sent?: boolean | null
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          technical_assessment_score?: number | null
+          user_id?: string | null
+          verification_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_onboarding: {
+        Row: {
+          application_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          onboarding_completed: boolean | null
+          onboarding_step: string | null
+          profile_created: boolean | null
+          user_id: string | null
+          welcome_email_sent: boolean | null
+        }
+        Insert: {
+          application_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          onboarding_step?: string | null
+          profile_created?: boolean | null
+          user_id?: string | null
+          welcome_email_sent?: boolean | null
+        }
+        Update: {
+          application_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          onboarding_completed?: boolean | null
+          onboarding_step?: string | null
+          profile_created?: boolean | null
+          user_id?: string | null
+          welcome_email_sent?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_onboarding_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "provider_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_onboarding_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          avatar: string | null
+          created_at: string | null
+          description: string | null
+          email: string
+          id: string
+          name: string
+          projects_completed: number | null
+          rating: number | null
+          specialties: string[] | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          id?: string
+          name: string
+          projects_completed?: number | null
+          rating?: number | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          id?: string
+          name?: string
+          projects_completed?: number | null
+          rating?: number | null
+          specialties?: string[] | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "providers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      calculate_application_score: {
+        Args: { application_data: Json }
+        Returns: number
+      }
       calculate_fee: {
         Args: { payment_amount: number }
         Returns: number
