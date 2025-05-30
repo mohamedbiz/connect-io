@@ -14,6 +14,7 @@ import NotFoundPage from "./pages/errors/NotFoundPage";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
 import ProviderApplyRedirect from "./pages/provider/ProviderApplyRedirect";
+import ProviderSignupPage from "./pages/provider/ProviderSignupPage";
 import PostRegisterPage from "./pages/PostRegisterPage";
 import FounderQualificationPage from "./pages/FounderQualificationPage";
 import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
