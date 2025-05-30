@@ -9,10 +9,11 @@ const CTASection = () => {
       <div className="container mx-auto px-4">
         <div className="bg-[#0E3366] rounded-lg border border-[#2D82B7]/50 p-8 md:p-12 text-center transition-all duration-300 hover:border-[#2D82B7]">
           <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-            Ready to Elevate Your eCommerce Growth or Find Your Next High-Value Client?
+            Stop Searching, Start Connecting
           </h2>
           <p className="text-xl max-w-3xl mx-auto mb-8 text-[#BFD7ED]">
-            Choose your path and join the curated Connect marketplace today.
+            Whether you're scaling an eCommerce brand or seeking high-value clients, 
+            find your ideal match on Connect.
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Button 
@@ -22,7 +23,7 @@ const CTASection = () => {
               asChild
             >
               <Link to="/auth?register=true&type=founder">
-                I'm an eCommerce Founder
+                I Need Email Expertise (Founder)
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
@@ -33,7 +34,7 @@ const CTASection = () => {
               asChild
             >
               <Link to="/provider-application">
-                I'm an Email Expert
+                I Offer Email Expertise (Provider)
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>

@@ -1,27 +1,27 @@
 
-import { UserPlus, ShieldCheck, MessageSquare, TrendingUp } from "lucide-react";
+import { UserPlus, Check, users, ArrowRight } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
     {
       icon: <UserPlus className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Sign Up / Apply",
-      description: "Founders define their needs quickly. Providers showcase their expertise through our vetting process."
+      title: "Join & Qualify",
+      description: "Founders define needs; Providers apply & pass our vetting."
     },
     {
-      icon: <ShieldCheck className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Get Verified",
-      description: "We manually vet every Provider. Founders confirm their goals and readiness to collaborate."
+      icon: <Check className="h-8 w-8 text-[#2D82B7]" />,
+      title: "Discover Quality",
+      description: "Founders browse vetted experts; Providers access qualified leads."
     },
     {
-      icon: <MessageSquare className="h-8 w-8 text-[#2D82B7]" />,
+      icon: <users className="h-8 w-8 text-[#2D82B7]" />,
       title: "Connect Directly",
-      description: "Browse curated profiles and initiate conversations through our secure platform."
+      description: "Initiate secure conversations via the platform."
     },
     {
-      icon: <TrendingUp className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Achieve Results",
-      description: "Collaborate with confidence and watch your email marketing drive real growth."
+      icon: <ArrowRight className="h-8 w-8 text-[#2D82B7]" />,
+      title: "Achieve Mutual Success",
+      description: "Collaborate effectively to drive measurable eCommerce growth."
     }
   ];
 
@@ -30,12 +30,8 @@ const HowItWorks = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-            Simple Steps to Scalable Results
+            A Smarter Path to Partnership
           </h2>
-          <p className="text-lg text-[#0E3366] max-w-2xl mx-auto">
-            Our streamlined process connects verified talent with qualified opportunities
-            for guaranteed success.
-          </p>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-start gap-6 md:gap-2 max-w-6xl mx-auto">

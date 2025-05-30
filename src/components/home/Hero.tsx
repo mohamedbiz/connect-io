@@ -9,12 +9,13 @@ const Hero = () => {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
-            Connect Vetted Email Experts with<br />
-            <span className="text-[#2D82B7]">Growth-Focused eCommerce Brands</span>
+            Where Vetted Email Experts &<br />
+            <span className="text-[#2D82B7]">Growth-Ready eCommerce Brands Connect</span>
           </h1>
           <p className="text-lg md:text-xl mb-8 text-[#BFD7ED] max-w-3xl mx-auto">
-            Stop searching, start scaling. Find proven email marketers ready to drive revenue, 
-            or access qualified eCommerce clients actively seeking results.
+            Stop the endless search and risky hires. Connect is the curated marketplace 
+            delivering qualified opportunities for experts and proven talent for Founders, 
+            focused on measurable results.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -24,7 +25,7 @@ const Hero = () => {
               asChild
             >
               <Link to="/auth?register=true&type=founder">
-                Find Your Expert
+                Grow My eCommerce Brand
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
@@ -35,7 +36,7 @@ const Hero = () => {
               asChild
             >
               <Link to="/provider-application">
-                Access Qualified Clients
+                Access Quality Clients
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
             </Button>
