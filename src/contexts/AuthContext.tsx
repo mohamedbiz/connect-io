@@ -36,7 +36,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasRedirected, setHasRedirected] = useState(false);
   const { redirectAfterLogin } = usePostLoginRedirection();
+
+  // Add loading timeout to prevent infinite loading
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.log('Loading timeout reached, forcing loading to false');
+        setLoading(false);
+        setError('Authentication timeout - please refresh the page');
+      }
+    }, 10000); // 10 second timeout
+
+    return () => clearTimeout(loadingTimeout);
+  }, [loading]);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -121,13 +135,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(null);
       setProfile(null);
       setError(null);
+      setHasRedirected(false);
     } catch (error: any) {
       console.error('Error signing out:', error);
       setError('Error signing out');
     }
   };
 
-  const signOut = logout; // Alias for backward compatibility
+  const signOut = logout;
 
   const refreshProfile = async () => {
     if (!user) return;
@@ -187,6 +202,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const retryAuth = () => {
     setError(null);
     setLoading(true);
+    setHasRedirected(false);
     // Trigger a fresh session check
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
@@ -200,28 +216,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
 
+        if (!mounted) return;
+
         setSession(session);
         if (session?.user) {
+          console.log('Initial session found for user:', session.user.email);
           setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
           setProfile(userProfile);
           
-          // Trigger redirection after setting user and profile
-          setTimeout(() => {
-            redirectAfterLogin(session.user, userProfile);
-          }, 100);
+          // Only redirect on initial load if we haven't redirected yet
+          if (!hasRedirected) {
+            console.log('Triggering initial redirection...');
+            setHasRedirected(true);
+            setTimeout(() => {
+              if (mounted) {
+                redirectAfterLogin(session.user, userProfile);
+              }
+            }, 100);
+          }
+        } else {
+          console.log('No initial session found');
         }
       } catch (error: any) {
         console.error('Error getting session:', error);
-        setError('Authentication error');
+        if (mounted) {
+          setError('Authentication error');
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -232,22 +266,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         
+        if (!mounted) return;
+        
         setSession(session);
         if (session?.user) {
           setUser(session.user);
           const userProfile = await fetchProfile(session.user.id);
           setProfile(userProfile);
           
-          // Only redirect on sign in events, not on token refresh
-          if (event === 'SIGNED_IN') {
+          // Only redirect on sign in events, not on token refresh or initial load
+          if (event === 'SIGNED_IN' && !hasRedirected) {
             console.log('User signed in, triggering redirection');
+            setHasRedirected(true);
             setTimeout(() => {
-              redirectAfterLogin(session.user, userProfile);
+              if (mounted) {
+                redirectAfterLogin(session.user, userProfile);
+              }
             }, 100);
           }
         } else {
           setUser(null);
           setProfile(null);
+          setHasRedirected(false);
         }
         
         setLoading(false);
@@ -256,9 +296,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [redirectAfterLogin]);
+  }, [redirectAfterLogin, hasRedirected]);
 
   const value = {
     user,

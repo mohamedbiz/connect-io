@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, User } from 'lucide-react';
+import { CheckCircle, ArrowRight, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { NewApplicationProvider } from './NewApplicationContext';
@@ -17,6 +17,23 @@ const NewProviderApplicationFlow = () => {
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<'draft' | 'submitted' | 'approved' | 'rejected'>('draft');
+  const [componentLoading, setComponentLoading] = useState(true);
+
+  // Add component loading timeout
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setComponentLoading(false);
+    }, 5000); // 5 second timeout
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Set component loading to false when auth loading is done
+  useEffect(() => {
+    if (!loading) {
+      setComponentLoading(false);
+    }
+  }, [loading]);
 
   // Check if user has already submitted an application
   useEffect(() => {
@@ -103,13 +120,26 @@ const NewProviderApplicationFlow = () => {
     }
   };
 
-  if (loading) {
+  if (loading || componentLoading) {
     return (
       <div className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D82B7] mx-auto mb-4"></div>
-            <p className="text-[#0E3366]">Loading application...</p>
+            <p className="text-[#0E3366] mb-4">Loading application...</p>
+            {componentLoading && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setComponentLoading(false);
+                  window.location.reload();
+                }}
+                className="mt-4"
+              >
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Taking too long? Refresh page
+              </Button>
+            )}
           </div>
         </div>
       </div>
