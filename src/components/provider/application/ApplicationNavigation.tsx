@@ -4,11 +4,11 @@ import { useApplicationContext } from "./ApplicationContext";
 import { STEPS } from "./ApplicationProgress";
 
 interface ApplicationNavigationProps {
-  handleSubmit: () => Promise<void>;
+  handleSubmit: (formData: any) => Promise<void>;
 }
 
 export const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => {
-  const { currentStep, setCurrentStep, isSubmitting } = useApplicationContext();
+  const { currentStep, setCurrentStep, isSubmitting, formData } = useApplicationContext();
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
@@ -22,6 +22,10 @@ export const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationPro
       setCurrentStep(currentStep - 1);
       window.scrollTo(0, 0);
     }
+  };
+  
+  const handleFinalSubmit = async () => {
+    await handleSubmit(formData);
   };
   
   return (
@@ -44,7 +48,7 @@ export const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationPro
         </Button>
       ) : (
         <Button 
-          onClick={handleSubmit} 
+          onClick={handleFinalSubmit} 
           disabled={isSubmitting} 
           className="min-w-[120px] bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
         >
