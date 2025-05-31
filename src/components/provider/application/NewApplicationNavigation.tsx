@@ -1,16 +1,23 @@
 
 import { Button } from "@/components/ui/button";
-import { useApplicationContext } from "./ApplicationContext";
-import { STEPS } from "./ApplicationProgress";
+import { useNewApplicationContext } from "./NewApplicationContext";
+import { STEPS } from "./NewApplicationProgress";
+import { toast } from "sonner";
 
-interface ApplicationNavigationProps {
+interface NewApplicationNavigationProps {
   handleSubmit: (formData: any) => Promise<void>;
 }
 
-export const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationProps) => {
-  const { currentStep, setCurrentStep, isSubmitting, formData } = useApplicationContext();
+export const NewApplicationNavigation = ({ handleSubmit }: NewApplicationNavigationProps) => {
+  const { currentStep, setCurrentStep, isSubmitting, formData, validateCurrentStep } = useNewApplicationContext();
 
   const nextStep = () => {
+    const validation = validateCurrentStep();
+    if (!validation.isValid) {
+      validation.errors.forEach(error => toast.error(error));
+      return;
+    }
+
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
@@ -25,6 +32,11 @@ export const ApplicationNavigation = ({ handleSubmit }: ApplicationNavigationPro
   };
   
   const handleFinalSubmit = async () => {
+    const validation = validateCurrentStep();
+    if (!validation.isValid) {
+      validation.errors.forEach(error => toast.error(error));
+      return;
+    }
     await handleSubmit(formData);
   };
   

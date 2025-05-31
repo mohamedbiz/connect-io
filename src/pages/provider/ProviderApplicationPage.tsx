@@ -1,11 +1,11 @@
 
 import Layout from "@/components/layout/Layout";
-import ProviderApplicationFlow from "@/components/provider/application/ProviderApplicationFlow";
+import NewProviderApplicationFlow from "@/components/provider/application/NewProviderApplicationFlow";
 
 const ProviderApplicationPage = () => {
   return (
     <Layout>
-      <ProviderApplicationFlow />
+      <NewProviderApplicationFlow />
     </Layout>
   );
 };

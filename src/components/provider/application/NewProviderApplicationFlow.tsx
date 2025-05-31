@@ -4,15 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, User, FileText, Send } from 'lucide-react';
-import { ApplicationProvider } from './ApplicationContext';
-import { ApplicationProgress } from './ApplicationProgress';
-import { ApplicationStep } from './ApplicationStep';
-import { ApplicationNavigation } from './ApplicationNavigation';
+import { CheckCircle, ArrowRight, User, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { NewApplicationProvider } from './NewApplicationContext';
+import { NewApplicationProgress } from './NewApplicationProgress';
+import { NewApplicationStep } from './NewApplicationStep';
+import { NewApplicationNavigation } from './NewApplicationNavigation';
 
-const ProviderApplicationFlow = () => {
+const NewProviderApplicationFlow = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -76,17 +76,15 @@ const ProviderApplicationFlow = () => {
         .from('profiles')
         .update({
           role: 'provider',
-          business_name: formData.full_name + ' Consulting',
-          expertise: formData.expertise_areas?.join(', ') || '',
+          business_name: formData.full_name + ' Email Marketing',
           portfolio_url: formData.portfolio_url,
-          linkedin_url: formData.linkedin_url,
-          about: formData.additional_information
+          first_name: formData.full_name.split(' ')[0],
+          last_name: formData.full_name.split(' ').slice(1).join(' ')
         })
         .eq('id', user.id);
 
       if (profileError) {
         console.error('Profile update error:', profileError);
-        // Don't fail the whole process if profile update fails
       }
 
       setIsSubmitted(true);
@@ -127,8 +125,8 @@ const ProviderApplicationFlow = () => {
           <p className="text-gray-600 mb-4">
             Please sign in to access the provider application form.
           </p>
-          <Button onClick={() => navigate('/auth?register=true&type=provider')}>
-            Sign In / Register
+          <Button onClick={() => navigate('/provider-signup')}>
+            Sign Up as Provider
           </Button>
         </Card>
       </div>
@@ -189,21 +187,21 @@ const ProviderApplicationFlow = () => {
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold mb-4 text-[#0A2342]">Provider Application</h1>
           <p className="text-lg text-[#0E3366] max-w-2xl mx-auto">
-            Join our network of specialized service providers and connect with pre-qualified 
+            Join our network of qualified Email Marketing Specialists and connect with 
             eCommerce businesses looking for your expertise.
           </p>
         </div>
         
-        <ApplicationProvider>
-          <ApplicationProgress />
+        <NewApplicationProvider>
+          <NewApplicationProgress />
           <Card className="p-6">
-            <ApplicationStep />
-            <ApplicationNavigation handleSubmit={handleFinalSubmit} />
+            <NewApplicationStep />
+            <NewApplicationNavigation handleSubmit={handleFinalSubmit} />
           </Card>
-        </ApplicationProvider>
+        </NewApplicationProvider>
       </div>
     </div>
   );
 };
 
-export default ProviderApplicationFlow;
+export default NewProviderApplicationFlow;
