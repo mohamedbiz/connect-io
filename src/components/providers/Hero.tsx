@@ -19,12 +19,12 @@ const Hero = () => {
           </p>
           <Button 
             size="lg" 
-            className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
+            className="bg-white text-[#0A2342] hover:bg-[#f8fafc] border-2 border-white px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 rounded-lg"
             asChild
           >
             <Link to="/provider-application">
               Apply for Qualified Leads
-              <ArrowRight className="ml-1 h-5 w-5" />
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
         </div>
