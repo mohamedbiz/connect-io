@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 
 const LoginForm = () => {
   const [loading, setLoading] = useState(false);
@@ -22,39 +21,20 @@ const LoginForm = () => {
     password: '',
   });
 
-  const { login, error: authError, retryAuth, user, profile } = useAuth();
-  const navigate = useNavigate();
+  const { login, error: authError, retryAuth } = useAuth();
   const location = useLocation();
-  const { redirectAfterLogin } = usePostLoginRedirection();
   
-  // Get redirect path after login
-  const from = location.state?.from || '/';
   const isConnectionError = authError && authError.includes('fetch');
 
-  // Handle redirection after successful authentication
-  useEffect(() => {
-    if (user && profile) {
-      console.log('User and profile available, triggering redirection');
-      setTimeout(() => {
-        redirectAfterLogin(user, profile);
-      }, 1000); // Small delay to show success message
-    }
-  }, [user, profile, redirectAfterLogin]);
-
-  // Check network status on component mount
+  // Simplified network checking on mount
   useEffect(() => {
     const checkNetwork = async () => {
       const isOnline = await checkNetworkConnection();
       setNetworkAvailable(isOnline);
-      
-      if (!isOnline) {
-        toast.error('Network connection unavailable');
-      }
     };
     
     checkNetwork();
     
-    // Also check when browser reports online status changes
     const handleOnline = () => setNetworkAvailable(true);
     const handleOffline = () => setNetworkAvailable(false);
     
@@ -78,7 +58,7 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check network connection again right before login attempt
+    // Check network connection before login
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       toast.error('Network connection is unavailable. Please check your internet connection and try again.');
@@ -91,10 +71,12 @@ const LoginForm = () => {
     try {
       console.log('Attempting login with:', formData.email);
       const { error } = await login(formData.email, formData.password);
+      
       if (!error) {
-        // Login successful - redirection will be handled by useEffect
-        console.log('Login successful, waiting for profile data');
-        toast.success('Login successful! Redirecting...');
+        // Success - let AuthContext handle redirection
+        console.log('Login successful');
+        toast.success('Login successful!');
+        // Don't redirect here - let AuthContext handle it
       } else {
         // Enhanced error messages
         if (error.message?.includes('credentials')) {
@@ -116,9 +98,7 @@ const LoginForm = () => {
     }
   };
 
-  // Handle Google Sign In
   const handleGoogleSignIn = async () => {
-    // Check network connection before attempting OAuth
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       toast.error('Network connection is unavailable. Please check your internet connection and try again.');
@@ -152,7 +132,6 @@ const LoginForm = () => {
     }
   };
 
-  // Display network error banner
   const handleRetryConnection = async () => {
     const isOnline = await checkNetworkConnection();
     setNetworkAvailable(isOnline);
@@ -172,12 +151,7 @@ const LoginForm = () => {
           <WifiOff className="h-4 w-4 mr-2" />
           <AlertTitle>Network Connection Error</AlertTitle>
           <AlertDescription className="space-y-2">
-            <p>We're having trouble connecting to our servers. This could be due to:</p>
-            <ul className="list-disc ml-5 space-y-1">
-              <li>Your internet connection is down</li>
-              <li>Your network might be blocking the connection</li>
-              <li>Our servers might be temporarily unavailable</li>
-            </ul>
+            <p>We're having trouble connecting to our servers. Please check your internet connection.</p>
             <Button 
               variant="outline" 
               size="sm"

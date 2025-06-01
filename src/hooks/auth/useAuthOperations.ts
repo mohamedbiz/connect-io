@@ -44,6 +44,8 @@ export const useAuthOperations = ({
   const login = useCallback(async (email: string, password: string) => {
     try {
       setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -71,6 +73,8 @@ export const useAuthOperations = ({
   ) => {
     try {
       setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -103,6 +107,7 @@ export const useAuthOperations = ({
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      // Clear all state
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -135,6 +140,7 @@ export const useAuthOperations = ({
         return userProfile;
       }
       
+      // Create new profile if it doesn't exist
       const newProfile = {
         id: user.id,
         email: user.email || '',

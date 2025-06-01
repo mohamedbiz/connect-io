@@ -30,22 +30,23 @@ export const useAuthEffects = ({
 }: UseAuthEffectsProps) => {
   const { redirectAfterLogin } = usePostLoginRedirection();
 
-  // Loading timeout effect
+  // Critical fix: Loading timeout to prevent infinite loading
   useEffect(() => {
     const loadingTimeout = setTimeout(() => {
       if (loading) {
-        console.log('Loading timeout reached, forcing loading to false');
+        console.warn('Authentication loading timeout reached');
         setLoading(false);
         setError('Authentication timeout - please refresh the page');
       }
-    }, 10000);
+    }, 8000); // Reduced from 10s to 8s
 
     return () => clearTimeout(loadingTimeout);
   }, [loading, setLoading, setError]);
 
-  // Main auth effect
+  // Main auth effect - simplified to prevent loops
   useEffect(() => {
     let mounted = true;
+    let redirectionTimeout: NodeJS.Timeout;
     
     const getInitialSession = async () => {
       try {
@@ -56,28 +57,39 @@ export const useAuthEffects = ({
         if (!mounted) return;
 
         setSession(session);
+        setError(null);
+        
         if (session?.user) {
           console.log('Initial session found for user:', session.user.email);
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
           
-          if (!hasRedirected) {
-            console.log('Triggering initial redirection...');
-            setHasRedirected(true);
-            setTimeout(() => {
-              if (mounted) {
-                redirectAfterLogin(session.user, userProfile);
-              }
-            }, 100);
+          try {
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+            
+            // Fixed redirection logic - only redirect if not already redirected
+            if (!hasRedirected) {
+              console.log('Triggering initial redirection...');
+              setHasRedirected(true);
+              redirectionTimeout = setTimeout(() => {
+                if (mounted) {
+                  redirectAfterLogin(session.user, userProfile);
+                }
+              }, 500); // Increased delay to prevent race conditions
+            }
+          } catch (profileError) {
+            console.error('Error fetching profile:', profileError);
+            setProfile(null);
           }
         } else {
           console.log('No initial session found');
+          setUser(null);
+          setProfile(null);
         }
       } catch (error: any) {
         console.error('Error getting session:', error);
         if (mounted) {
-          setError('Authentication error');
+          setError('Authentication error - please try again');
         }
       } finally {
         if (mounted) {
@@ -95,19 +107,28 @@ export const useAuthEffects = ({
         if (!mounted) return;
         
         setSession(session);
+        setError(null);
+        
         if (session?.user) {
           setUser(session.user);
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
           
-          if (event === 'SIGNED_IN' && !hasRedirected) {
-            console.log('User signed in, triggering redirection');
-            setHasRedirected(true);
-            setTimeout(() => {
-              if (mounted) {
-                redirectAfterLogin(session.user, userProfile);
-              }
-            }, 100);
+          try {
+            const userProfile = await fetchProfile(session.user.id);
+            setProfile(userProfile);
+            
+            // Only redirect on SIGNED_IN event and if not already redirected
+            if (event === 'SIGNED_IN' && !hasRedirected) {
+              console.log('User signed in, triggering redirection');
+              setHasRedirected(true);
+              redirectionTimeout = setTimeout(() => {
+                if (mounted) {
+                  redirectAfterLogin(session.user, userProfile);
+                }
+              }, 500);
+            }
+          } catch (profileError) {
+            console.error('Error fetching profile:', profileError);
+            setProfile(null);
           }
         } else {
           setUser(null);
@@ -116,12 +137,14 @@ export const useAuthEffects = ({
         }
         
         setLoading(false);
-        setError(null);
       }
     );
 
     return () => {
       mounted = false;
+      if (redirectionTimeout) {
+        clearTimeout(redirectionTimeout);
+      }
       subscription.unsubscribe();
     };
   }, [

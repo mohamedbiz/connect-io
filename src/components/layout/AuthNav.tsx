@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, User, RefreshCw } from 'lucide-react';
+import { LogIn, LogOut, User, RefreshCw, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ export const AuthNav = () => {
   if (loading) {
     return (
       <Button variant="ghost" size="sm" disabled>
-        <span className="h-4 w-4 mr-2 animate-pulse rounded-full bg-gray-300"></span>
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         Loading...
       </Button>
     );
