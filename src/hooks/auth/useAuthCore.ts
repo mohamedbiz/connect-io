@@ -38,6 +38,8 @@ export const useAuthCore = () => {
 
     const initAuth = async () => {
       try {
+        console.log('Initializing auth...');
+        
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -47,13 +49,17 @@ export const useAuthCore = () => {
 
         if (!mounted) return;
 
+        console.log('Initial session:', session ? 'found' : 'none');
         setSession(session);
         setUser(session?.user ?? null);
 
         // Fetch profile if user exists
         if (session?.user) {
+          console.log('Fetching profile for user:', session.user.id);
           const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          if (mounted) {
+            setProfile(userProfile);
+          }
         }
 
         setError(null);
@@ -64,6 +70,7 @@ export const useAuthCore = () => {
         }
       } finally {
         if (mounted) {
+          console.log('Auth initialization complete');
           setLoading(false);
         }
       }
@@ -81,32 +88,26 @@ export const useAuthCore = () => {
 
         if (currentSession?.user) {
           const userProfile = await fetchProfile(currentSession.user.id);
-          setProfile(userProfile);
+          if (mounted) {
+            setProfile(userProfile);
+          }
         } else {
           setProfile(null);
         }
 
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     );
 
     initAuth();
 
-    // Loading timeout
-    const timeout = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('Auth loading timeout');
-        setLoading(false);
-        setError('Authentication timeout');
-      }
-    }, 8000);
-
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription.unsubscribe();
     };
-  }, [fetchProfile, loading]);
+  }, [fetchProfile]);
 
   // Auth operations
   const login = useCallback(async (email: string, password: string) => {
@@ -230,6 +231,5 @@ export const useAuthCore = () => {
     refreshProfile,
     ensureProfile,
     retryAuth,
-    setProfile,
   };
 };

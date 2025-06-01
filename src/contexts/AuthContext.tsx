@@ -35,11 +35,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Handle redirection after successful authentication
   useEffect(() => {
-    if (!authState.loading && authState.user && authState.session) {
-      // Only redirect if we're on the auth page
-      if (window.location.pathname === '/auth') {
-        redirectUser(authState.user, authState.profile);
-      }
+    // Only redirect if we have a complete auth state and we're NOT on the auth page
+    if (!authState.loading && authState.user && authState.session && window.location.pathname !== '/auth') {
+      console.log('User authenticated, checking if redirection needed from:', window.location.pathname);
+      redirectUser(authState.user, authState.profile);
     }
   }, [authState.loading, authState.user, authState.session, authState.profile, redirectUser]);
 
