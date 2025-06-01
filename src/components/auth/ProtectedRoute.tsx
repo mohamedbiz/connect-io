@@ -8,10 +8,11 @@ import { WifiOff, Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: ('founder' | 'provider' | 'admin')[];
   adminOnly?: boolean;
 }
 
-const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }: ProtectedRouteProps) => {
   const { user, profile, loading, error } = useAuth();
   const location = useLocation();
 
@@ -52,12 +53,39 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
 
   // Not authenticated - redirect to login
   if (!user) {
-    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Admin only routes
   if (adminOnly && profile?.role !== 'admin') {
     return <Navigate to="/" replace />;
+  }
+
+  // Role check if roles are specified
+  if (allowedRoles.length > 0 && profile && !allowedRoles.includes(profile.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Account status-based redirection logic
+  if (profile) {
+    const currentPath = location.pathname;
+
+    // Founder status checks
+    if (profile.role === 'founder') {
+      // If founder hasn't completed onboarding and is trying to access dashboard
+      if (!profile.onboarding_complete && currentPath.includes('/founder/dashboard')) {
+        // Instead of redirecting to a separate onboarding page, we'll show onboarding within the dashboard
+        // The dashboard will handle showing the onboarding flow
+      }
+    }
+
+    // Provider status checks
+    if (profile.role === 'provider') {
+      // If provider hasn't been approved and is trying to access dashboard
+      if (!profile.approved && currentPath.includes('/provider/dashboard')) {
+        // The dashboard will handle showing the application status or application form
+      }
+    }
   }
 
   // User is authenticated and has necessary permissions
