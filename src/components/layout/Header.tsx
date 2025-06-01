@@ -11,18 +11,7 @@ interface HeaderProps {
 
 const Header = ({ hideAuth = false }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
-  // Try to use auth context but handle the case when it's not available
-  let authData = { user: null, profile: null, logout: async () => {} };
-  
-  try {
-    authData = useAuth();
-  } catch (error) {
-    // Auth context not available, using default values
-    console.log("Auth context not available in Header");
-  }
-  
-  const { user, profile, logout } = authData;
+  const { user, profile, logout } = useAuth();
   
   const handleLogout = async () => {
     await logout();
@@ -64,23 +53,28 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
           <Link to="/for-providers" className="text-[#BFD7ED] hover:text-white transition-colors">
             For Providers
           </Link>
-          {isProvider && <Link to="/provider-dashboard#resources" className="text-[#BFD7ED] hover:text-white transition-colors flex items-center gap-1">
+          {isProvider && (
+            <Link to="/provider-dashboard#resources" className="text-[#BFD7ED] hover:text-white transition-colors flex items-center gap-1">
               <BookOpen className="h-4 w-4" />
               <span>Resources</span>
-            </Link>}
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Auth Buttons */}
         {!hideAuth && (
           <div className="hidden lg:flex items-center gap-4">
-            {!user ? <>
+            {!user ? (
+              <>
                 <Button variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
                   <Link to="/auth">Login</Link>
                 </Button>
                 <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild>
                   <Link to="/auth">Get Started</Link>
                 </Button>
-              </> : <div className="flex items-center gap-2">
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
                 <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
                   <Link to={getDashboardLink()}>My Dashboard</Link>
                 </Button>
@@ -90,36 +84,42 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
                 <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" onClick={handleLogout}>
                   Logout
                 </Button>
-              </div>}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Mobile Menu */}
-      {isMenuOpen && <div className="lg:hidden bg-[#0E3366] absolute top-16 left-0 right-0 z-50 shadow-md border-b border-[#2D82B7]/30">
+      {isMenuOpen && (
+        <div className="lg:hidden bg-[#0E3366] absolute top-16 left-0 right-0 z-50 shadow-md border-b border-[#2D82B7]/30">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-            
             <Link to="/for-founders" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
               For Founders
             </Link>
             <Link to="/for-providers" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
               For Providers
             </Link>
-            {isProvider && <Link to="/provider-dashboard#resources" className="text-[#BFD7ED] hover:text-white transition-colors py-2 flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+            {isProvider && (
+              <Link to="/provider-dashboard#resources" className="text-[#BFD7ED] hover:text-white transition-colors py-2 flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
                 <BookOpen className="h-4 w-4" />
                 <span>Resources</span>
-              </Link>}
+              </Link>
+            )}
             <hr className="border-[#2D82B7]/30" />
             
             {!hideAuth && (
-              !user ? <>
+              !user ? (
+                <>
                   <Link to="/auth" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
                     Login
                   </Link>
                   <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild onClick={() => setIsMenuOpen(false)}>
                     <Link to="/auth">Get Started</Link>
                   </Button>
-                </> : <>
+                </>
+              ) : (
+                <>
                   <Link to={getDashboardLink()} className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
                     My Dashboard
                   </Link>
@@ -127,9 +127,11 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
                     Logout
                   </Button>
                 </>
+              )
             )}
           </div>
-        </div>}
+        </div>
+      )}
     </header>
   );
 };

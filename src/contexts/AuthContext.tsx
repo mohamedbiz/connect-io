@@ -1,10 +1,9 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { Profile } from '@/types/auth';
-import { useAuthState } from '@/hooks/auth/useAuthState';
-import { useAuthOperations } from '@/hooks/auth/useAuthOperations';
-import { useAuthEffects } from '@/hooks/auth/useAuthEffects';
+import { useAuthCore } from '@/hooks/auth/useAuthCore';
+import { useAuthRedirection } from '@/hooks/useAuthRedirection';
 
 interface AuthContextType {
   user: User | null;
@@ -13,11 +12,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<{ error: any | null }>;
-  register: (email: string, password: string, userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }) => Promise<{ error: any | null }>;
   logout: () => Promise<void>;
-  signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  ensureProfile: () => Promise<Profile | null>;
   retryAuth: () => void;
 }
 
@@ -32,71 +27,21 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const {
-    user,
-    setUser,
-    session,
-    setSession,
-    profile,
-    setProfile,
-    loading,
-    setLoading,
-    error,
-    setError,
-    hasRedirected,
-    setHasRedirected,
-  } = useAuthState();
+  const authState = useAuthCore();
+  const { redirectUser } = useAuthRedirection();
 
-  const {
-    fetchProfile,
-    login,
-    register,
-    logout,
-    refreshProfile: refreshProfileOperation,
-    ensureProfile: ensureProfileOperation,
-    retryAuth,
-  } = useAuthOperations({
-    setLoading,
-    setError,
-    setUser,
-    setSession,
-    setProfile,
-    setHasRedirected,
-  });
-
-  useAuthEffects({
-    loading,
-    hasRedirected,
-    setSession,
-    setUser,
-    setProfile,
-    setLoading,
-    setError,
-    setHasRedirected,
-    fetchProfile,
-  });
-
-  const refreshProfile = () => refreshProfileOperation(user);
-  const ensureProfile = () => ensureProfileOperation(user);
-  const signOut = logout;
-
-  const value = {
-    user,
-    session,
-    profile,
-    loading,
-    error,
-    login,
-    register,
-    logout,
-    signOut,
-    refreshProfile,
-    ensureProfile,
-    retryAuth,
-  };
+  // Handle redirection after successful authentication
+  useEffect(() => {
+    if (!authState.loading && authState.user && authState.session) {
+      // Only redirect if we're on the auth page
+      if (window.location.pathname === '/auth') {
+        redirectUser(authState.user, authState.profile);
+      }
+    }
+  }, [authState.loading, authState.user, authState.session, authState.profile, redirectUser]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={authState}>
       {children}
     </AuthContext.Provider>
   );
