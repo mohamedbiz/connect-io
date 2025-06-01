@@ -11,11 +11,12 @@ interface HeaderProps {
 
 const Header = ({ hideAuth = false }: HeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, logout } = useAuth();
+  const { user, profile, logout, loading } = useAuth();
   
   const handleLogout = async () => {
-    await logout();
+    console.log('Header logout button clicked');
     setIsMenuOpen(false);
+    await logout();
   };
 
   // Determine dashboard link based on user role
@@ -64,7 +65,7 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
         {/* Desktop Auth Buttons */}
         {!hideAuth && (
           <div className="hidden lg:flex items-center gap-4">
-            {!user ? (
+            {!user || loading ? (
               <>
                 <Button variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
                   <Link to="/auth">Login</Link>
@@ -81,8 +82,14 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
                 <span className="text-sm font-medium text-[#BFD7ED]">
                   {profile?.first_name || user.email}
                 </span>
-                <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" onClick={handleLogout}>
-                  Logout
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" 
+                  onClick={handleLogout}
+                  disabled={loading}
+                >
+                  {loading ? 'Logging out...' : 'Logout'}
                 </Button>
               </div>
             )}
@@ -109,7 +116,7 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
             <hr className="border-[#2D82B7]/30" />
             
             {!hideAuth && (
-              !user ? (
+              !user || loading ? (
                 <>
                   <Link to="/auth" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
                     Login
@@ -123,8 +130,12 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
                   <Link to={getDashboardLink()} className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
                     My Dashboard
                   </Link>
-                  <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" onClick={handleLogout}>
-                    Logout
+                  <Button 
+                    className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" 
+                    onClick={handleLogout}
+                    disabled={loading}
+                  >
+                    {loading ? 'Logging out...' : 'Logout'}
                   </Button>
                 </>
               )

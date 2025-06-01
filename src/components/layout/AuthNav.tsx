@@ -18,8 +18,8 @@ export const AuthNav = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    console.log('AuthNav logout triggered');
     await logout();
-    navigate('/');
   };
 
   // Loading state

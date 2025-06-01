@@ -32,6 +32,15 @@ export const useAuthCore = () => {
     }
   }, []);
 
+  // Clear all auth state
+  const clearAuthState = useCallback(() => {
+    console.log('Clearing all auth state');
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setError(null);
+  }, []);
+
   // Initialize authentication
   useEffect(() => {
     let mounted = true;
@@ -60,6 +69,8 @@ export const useAuthCore = () => {
           if (mounted) {
             setProfile(userProfile);
           }
+        } else {
+          setProfile(null);
         }
 
         setError(null);
@@ -67,6 +78,7 @@ export const useAuthCore = () => {
         console.error('Auth initialization error:', err);
         if (mounted) {
           setError(err.message || 'Authentication failed');
+          clearAuthState();
         }
       } finally {
         if (mounted) {
@@ -79,9 +91,17 @@ export const useAuthCore = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log('Auth state change:', event);
+        console.log('Auth state change:', event, currentSession ? 'session exists' : 'no session');
         
         if (!mounted) return;
+
+        // Handle sign out event explicitly
+        if (event === 'SIGNED_OUT') {
+          console.log('User signed out, clearing state');
+          clearAuthState();
+          setLoading(false);
+          return;
+        }
 
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -107,7 +127,7 @@ export const useAuthCore = () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, clearAuthState]);
 
   // Auth operations
   const login = useCallback(async (email: string, password: string) => {
@@ -150,16 +170,36 @@ export const useAuthCore = () => {
 
   const logout = useCallback(async () => {
     try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setProfile(null);
+      console.log('Logout initiated');
       setError(null);
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Supabase logout error:', error);
+        throw error;
+      }
+      
+      // Force clear all state immediately
+      clearAuthState();
+      
+      console.log('Logout completed successfully');
+      
+      // Force reload to ensure clean state
+      window.location.href = '/';
+      
     } catch (err: any) {
       console.error('Logout error:', err);
       setError('Logout failed');
+      
+      // Even if there's an error, clear local state
+      clearAuthState();
+      
+      // Force reload as fallback
+      window.location.href = '/';
     }
-  }, []);
+  }, [clearAuthState]);
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
