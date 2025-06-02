@@ -72,18 +72,25 @@ const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }: Prot
 
     // Founder status checks
     if (profile.role === 'founder') {
-      // If founder hasn't completed onboarding and is trying to access dashboard
-      if (!profile.onboarding_complete && currentPath.includes('/founder/dashboard')) {
-        // Instead of redirecting to a separate onboarding page, we'll show onboarding within the dashboard
-        // The dashboard will handle showing the onboarding flow
+      // If founder hasn't completed profile and is trying to access dashboard
+      if (profile.account_status === 'pending_profile' && currentPath.includes('/founder/dashboard')) {
+        return <Navigate to="/founder/onboarding" replace />;
+      }
+      // If founder completed profile but is trying to access onboarding
+      if (profile.account_status === 'active' && currentPath.includes('/founder/onboarding')) {
+        return <Navigate to="/founder/dashboard" replace />;
       }
     }
 
     // Provider status checks
     if (profile.role === 'provider') {
-      // If provider hasn't been approved and is trying to access dashboard
-      if (!profile.approved && currentPath.includes('/provider/dashboard')) {
-        // The dashboard will handle showing the application status or application form
+      // If provider hasn't submitted application and is trying to access dashboard
+      if (profile.account_status === 'pending_application' && currentPath.includes('/provider/dashboard')) {
+        return <Navigate to="/provider/onboarding" replace />;
+      }
+      // If provider is approved but trying to access onboarding
+      if (profile.account_status === 'active' && currentPath.includes('/provider/onboarding')) {
+        return <Navigate to="/provider/dashboard" replace />;
       }
     }
   }

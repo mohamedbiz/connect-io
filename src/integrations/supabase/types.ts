@@ -93,6 +93,53 @@ export type Database = {
           },
         ]
       }
+      founder_profiles: {
+        Row: {
+          biggest_challenge: string | null
+          business_website: string | null
+          created_at: string
+          current_email_platform: string | null
+          id: string
+          monthly_revenue_range: string | null
+          primary_goal: string | null
+          profile_picture_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          biggest_challenge?: string | null
+          business_website?: string | null
+          created_at?: string
+          current_email_platform?: string | null
+          id?: string
+          monthly_revenue_range?: string | null
+          primary_goal?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          biggest_challenge?: string | null
+          business_website?: string | null
+          created_at?: string
+          current_email_platform?: string | null
+          id?: string
+          monthly_revenue_range?: string | null
+          primary_goal?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "founder_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -137,6 +184,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: Database["public"]["Enums"]["account_status"] | null
           approach_description: string | null
           approved: boolean | null
           avatar_url: string | null
@@ -163,6 +211,7 @@ export type Database = {
           years_experience: string | null
         }
         Insert: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
           approach_description?: string | null
           approved?: boolean | null
           avatar_url?: string | null
@@ -189,6 +238,7 @@ export type Database = {
           years_experience?: string | null
         }
         Update: {
+          account_status?: Database["public"]["Enums"]["account_status"] | null
           approach_description?: string | null
           approved?: boolean | null
           avatar_url?: string | null
@@ -332,6 +382,56 @@ export type Database = {
           },
         ]
       }
+      provider_profiles: {
+        Row: {
+          approach_description: string | null
+          created_at: string
+          headline: string | null
+          id: string
+          industries_served: string[] | null
+          portfolio_url: string | null
+          primary_esp: string | null
+          profile_picture_url: string | null
+          updated_at: string
+          user_id: string
+          years_experience: string | null
+        }
+        Insert: {
+          approach_description?: string | null
+          created_at?: string
+          headline?: string | null
+          id?: string
+          industries_served?: string[] | null
+          portfolio_url?: string | null
+          primary_esp?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id: string
+          years_experience?: string | null
+        }
+        Update: {
+          approach_description?: string | null
+          created_at?: string
+          headline?: string | null
+          id?: string
+          industries_served?: string[] | null
+          portfolio_url?: string | null
+          primary_esp?: string | null
+          profile_picture_url?: string | null
+          updated_at?: string
+          user_id?: string
+          years_experience?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       providers: {
         Row: {
           avatar: string | null
@@ -404,6 +504,11 @@ export type Database = {
       }
     }
     Enums: {
+      account_status:
+        | "pending_profile"
+        | "pending_application"
+        | "active"
+        | "rejected"
       user_role: "founder" | "provider" | "admin"
     }
     CompositeTypes: {
@@ -520,6 +625,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_status: [
+        "pending_profile",
+        "pending_application",
+        "active",
+        "rejected",
+      ],
       user_role: ["founder", "provider", "admin"],
     },
   },

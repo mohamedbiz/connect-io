@@ -7,7 +7,9 @@ import HomePage from "./pages/home/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
+import FounderOnboardingPage from "./pages/founder/FounderOnboardingPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
+import ProviderOnboardingPage from "./pages/provider/ProviderOnboardingPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -24,10 +26,22 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
         
-        {/* Protected routes - require authentication and handle redirects based on account status */}
+        {/* Founder routes */}
+        <Route path="/founder/onboarding" element={
+          <ProtectedRoute allowedRoles={['founder']}>
+            <FounderOnboardingPage />
+          </ProtectedRoute>
+        } />
         <Route path="/founder/dashboard" element={
           <ProtectedRoute allowedRoles={['founder']}>
             <FounderDashboardPage />
+          </ProtectedRoute>
+        } />
+        
+        {/* Provider routes */}
+        <Route path="/provider/onboarding" element={
+          <ProtectedRoute allowedRoles={['provider']}>
+            <ProviderOnboardingPage />
           </ProtectedRoute>
         } />
         <Route path="/provider/dashboard" element={
@@ -35,6 +49,8 @@ function App() {
             <ProviderDashboardPage />
           </ProtectedRoute>
         } />
+        
+        {/* Admin routes */}
         <Route path="/admin/dashboard" element={
           <ProtectedRoute allowedRoles={['admin']}>
             <AdminDashboardPage />
