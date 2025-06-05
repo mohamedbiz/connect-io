@@ -2,44 +2,19 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { WifiOff, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: ('founder' | 'provider' | 'admin')[];
-  adminOnly?: boolean;
+  requiredStatus?: string[];
 }
 
-const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }: ProtectedRouteProps) => {
-  const { user, profile, loading, error } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: ProtectedRouteProps) => {
+  const { user, profile, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  // Handle connection error
-  if (error && error.includes('fetch')) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Alert className="max-w-md">
-          <WifiOff className="h-5 w-5" />
-          <AlertTitle>Connection Error</AlertTitle>
-          <AlertDescription>
-            <p className="mb-4">
-              We're having trouble connecting to our servers. Please check your internet connection.
-            </p>
-            <Button 
-              onClick={() => window.location.reload()}
-              variant="outline"
-            >
-              Try Again
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Still loading - show loading spinner
+  // Show loading spinner while auth state is being determined
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -51,22 +26,17 @@ const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }: Prot
     );
   }
 
-  // Not authenticated - redirect to login
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  // Admin only routes
-  if (adminOnly && profile?.role !== 'admin') {
-    return <Navigate to="/" replace />;
-  }
-
-  // Role check if roles are specified
+  // Check role requirements if specified
   if (allowedRoles.length > 0 && profile && !allowedRoles.includes(profile.role)) {
     return <Navigate to="/" replace />;
   }
 
-  // Account status-based redirection logic
+  // Check status requirements and handle redirects based on role and status
   if (profile) {
     const currentPath = location.pathname;
 
@@ -93,9 +63,67 @@ const ProtectedRoute = ({ children, allowedRoles = [], adminOnly = false }: Prot
         return <Navigate to="/provider/dashboard" replace />;
       }
     }
+
+    // Status requirements check
+    if (requiredStatus.length > 0 && !requiredStatus.includes(profile.account_status || '')) {
+      // Redirect based on role and status
+      if (profile.role === 'founder') {
+        if (profile.account_status === 'pending_profile') {
+          return <Navigate to="/founder/onboarding" replace />;
+        }
+      } else if (profile.role === 'provider') {
+        if (profile.account_status === 'pending_application') {
+          return <Navigate to="/provider/onboarding" replace />;
+        }
+      }
+      
+      return <Navigate to="/" replace />;
+    }
   }
 
-  // User is authenticated and has necessary permissions
+  // All checks passed, render the protected content
+  return <>{children}</>;
+};
+
+// Public route that redirects authenticated users
+export const PublicOnlyRoute = ({ children, redirectPath = '/' }: { children: React.ReactNode; redirectPath?: string }) => {
+  const { isAuthenticated, loading, profile } = useAuth();
+
+  // Show loading spinner while auth state is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect authenticated users based on their role and status
+  if (isAuthenticated && profile) {
+    if (profile.role === 'founder') {
+      if (profile.account_status === 'pending_profile') {
+        return <Navigate to="/founder/onboarding" replace />;
+      } else if (profile.account_status === 'active') {
+        return <Navigate to="/founder/dashboard" replace />;
+      }
+    } else if (profile.role === 'provider') {
+      if (profile.account_status === 'pending_application') {
+        return <Navigate to="/provider/onboarding" replace />;
+      } else if (profile.account_status === 'active') {
+        return <Navigate to="/provider/dashboard" replace />;
+      }
+    } else if (profile.role === 'admin') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    
+    // Default fallback if no specific route matches
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  // Not authenticated, render the public content
   return <>{children}</>;
 };
 

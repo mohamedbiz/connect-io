@@ -2,8 +2,8 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogIn, LogOut, User, RefreshCw, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { LogIn, LogOut, User, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const AuthNav = () => {
-  const { user, profile, logout, loading, error, retryAuth } = useAuth();
-  const navigate = useNavigate();
+  const { user, profile, logout, loading, isAuthenticated } = useAuth();
 
   const handleLogout = async () => {
     console.log('AuthNav logout triggered');
@@ -32,18 +31,8 @@ export const AuthNav = () => {
     );
   }
 
-  // Connection error state
-  if (error && error.includes('fetch')) {
-    return (
-      <Button variant="ghost" size="sm" className="text-amber-600" onClick={retryAuth}>
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Reconnect
-      </Button>
-    );
-  }
-
   // Not logged in - show login button
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <Button asChild variant="secondary" size="sm">
         <Link to="/auth">
@@ -61,7 +50,7 @@ export const AuthNav = () => {
         <Button variant="ghost" size="sm" className="gap-2">
           <User className="h-4 w-4" />
           <span className="hidden md:inline">
-            {profile?.first_name || user.email?.split('@')[0] || 'Account'}
+            {profile?.first_name || user?.email?.split('@')[0] || 'Account'}
           </span>
         </Button>
       </DropdownMenuTrigger>
@@ -69,25 +58,21 @@ export const AuthNav = () => {
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem asChild>
-          <Link to="/profile" className="cursor-pointer">Profile</Link>
-        </DropdownMenuItem>
-        
         {profile?.role === 'founder' && (
           <DropdownMenuItem asChild>
-            <Link to="/founder-dashboard" className="cursor-pointer">Dashboard</Link>
+            <Link to="/founder/dashboard" className="cursor-pointer">Dashboard</Link>
           </DropdownMenuItem>
         )}
         
         {profile?.role === 'provider' && (
           <DropdownMenuItem asChild>
-            <Link to="/provider-dashboard" className="cursor-pointer">Dashboard</Link>
+            <Link to="/provider/dashboard" className="cursor-pointer">Dashboard</Link>
           </DropdownMenuItem>
         )}
         
         {profile?.role === 'admin' && (
           <DropdownMenuItem asChild>
-            <Link to="/admin/provider-applications" className="cursor-pointer">Admin Panel</Link>
+            <Link to="/admin/dashboard" className="cursor-pointer">Admin Panel</Link>
           </DropdownMenuItem>
         )}
         
