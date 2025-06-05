@@ -33,7 +33,7 @@ const CTASection = () => {
               className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:border-white transition-colors" 
               asChild
             >
-              <Link to="/provider-application">
+              <Link to="/auth?register=true&type=provider">
                 I Offer Email Expertise (Provider)
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>

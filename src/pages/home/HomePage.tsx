@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from "@/components/layout/Layout";
@@ -14,8 +15,8 @@ const HomePage = () => {
   const handleRoleSelection = (role: 'founder' | 'provider') => {
     // Store the selected role in session storage for persistence
     sessionStorage.setItem('selectedRole', role);
-    // Navigate to signup page with role parameter
-    navigate(`/signup?role=${role}`);
+    // Navigate to auth page with role parameter
+    navigate(`/auth?register=true&type=${role}`);
   };
 
   return (

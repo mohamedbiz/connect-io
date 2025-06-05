@@ -16,6 +16,8 @@ interface AuthContextType {
   register: (email: string, password: string, userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }) => Promise<{ error: any | null }>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<Profile>) => Promise<{ error: any | null }>;
+  refreshProfile: () => Promise<void>;
+  retryAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -307,6 +309,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Refresh profile function
+  const refreshProfile = async () => {
+    try {
+      if (!user || !user.id) {
+        throw new Error('No authenticated user');
+      }
+      
+      const userProfile = await fetchProfile(user.id);
+      setProfile(userProfile);
+    } catch (err: any) {
+      console.error('Profile refresh error:', err);
+      setError('Failed to refresh profile');
+    }
+  };
+
+  // Retry auth function
+  const retryAuth = () => {
+    setError(null);
+    setLoading(true);
+    
+    // Re-trigger auth initialization
+    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+      if (error) {
+        console.error('Retry auth error:', error);
+        setError(error.message);
+      } else if (currentSession) {
+        setSession(currentSession);
+        setUser(currentSession.user);
+        fetchProfile(currentSession.user.id).then(userProfile => {
+          setProfile(userProfile);
+        });
+      }
+      setLoading(false);
+    });
+  };
+
   // Auth context value
   const value = {
     user,
@@ -319,6 +357,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     register,
     logout,
     updateProfile,
+    refreshProfile,
+    retryAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
