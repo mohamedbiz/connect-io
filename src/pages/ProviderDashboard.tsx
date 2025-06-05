@@ -10,6 +10,7 @@ import { useProviderApplications } from "@/hooks/useProviderApplications";
 import { useMatches } from "@/hooks/useMatches";
 import { toast } from "sonner";
 import ErrorFallback from "@/components/ErrorFallback";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Import refactored components
 import StatsOverview from "@/components/provider/dashboard/StatsOverview";
@@ -47,7 +48,7 @@ const ProviderDashboard = () => {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        navigate("/auth");
+        navigate("/login");
         return;
       } 
       
@@ -67,8 +68,12 @@ const ProviderDashboard = () => {
     }
   }, [myApplication]);
 
+  const handleCompleteApplication = () => {
+    navigate("/provider/onboarding");
+  };
+
   // Authentication error case
-  if (error) {
+  if (error && error.includes('fetch')) {
     return (
       <Layout>
         <div className="container mx-auto py-10 px-4">
@@ -102,7 +107,7 @@ const ProviderDashboard = () => {
             <p className="text-center text-lg text-[#0E3366]">Please log in to access your dashboard</p>
             <Button 
               variant="default"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/login")}
               className="mt-4"
             >
               Go to Login
@@ -136,6 +141,23 @@ const ProviderDashboard = () => {
             </Button>
           </div>
         </div>
+
+        {profile?.account_status === 'pending_application' && (
+          <Alert className="mb-6 bg-amber-50 border-amber-200">
+            <AlertTitle className="text-amber-800">Complete Your Application</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              <p className="mb-4">
+                Welcome! Please complete your provider application to get matched with clients.
+              </p>
+              <Button 
+                onClick={handleCompleteApplication}
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                Complete Application
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Grid */}
         <StatsOverview stats={stats} />

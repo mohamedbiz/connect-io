@@ -4,22 +4,23 @@ import Layout from "@/components/layout/Layout";
 import { useFounderDashboard } from "@/hooks/useFounderDashboard";
 import DashboardAccessControl from "@/components/dashboard/DashboardAccessControl";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import QualificationBanner from "@/components/dashboard/QualificationBanner";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import FounderDashboardContent from "@/components/dashboard/FounderDashboardContent";
 import DashboardNavigation from "@/components/dashboard/DashboardNavigation";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const FounderDashboard = () => {
   const { 
     user, 
     profile, 
     loading, 
-    error, 
-    isQualified, 
-    qualificationLoading 
+    error
   } = useFounderDashboard();
   
+  const navigate = useNavigate();
   const dashboardTabs = FounderDashboardContent();
   const [activeTab, setActiveTab] = useState("diagnostic");
   const [isNewUser, setIsNewUser] = useState(true);
@@ -40,10 +41,12 @@ const FounderDashboard = () => {
   };
   
   const handleGetStarted = () => {
-    if (!isQualified) {
-      // If the user isn't qualified yet, take them to qualification
-      window.location.href = "/founder-qualification";
-    }
+    // Simple navigation to first tab
+    setActiveTab("diagnostic");
+  };
+
+  const handleCompleteProfile = () => {
+    navigate("/founder/onboarding");
   };
 
   return (
@@ -69,10 +72,22 @@ const FounderDashboard = () => {
             />
           )}
           
-          <QualificationBanner 
-            isQualified={isQualified} 
-            isLoading={qualificationLoading} 
-          />
+          {profile?.account_status === 'pending_profile' && (
+            <Alert className="mb-6 bg-amber-50 border-amber-200">
+              <AlertTitle className="text-amber-800">Complete Your Profile</AlertTitle>
+              <AlertDescription className="text-amber-700">
+                <p className="mb-4">
+                  Welcome! Please complete your founder profile to unlock all dashboard features.
+                </p>
+                <Button 
+                  onClick={handleCompleteProfile}
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Complete Profile
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
           
           <DashboardNavigation 
             activeTab={activeTab}

@@ -1,9 +1,8 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { Profile } from '@/types/auth';
 import { useAuthCore } from '@/hooks/auth/useAuthCore';
-import { useAuthRedirection } from '@/hooks/useAuthRedirection';
 
 interface AuthContextType {
   user: User | null;
@@ -31,16 +30,6 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const authState = useAuthCore();
-  const { redirectUser } = useAuthRedirection();
-
-  // Handle redirection after successful authentication
-  useEffect(() => {
-    // Only redirect if we have a complete auth state and we're NOT on the auth page
-    if (!authState.loading && authState.user && authState.session && window.location.pathname !== '/auth') {
-      console.log('User authenticated, checking if redirection needed from:', window.location.pathname);
-      redirectUser(authState.user, authState.profile);
-    }
-  }, [authState.loading, authState.user, authState.session, authState.profile, redirectUser]);
 
   return (
     <AuthContext.Provider value={authState}>
