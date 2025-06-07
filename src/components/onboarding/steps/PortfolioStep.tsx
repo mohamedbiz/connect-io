@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InfoCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
 
 interface PortfolioStepProps {
   data: {
@@ -73,7 +72,7 @@ const PortfolioStep = ({ data, updateData, onNext, onBack }: PortfolioStepProps)
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                  <Info className="h-4 w-4 text-gray-400 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="w-[200px] text-sm">
@@ -98,7 +97,7 @@ const PortfolioStep = ({ data, updateData, onNext, onBack }: PortfolioStepProps)
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                  <Info className="h-4 w-4 text-gray-400 cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="w-[200px] text-sm">
