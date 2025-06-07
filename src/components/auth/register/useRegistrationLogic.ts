@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 import { RegisterFormData } from './RegisterFormData';
 
 interface UseRegistrationLogicProps {
@@ -18,24 +17,20 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
   const [registrationComplete, setRegistrationComplete] = useState(false);
   
   const { register, retryAuth, user, profile } = useAuth();
-  const { redirectAfterLogin } = usePostLoginRedirection();
 
   // Handle redirection after successful registration
   useEffect(() => {
     if (user && registrationComplete && !loading) {
-      console.log('Registration complete, triggering redirection with userType:', userType);
+      console.log('Registration complete, user authenticated. ProtectedRoute will handle redirection.');
       
       // Clear the registration complete flag to prevent multiple redirections
       setRegistrationComplete(false);
       
-      // Use a timeout to ensure all auth state has settled
-      const redirectTimer = setTimeout(() => {
-        redirectAfterLogin(user, profile, userType);
-      }, 1000);
-      
-      return () => clearTimeout(redirectTimer);
+      // Let ProtectedRoute handle the redirection based on user role and status
+      // No manual redirection needed - ProtectedRoute will automatically redirect
+      // providers to onboarding if account_status is 'pending_application'
     }
-  }, [user, registrationComplete, loading, redirectAfterLogin, userType, profile]);
+  }, [user, registrationComplete, loading, userType, profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

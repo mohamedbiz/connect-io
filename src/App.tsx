@@ -6,6 +6,7 @@ import { Toaster as SonnerToaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/home/HomePage";
 import AuthPage from "./pages/AuthPage";
+import AuthCallback from "./pages/AuthCallback";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
 import FounderOnboardingPage from "./pages/founder/FounderOnboardingPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
@@ -29,6 +30,7 @@ function App() {
               <AuthPage />
             </PublicOnlyRoute>
           } />
+          <Route path="/auth-callback" element={<AuthCallback />} />
           
           {/* Founder routes */}
           <Route path="/founder/onboarding" element={

@@ -45,6 +45,9 @@ export const createProfile = async (
   role: 'founder' | 'provider' = 'founder'
 ): Promise<Profile | null> => {
   try {
+    // Set initial account_status based on role
+    const accountStatus = role === 'provider' ? 'pending_application' : 'pending_profile';
+    
     const { data, error } = await supabase
       .from('profiles')
       .insert({
@@ -53,6 +56,7 @@ export const createProfile = async (
         first_name: firstName,
         last_name: lastName,
         role,
+        account_status: accountStatus,
         onboarding_complete: false,
         approved: role === 'founder' ? true : false // Founders auto-approved, providers need manual approval
       })
@@ -64,6 +68,7 @@ export const createProfile = async (
       return null;
     }
     
+    logAuth(`Profile created with status: ${accountStatus}`, data);
     return data as Profile;
   } catch (error) {
     logAuth('Error creating profile:', error, false, true);

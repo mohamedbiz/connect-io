@@ -14,19 +14,6 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  // Handle redirection based on user role and profile
-  const redirectAfterLogin = (user: any, profile: any, userRole?: 'founder' | 'provider') => {
-    console.log('Redirecting after login - user role:', userRole, 'profile role:', profile?.role);
-    
-    const role = userRole || profile?.role || 'founder';
-    
-    if (role === 'provider') {
-      navigate('/provider/dashboard', { replace: true });
-    } else {
-      navigate('/founder/dashboard', { replace: true });
-    }
-  };
-
   useEffect(() => {
     const handleAuthCallback = async () => {
       // Get the URL hash
@@ -77,8 +64,8 @@ const AuthCallback = () => {
               }
             }
             
-            // Wait for profile to be available and then redirect
-            console.log('OAuth login successful, waiting for profile data to redirect');
+            // Don't manually redirect - let ProtectedRoute handle it based on user status
+            console.log('OAuth login successful, letting ProtectedRoute handle redirection');
           } else {
             // No session found, redirect to sign in
             navigate('/auth', { replace: true });
@@ -103,22 +90,31 @@ const AuthCallback = () => {
     handleAuthCallback();
   }, [navigate]);
 
-  // Handle redirection when user and profile become available
+  // Handle automatic redirection when user and profile become available
   useEffect(() => {
-    if (user && !loading && !error) {
-      console.log('OAuth callback: User available, triggering redirection');
-      const url = new URL(window.location.href);
-      const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
-      const userRole = user.user_metadata?.role || roleFromUrl;
+    if (user && profile && !loading && !error) {
+      console.log('OAuth callback: User and profile available, redirecting to appropriate dashboard');
       
-      console.log('OAuth callback redirection - user role:', userRole);
-      console.log('OAuth callback redirection - profile:', profile);
-      
-      setTimeout(() => {
-        redirectAfterLogin(user, profile, userRole as 'founder' | 'provider');
-      }, 1000);
+      // Use ProtectedRoute logic for redirection
+      if (profile.role === 'provider') {
+        if (profile.account_status === 'pending_application') {
+          console.log('Redirecting provider to onboarding');
+          navigate('/provider/onboarding', { replace: true });
+        } else {
+          console.log('Redirecting provider to dashboard');
+          navigate('/provider/dashboard', { replace: true });
+        }
+      } else if (profile.role === 'founder') {
+        if (profile.account_status === 'pending_profile') {
+          console.log('Redirecting founder to onboarding');
+          navigate('/founder/onboarding', { replace: true });
+        } else {
+          console.log('Redirecting founder to dashboard');
+          navigate('/founder/dashboard', { replace: true });
+        }
+      }
     }
-  }, [user, profile, loading, error]);
+  }, [user, profile, loading, error, navigate]);
 
   return (
     <Layout>
