@@ -1,4 +1,3 @@
-
 import { DashboardTab } from "./DashboardTabs";
 import EmailMarketingDiagnostic from "@/components/dashboard/EmailMarketingDiagnostic";
 import EmailListGrowthDiagnostic from "@/components/dashboard/EmailListGrowthDiagnostic";
@@ -8,13 +7,19 @@ import ProvidersDirectory from "@/components/providers/ProvidersDirectory";
 import MatchesList from "@/components/matches/MatchesList";
 import ProvidersPaymentSection from "@/components/founder/ProvidersPaymentSection";
 import PaymentAnalytics from "@/components/payment/PaymentAnalytics";
+import RecommendedProviders from "@/components/founder/RecommendedProviders";
 
 const FounderDashboardContent = () => {
   const dashboardTabs: DashboardTab[] = [
     {
       id: "diagnostic",
       label: "Email Diagnostic",
-      content: <EmailMarketingDiagnostic />
+      content: (
+        <div className="space-y-6">
+          <RecommendedProviders />
+          <EmailMarketingDiagnostic />
+        </div>
+      )
     },
     {
       id: "cart-recovery",
