@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +5,7 @@ import Layout from '@/components/layout/Layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { ensureProfileExists } from '@/utils/auth/auth-operations';
+import { ensureProfileExists } from '@/utils/auth/profile-operations';
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
