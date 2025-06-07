@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRegistrationLogic } from './useRegistrationLogic';
 import { useNetworkMonitoring } from './useNetworkMonitoring';
-import { RegisterNetworkAlert } from './RegisterNetworkAlert';
+import RegisterNetworkAlert from './RegisterNetworkAlert';
 
 interface RegisterFormProps {
   userType: 'founder' | 'provider';
@@ -22,6 +22,7 @@ const RegisterForm = ({ userType }: RegisterFormProps) => {
     lastName: '',
     email: '',
     password: '',
+    companyName: '',
     acceptTerms: false,
   });
 

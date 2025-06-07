@@ -68,7 +68,7 @@ export const createProfile = async (
       return null;
     }
     
-    logAuth(`Profile created with status: ${accountStatus}`, data);
+    logAuth(`Profile created with role: ${role}, status: ${accountStatus}`, data);
     return data as Profile;
   } catch (error) {
     logAuth('Error creating profile:', error, false, true);
@@ -115,14 +115,26 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
     
     // If no profile exists, create one
     if (!userProfile) {
-      logAuth('No profile found, creating one', { userId: user.id });
+      logAuth('No profile found, creating one', { userId: user.id, userMetadata: user.user_metadata });
+      
+      // Extract role from user metadata with proper fallback
+      const roleFromMetadata = user.user_metadata?.role;
+      let userRole: 'founder' | 'provider' = 'founder'; // default
+      
+      if (roleFromMetadata === 'provider') {
+        userRole = 'provider';
+      } else if (roleFromMetadata === 'founder') {
+        userRole = 'founder';
+      }
+      
+      logAuth(`Creating profile with role: ${userRole}`, { extractedRole: roleFromMetadata });
       
       userProfile = await createProfile(
         user.id,
         user.email || '',
         user.user_metadata?.first_name || '',
         user.user_metadata?.last_name || '',
-        user.user_metadata?.role || 'founder'
+        userRole
       );
       
       if (userProfile) {
