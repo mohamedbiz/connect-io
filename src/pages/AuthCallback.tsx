@@ -16,67 +16,55 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Get the URL hash
-      const hash = window.location.hash;
-      
       try {
         setLoading(true);
         
-        // Handle session from hash
-        if (hash) {
-          // The session should be automatically handled by Supabase
-          const { data, error } = await supabase.auth.getSession();
+        // Handle session from URL hash/query parameters
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data.session) {
+          toast.success('Email verified successfully! Welcome to the platform.');
           
-          if (error) {
-            throw error;
-          }
+          // Get role from URL parameter
+          const url = new URL(window.location.href);
+          const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
           
-          if (data.session) {
-            toast.success('Successfully signed in!');
-            
-            // Check if the user is new or returning
-            const { data: userData } = await supabase.auth.getUser();
-            
-            // Get role from URL if present
-            const url = new URL(window.location.href);
-            const roleFromUrl = url.searchParams.get('role') as 'founder' | 'provider' | null;
-            
-            console.log('OAuth callback - role from URL:', roleFromUrl);
-            console.log('OAuth callback - user metadata role:', userData.user?.user_metadata?.role);
-            
-            // Check for role in user metadata or URL parameter
-            const role = userData.user?.user_metadata?.role || roleFromUrl;
-            
-            if (role && userData.user) {
-              // If we have a role from URL, update user metadata if needed
-              if (roleFromUrl && !userData.user?.user_metadata?.role) {
-                console.log('Updating user metadata with role from URL:', roleFromUrl);
-                await supabase.auth.updateUser({
-                  data: { role: roleFromUrl }
-                });
-              }
-              
-              // Ensure profile exists with correct role
-              try {
-                await ensureProfileExists(userData.user);
-              } catch (profileError) {
-                console.error('Profile creation error in OAuth callback:', profileError);
-              }
+          console.log('Auth callback - role from URL:', roleFromUrl);
+          console.log('Auth callback - user metadata role:', data.session.user?.user_metadata?.role);
+          
+          // Check for role in user metadata or URL parameter
+          const role = data.session.user?.user_metadata?.role || roleFromUrl;
+          
+          if (role && data.session.user) {
+            // If we have a role from URL, update user metadata if needed
+            if (roleFromUrl && !data.session.user?.user_metadata?.role) {
+              console.log('Updating user metadata with role from URL:', roleFromUrl);
+              await supabase.auth.updateUser({
+                data: { role: roleFromUrl }
+              });
             }
             
-            // Don't manually redirect - let ProtectedRoute handle it based on user status
-            console.log('OAuth login successful, letting ProtectedRoute handle redirection');
-          } else {
-            // No session found, redirect to sign in
-            navigate('/auth', { replace: true });
+            // Ensure profile exists with correct role
+            try {
+              await ensureProfileExists(data.session.user);
+            } catch (profileError) {
+              console.error('Profile creation error in auth callback:', profileError);
+            }
           }
+          
+          // Let ProtectedRoute handle redirection based on user status
+          console.log('Auth callback successful, letting ProtectedRoute handle redirection');
         } else {
-          // No hash found, redirect to sign in
+          // No session found, redirect to sign in
           navigate('/auth', { replace: true });
         }
       } catch (err: any) {
         console.error('Auth callback error:', err);
-        setError(err.message || 'Authentication failed. Please try again.');
+        setError(err.message || 'Email verification failed. Please try again.');
         
         // Redirect to auth page after a delay
         setTimeout(() => {
@@ -93,10 +81,9 @@ const AuthCallback = () => {
   // Handle automatic redirection when user and profile become available
   useEffect(() => {
     if (user && profile && !loading && !error) {
-      console.log('OAuth callback: User and profile available, letting ProtectedRoute handle redirection');
+      console.log('Auth callback: User and profile available, redirecting based on role and status');
       
-      // Let ProtectedRoute handle the redirection based on role and status
-      // Navigate to the appropriate dashboard and let ProtectedRoute redirect if needed
+      // Navigate to appropriate dashboard and let ProtectedRoute handle status-based redirection
       if (profile.role === 'provider') {
         navigate('/provider/dashboard', { replace: true });
       } else if (profile.role === 'founder') {
@@ -112,13 +99,13 @@ const AuthCallback = () => {
       <div className="container mx-auto flex flex-col items-center justify-center min-h-[60vh] py-12 px-4">
         {error ? (
           <Alert variant="destructive" className="max-w-md">
-            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertTitle>Email Verification Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : (
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">
-              {loading ? 'Completing Sign In...' : 'Sign In Complete!'}
+              {loading ? 'Verifying Email...' : 'Email Verified!'}
             </h1>
             <div className="flex justify-center">
               {loading && (
