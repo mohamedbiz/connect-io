@@ -28,14 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     fetchProfile,
   } = useAuthStateManager();
 
-  const {
-    login,
-    register,
-    logout,
-    updateProfile,
-    refreshProfile,
-    retryAuth,
-  } = useAuthOperations(
+  const authOperations = useAuthOperations(
     setUser,
     setSession,
     setProfile,
@@ -52,12 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     error,
     isAuthenticated: !!session,
-    login,
-    register,
-    logout,
-    updateProfile,
-    refreshProfile,
-    retryAuth,
+    ...authOperations,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
