@@ -93,25 +93,16 @@ const AuthCallback = () => {
   // Handle automatic redirection when user and profile become available
   useEffect(() => {
     if (user && profile && !loading && !error) {
-      console.log('OAuth callback: User and profile available, redirecting to appropriate dashboard');
+      console.log('OAuth callback: User and profile available, letting ProtectedRoute handle redirection');
       
-      // Use ProtectedRoute logic for redirection
+      // Let ProtectedRoute handle the redirection based on role and status
+      // Navigate to the appropriate dashboard and let ProtectedRoute redirect if needed
       if (profile.role === 'provider') {
-        if (profile.account_status === 'pending_application') {
-          console.log('Redirecting provider to onboarding');
-          navigate('/provider/onboarding', { replace: true });
-        } else {
-          console.log('Redirecting provider to dashboard');
-          navigate('/provider/dashboard', { replace: true });
-        }
+        navigate('/provider/dashboard', { replace: true });
       } else if (profile.role === 'founder') {
-        if (profile.account_status === 'pending_profile') {
-          console.log('Redirecting founder to onboarding');
-          navigate('/founder/onboarding', { replace: true });
-        } else {
-          console.log('Redirecting founder to dashboard');
-          navigate('/founder/dashboard', { replace: true });
-        }
+        navigate('/founder/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
       }
     }
   }, [user, profile, loading, error, navigate]);

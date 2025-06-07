@@ -16,7 +16,7 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
   const [oauthLoading, setOAuthLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   
-  const { register, retryAuth, user, profile } = useAuth();
+  const { register, user, profile } = useAuth();
 
   // Handle redirection after successful registration
   useEffect(() => {
@@ -130,7 +130,8 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
     
     if (isOnline) {
       toast.success('Connection restored!');
-      retryAuth();
+      // Simple retry - just reset error state
+      // The auth state will be handled by the AuthContext
     } else {
       toast.error('Still offline. Please check your internet connection.');
     }
