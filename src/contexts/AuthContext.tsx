@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user
   );
 
-  // Auth context value
+  // Auth context value - explicitly destructure to ensure proper TypeScript inference
   const value: AuthContextType = {
     user,
     session,
@@ -45,7 +45,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     error,
     isAuthenticated: !!session,
-    ...authOperations,
+    login: authOperations.login,
+    register: authOperations.register,
+    logout: authOperations.logout,
+    updateProfile: authOperations.updateProfile,
+    refreshProfile: authOperations.refreshProfile,
+    retryAuth: authOperations.retryAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

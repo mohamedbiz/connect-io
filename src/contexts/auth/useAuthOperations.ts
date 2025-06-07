@@ -13,7 +13,7 @@ export const useAuthOperations = (
   user: User | null
 ) => {
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<{ error: any | null }> => {
     try {
       setError(null);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -37,7 +37,7 @@ export const useAuthOperations = (
     email: string, 
     password: string, 
     userData: { first_name: string; last_name: string; role: 'founder' | 'provider' }
-  ) => {
+  ): Promise<{ error: any | null }> => {
     try {
       setError(null);
       
@@ -68,7 +68,7 @@ export const useAuthOperations = (
   };
 
   // Logout function
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       console.log('Logout initiated');
       setError(null);
@@ -112,7 +112,7 @@ export const useAuthOperations = (
   };
 
   // Update profile function
-  const updateProfile = async (profileData: Partial<Profile>) => {
+  const updateProfile = async (profileData: Partial<Profile>): Promise<{ error: any | null }> => {
     try {
       setError(null);
       
@@ -144,7 +144,7 @@ export const useAuthOperations = (
   };
 
   // Refresh profile function
-  const refreshProfile = async () => {
+  const refreshProfile = async (): Promise<void> => {
     try {
       if (!user || !user.id) {
         throw new Error('No authenticated user');
@@ -159,7 +159,7 @@ export const useAuthOperations = (
   };
 
   // Retry auth function
-  const retryAuth = () => {
+  const retryAuth = (): void => {
     setError(null);
     
     // Re-trigger auth initialization

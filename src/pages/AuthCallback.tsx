@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,7 +6,6 @@ import Layout from '@/components/layout/Layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { usePostLoginRedirection } from '@/hooks/usePostLoginRedirection';
 import { ensureProfileExists } from '@/utils/auth/auth-operations';
 
 const AuthCallback = () => {
@@ -13,7 +13,19 @@ const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const { redirectAfterLogin } = usePostLoginRedirection();
+
+  // Handle redirection based on user role and profile
+  const redirectAfterLogin = (user: any, profile: any, userRole?: 'founder' | 'provider') => {
+    console.log('Redirecting after login - user role:', userRole, 'profile role:', profile?.role);
+    
+    const role = userRole || profile?.role || 'founder';
+    
+    if (role === 'provider') {
+      navigate('/provider/dashboard', { replace: true });
+    } else {
+      navigate('/founder/dashboard', { replace: true });
+    }
+  };
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -106,7 +118,7 @@ const AuthCallback = () => {
         redirectAfterLogin(user, profile, userRole as 'founder' | 'provider');
       }, 1000);
     }
-  }, [user, profile, loading, error, redirectAfterLogin]);
+  }, [user, profile, loading, error]);
 
   return (
     <Layout>
