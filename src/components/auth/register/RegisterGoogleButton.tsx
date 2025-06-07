@@ -3,15 +3,13 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 
 interface RegisterGoogleButtonProps {
-  userType: 'founder' | 'provider';
-  loading: boolean;
+  oauthLoading: boolean;
   networkAvailable: boolean;
   onGoogleSignIn: () => void;
 }
 
 const RegisterGoogleButton = ({ 
-  userType, 
-  loading, 
+  oauthLoading, 
   networkAvailable, 
   onGoogleSignIn 
 }: RegisterGoogleButtonProps) => {
@@ -21,7 +19,7 @@ const RegisterGoogleButton = ({
       variant="outline" 
       className="w-full flex items-center justify-center gap-2"
       onClick={onGoogleSignIn}
-      disabled={loading || !networkAvailable}
+      disabled={oauthLoading || !networkAvailable}
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24">
         <path
@@ -42,7 +40,7 @@ const RegisterGoogleButton = ({
         />
         <path d="M1 1h22v22H1z" fill="none" />
       </svg>
-      {loading ? 'Connecting...' : 'Sign up with Google'}
+      {oauthLoading ? 'Connecting...' : 'Sign in with Google'}
     </Button>
   );
 };
