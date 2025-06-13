@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { completeOnboarding } from '@/utils/auth/profile-operations';
 import BusinessInfoStep from './steps/BusinessInfoStep';
 import MarketingInfoStep from './steps/MarketingInfoStep';
 import ExpertiseStep from './steps/ExpertiseStep';
@@ -36,7 +37,7 @@ interface OnboardingData {
 }
 
 const UnifiedOnboardingFlow = ({ role }: UnifiedOnboardingFlowProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -47,19 +48,27 @@ const UnifiedOnboardingFlow = ({ role }: UnifiedOnboardingFlowProps) => {
   const pageTitle = isFounder ? 'Complete Your Founder Profile' : 'Submit Your Provider Application';
 
   useEffect(() => {
+    console.log('UnifiedOnboardingFlow: Checking user access', { user: !!user, profile, role });
+    
     if (!user || !profile) {
+      console.log('UnifiedOnboardingFlow: No user or profile, redirecting to login');
       navigate('/login');
       return;
     }
 
     if (profile.role !== role) {
       toast.error(`Access denied. This page is for ${role}s only.`);
+      console.log('UnifiedOnboardingFlow: Role mismatch, redirecting to home');
       navigate('/');
       return;
     }
 
-    if (profile.account_status === 'active') {
+    // Check if onboarding is already complete
+    if ((profile.account_status === 'active' && isFounder) || 
+        (profile.account_status === 'pending_application' && !isFounder) ||
+        (profile.account_status === 'active' && !isFounder)) {
       toast.info(`You have already completed ${isFounder ? 'onboarding' : 'your application'}.`);
+      console.log('UnifiedOnboardingFlow: Onboarding already complete, redirecting to dashboard');
       navigate(`/${role}/dashboard`);
       return;
     }
@@ -85,8 +94,12 @@ const UnifiedOnboardingFlow = ({ role }: UnifiedOnboardingFlowProps) => {
     if (!user) return;
 
     setLoading(true);
+    console.log('UnifiedOnboardingFlow: Starting onboarding submission', { role, formData });
+    
     try {
       if (isFounder) {
+        console.log('UnifiedOnboardingFlow: Creating founder profile');
+        
         // Create founder profile
         const { error: founderProfileError } = await supabase
           .from('founder_profiles')
@@ -108,15 +121,17 @@ const UnifiedOnboardingFlow = ({ role }: UnifiedOnboardingFlowProps) => {
           .update({
             industry: formData.industry,
             profile_picture_url: formData.profilePictureUrl,
-            account_status: 'active',
-            onboarding_complete: true
           })
           .eq('id', user.id);
 
         if (profileError) throw profileError;
 
-        toast.success('Onboarding completed successfully!');
+        // Complete onboarding with proper status transition
+        await completeOnboarding(user.id, 'founder');
+        
       } else {
+        console.log('UnifiedOnboardingFlow: Creating provider profile');
+        
         // Create provider profile
         const { error: providerProfileError } = await supabase
           .from('provider_profiles')
@@ -149,18 +164,30 @@ const UnifiedOnboardingFlow = ({ role }: UnifiedOnboardingFlowProps) => {
           .from('profiles')
           .update({
             profile_picture_url: formData.profilePictureUrl,
-            account_status: 'pending_application'
           })
           .eq('id', user.id);
 
         if (profileError) throw profileError;
 
-        toast.success('Application submitted successfully!');
+        // Complete onboarding with proper status transition
+        await completeOnboarding(user.id, 'provider');
       }
 
-      navigate(`/${role}/dashboard`);
+      console.log('UnifiedOnboardingFlow: Onboarding completed successfully');
+      
+      // Force refresh of profile to get updated status
+      await refreshProfile();
+      
+      // Small delay to ensure profile refresh completes
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      toast.success(`${isFounder ? 'Onboarding' : 'Application'} completed successfully!`);
+      
+      // Force page reload to ensure auth context is fully refreshed
+      window.location.href = `/${role}/dashboard`;
+      
     } catch (error) {
-      console.error(`Error completing ${isFounder ? 'onboarding' : 'application'}:`, error);
+      console.error(`UnifiedOnboardingFlow: Error completing ${isFounder ? 'onboarding' : 'application'}:`, error);
       toast.error(`Failed to complete ${isFounder ? 'onboarding' : 'application'}. Please try again.`);
     } finally {
       setLoading(false);

@@ -16,17 +16,22 @@ export const useAuthOperations = (
   const login = async (email: string, password: string): Promise<{ error: any | null }> => {
     try {
       setError(null);
+      console.log('Auth operations: Attempting login for', email);
+      
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        console.error('Auth operations: Login error', error);
         setError(error.message);
         return { error };
       }
       
+      console.log('Auth operations: Login successful');
       toast.success('Logged in successfully!');
       return { error: null };
     } catch (err: any) {
       const errorMessage = err.message || 'Login failed';
+      console.error('Auth operations: Login exception', err);
       setError(errorMessage);
       return { error: { message: errorMessage } };
     }
@@ -40,6 +45,7 @@ export const useAuthOperations = (
   ): Promise<{ error: any | null }> => {
     try {
       setError(null);
+      console.log('Auth operations: Attempting registration for', email, 'with role', userData.role);
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -54,14 +60,17 @@ export const useAuthOperations = (
       });
       
       if (error) {
+        console.error('Auth operations: Registration error', error);
         setError(error.message);
         return { error };
       }
       
+      console.log('Auth operations: Registration successful');
       toast.success('Account created successfully!');
       return { error: null };
     } catch (err: any) {
       const errorMessage = err.message || 'Registration failed';
+      console.error('Auth operations: Registration exception', err);
       setError(errorMessage);
       return { error: { message: errorMessage } };
     }
@@ -70,14 +79,14 @@ export const useAuthOperations = (
   // Logout function
   const logout = async (): Promise<void> => {
     try {
-      console.log('Logout initiated');
+      console.log('Auth operations: Logout initiated');
       setError(null);
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('Supabase logout error:', error);
+        console.error('Auth operations: Supabase logout error:', error);
         throw error;
       }
       
@@ -87,7 +96,7 @@ export const useAuthOperations = (
       setProfile(null);
       setError(null);
       
-      console.log('Logout completed successfully');
+      console.log('Auth operations: Logout completed successfully');
       toast.success('Logged out successfully');
       
       // Force reload to ensure clean state
@@ -96,7 +105,7 @@ export const useAuthOperations = (
       }, 100);
       
     } catch (err: any) {
-      console.error('Logout error:', err);
+      console.error('Auth operations: Logout error:', err);
       setError('Logout failed');
       
       // Even if there's an error, clear local state
@@ -115,6 +124,7 @@ export const useAuthOperations = (
   const updateProfile = async (profileData: Partial<Profile>): Promise<{ error: any | null }> => {
     try {
       setError(null);
+      console.log('Auth operations: Updating profile', profileData);
       
       if (!user || !user.id) {
         throw new Error('No authenticated user');
@@ -133,45 +143,59 @@ export const useAuthOperations = (
       
       // Update local profile state
       setProfile(data);
+      console.log('Auth operations: Profile updated successfully', data);
       toast.success('Profile updated successfully');
       
       return { error: null };
     } catch (err: any) {
       const errorMessage = err.message || 'Profile update failed';
+      console.error('Auth operations: Profile update error', err);
       setError(errorMessage);
       return { error: { message: errorMessage } };
     }
   };
 
-  // Refresh profile function
+  // Refresh profile function with enhanced error handling
   const refreshProfile = async (): Promise<void> => {
     try {
+      console.log('Auth operations: Refreshing profile');
+      
       if (!user || !user.id) {
-        throw new Error('No authenticated user');
+        console.log('Auth operations: No user available for profile refresh');
+        return;
       }
       
       const userProfile = await fetchProfile(user.id);
       setProfile(userProfile);
+      
+      if (userProfile) {
+        console.log('Auth operations: Profile refreshed successfully', userProfile);
+      } else {
+        console.log('Auth operations: Profile refresh returned null');
+      }
     } catch (err: any) {
-      console.error('Profile refresh error:', err);
+      console.error('Auth operations: Profile refresh error:', err);
       setError('Failed to refresh profile');
     }
   };
 
   // Retry auth function
   const retryAuth = (): void => {
+    console.log('Auth operations: Retrying authentication');
     setError(null);
     
     // Re-trigger auth initialization
     supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
       if (error) {
-        console.error('Retry auth error:', error);
+        console.error('Auth operations: Retry auth error:', error);
         setError(error.message);
       } else if (currentSession) {
+        console.log('Auth operations: Session recovered during retry');
         setSession(currentSession);
         setUser(currentSession.user);
         fetchProfile(currentSession.user.id).then(userProfile => {
           setProfile(userProfile);
+          console.log('Auth operations: Profile recovered during retry', userProfile);
         });
       }
     });

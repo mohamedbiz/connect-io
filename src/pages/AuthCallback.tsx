@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,21 +12,24 @@ const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
         setLoading(true);
+        console.log('Auth callback: Starting authentication process');
         
         // Handle session from URL hash/query parameters
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
+          console.error('Auth callback session error:', error);
           throw error;
         }
         
         if (data.session) {
+          console.log('Auth callback: Session found, processing user');
           toast.success('Email verified successfully! Welcome to the platform.');
           
           // Get role from URL parameter
@@ -41,7 +45,7 @@ const AuthCallback = () => {
           if (role && data.session.user) {
             // If we have a role from URL, update user metadata if needed
             if (roleFromUrl && !data.session.user?.user_metadata?.role) {
-              console.log('Updating user metadata with role from URL:', roleFromUrl);
+              console.log('Auth callback: Updating user metadata with role from URL:', roleFromUrl);
               await supabase.auth.updateUser({
                 data: { role: roleFromUrl }
               });
@@ -49,16 +53,28 @@ const AuthCallback = () => {
             
             // Ensure profile exists with correct role
             try {
-              await ensureProfileExists(data.session.user);
+              console.log('Auth callback: Ensuring profile exists for user:', data.session.user.id);
+              const profileResult = await ensureProfileExists(data.session.user);
+              
+              if (profileResult) {
+                console.log('Auth callback: Profile created/updated successfully', profileResult);
+                // Force refresh of auth context to get latest profile
+                await refreshProfile();
+                
+                // Small delay to ensure profile is fully synchronized
+                await new Promise(resolve => setTimeout(resolve, 500));
+              } else {
+                console.warn('Auth callback: Profile creation/update failed');
+              }
             } catch (profileError) {
-              console.error('Profile creation error in auth callback:', profileError);
+              console.error('Auth callback: Profile creation error:', profileError);
+              toast.error('Profile setup encountered an issue. Please try refreshing the page.');
             }
           }
           
-          // Let ProtectedRoute handle redirection based on user status
-          console.log('Auth callback successful, letting ProtectedRoute handle redirection');
+          console.log('Auth callback: Authentication successful, profile sync initiated');
         } else {
-          // No session found, redirect to sign in
+          console.log('Auth callback: No session found, redirecting to auth');
           navigate('/auth', { replace: true });
         }
       } catch (err: any) {
@@ -75,19 +91,40 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, refreshProfile]);
 
   // Handle automatic redirection when user and profile become available
   useEffect(() => {
     if (user && profile && !loading && !error) {
-      console.log('Auth callback: User and profile available, redirecting based on role and status');
+      console.log('Auth callback: User and profile available, determining redirection');
+      console.log('Auth callback: Profile role:', profile.role, 'Status:', profile.account_status);
       
-      // Navigate to appropriate dashboard and let ProtectedRoute handle status-based redirection
+      // Navigate based on role and status with explicit logging
       if (profile.role === 'provider') {
-        navigate('/provider/dashboard', { replace: true });
+        console.log('Auth callback: Provider detected, checking status for redirection');
+        
+        if (profile.account_status === 'pending_profile') {
+          console.log('Auth callback: Provider needs to complete onboarding');
+          navigate('/provider/onboarding', { replace: true });
+        } else {
+          console.log('Auth callback: Provider redirecting to dashboard');
+          navigate('/provider/dashboard', { replace: true });
+        }
       } else if (profile.role === 'founder') {
-        navigate('/founder/dashboard', { replace: true });
+        console.log('Auth callback: Founder detected, checking status for redirection');
+        
+        if (profile.account_status === 'pending_profile') {
+          console.log('Auth callback: Founder needs to complete onboarding');
+          navigate('/founder/onboarding', { replace: true });
+        } else {
+          console.log('Auth callback: Founder redirecting to dashboard');
+          navigate('/founder/dashboard', { replace: true });
+        }
+      } else if (profile.role === 'admin') {
+        console.log('Auth callback: Admin redirecting to dashboard');
+        navigate('/admin/dashboard', { replace: true });
       } else {
+        console.log('Auth callback: Unknown role, redirecting to home');
         navigate('/', { replace: true });
       }
     }
@@ -104,7 +141,7 @@ const AuthCallback = () => {
         ) : (
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">
-              {loading ? 'Verifying Email...' : 'Email Verified!'}
+              {loading ? 'Verifying Email & Setting Up Profile...' : 'Email Verified!'}
             </h1>
             <div className="flex justify-center">
               {loading && (

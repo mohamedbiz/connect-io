@@ -45,8 +45,10 @@ export const createProfile = async (
   role: 'founder' | 'provider' = 'founder'
 ): Promise<Profile | null> => {
   try {
+    logAuth(`Creating profile for user: ${userId} with role: ${role}`);
+    
     // Set initial account_status based on role
-    const accountStatus = role === 'provider' ? 'pending_application' : 'pending_profile';
+    const accountStatus = 'pending_profile'; // All users start with pending_profile
     
     const { data, error } = await supabase
       .from('profiles')
@@ -68,7 +70,7 @@ export const createProfile = async (
       return null;
     }
     
-    logAuth(`Profile created with role: ${role}, status: ${accountStatus}`, data);
+    logAuth(`Profile created successfully with role: ${role}, status: ${accountStatus}`, data);
     return data as Profile;
   } catch (error) {
     logAuth('Error creating profile:', error, false, true);
@@ -79,6 +81,8 @@ export const createProfile = async (
 // Update profile
 export const updateProfile = async (userId: string, updates: Partial<Profile>): Promise<Profile | null> => {
   try {
+    logAuth(`Updating profile for user: ${userId}`, updates);
+    
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -91,6 +95,7 @@ export const updateProfile = async (userId: string, updates: Partial<Profile>): 
       return null;
     }
     
+    logAuth('Profile updated successfully', data);
     return data as Profile;
   } catch (error) {
     logAuth('Error updating profile:', error, false, true);
@@ -100,9 +105,14 @@ export const updateProfile = async (userId: string, updates: Partial<Profile>): 
 
 // Ensure a profile exists or create one if it doesn't
 export const ensureProfileExists = async (user: User | null): Promise<Profile | null> => {
-  if (!user) return null;
+  if (!user) {
+    logAuth('No user provided to ensureProfileExists', null, true);
+    return null;
+  }
   
   try {
+    logAuth(`Ensuring profile exists for user: ${user.id}`);
+    
     const isOnline = await checkNetworkConnection();
     if (!isOnline) {
       logAuth('Network connectivity issue detected when ensuring profile exists', null, true);
@@ -138,16 +148,51 @@ export const ensureProfileExists = async (user: User | null): Promise<Profile | 
       );
       
       if (userProfile) {
+        logAuth('Profile created successfully', userProfile);
         toast.success('Profile created successfully');
       } else {
+        logAuth('Profile creation failed', null, true);
         toast.error('Could not create user profile');
       }
+    } else {
+      logAuth('Existing profile found', userProfile);
     }
     
     return userProfile;
   } catch (error) {
     logAuth('Error ensuring profile exists:', error, false, true);
     toast.error('Profile error');
+    return null;
+  }
+};
+
+// Complete onboarding and update status
+export const completeOnboarding = async (userId: string, role: 'founder' | 'provider'): Promise<Profile | null> => {
+  try {
+    logAuth(`Completing onboarding for user: ${userId} with role: ${role}`);
+    
+    // Determine the next status based on role
+    const nextStatus = role === 'provider' ? 'pending_application' : 'active';
+    
+    const updates: Partial<Profile> = {
+      onboarding_complete: true,
+      account_status: nextStatus
+    };
+    
+    const updatedProfile = await updateProfile(userId, updates);
+    
+    if (updatedProfile) {
+      logAuth(`Onboarding completed successfully. Status updated to: ${nextStatus}`, updatedProfile);
+      toast.success('Onboarding completed successfully!');
+    } else {
+      logAuth('Failed to complete onboarding', null, true);
+      toast.error('Failed to complete onboarding');
+    }
+    
+    return updatedProfile;
+  } catch (error) {
+    logAuth('Error completing onboarding:', error, false, true);
+    toast.error('Error completing onboarding');
     return null;
   }
 };
