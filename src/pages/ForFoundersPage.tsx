@@ -1,13 +1,13 @@
 
 import Layout from "@/components/layout/Layout";
-import { ArrowRight, CheckCircle, Clock, ShieldCheck, Target, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle, Clock, ShieldCheck, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const ForFoundersPage = () => {
   const benefits = [
     {
-      icon: <TrendingUp className="h-8 w-8 text-[#2D82B7]" />,
+      icon: <Target className="h-8 w-8 text-[#2D82B7]" />,
       title: "Predictable Performance",
       description: "Hire experts focused on delivering measurable ROI, not just completing tasks."
     },
@@ -20,47 +20,25 @@ const ForFoundersPage = () => {
       icon: <Clock className="h-8 w-8 text-[#2D82B7]" />,
       title: "Reclaim Your Time",
       description: "Drastically cut hiring time and focus on strategic growth, not endless interviews."
-    },
-    {
-      icon: <Target className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Access Elite Strategists",
-      description: "Connect with top-tier talent dedicated to eCommerce email success."
-    },
-    {
-      icon: <Zap className="h-8 w-8 text-[#2D82B7]" />,
-      title: "Achieve Scalable Growth",
-      description: "Implement strategies designed to consistently increase sales, LTV, and profitability."
     }
   ];
 
   const howItWorksSteps = [
     {
       number: 1,
-      title: "Define Your Growth Goals (Free)",
+      title: "Define Your Growth Goals",
       description: "Tell us what success looks like for your brand."
     },
     {
       number: 2,
-      title: "Browse Matched Experts",
-      description: "Review profiles of vetted specialists aligned with your needs."
+      title: "Browse & Connect with Experts",
+      description: "Review vetted specialists and initiate direct conversations."
     },
     {
       number: 3,
-      title: "Connect & Strategize",
-      description: "Initiate direct conversations and outline your path to results."
-    },
-    {
-      number: 4,
       title: "Execute & Scale",
       description: "Collaborate with your expert partner and achieve predictable email revenue."
     }
-  ];
-
-  const qualityPoints = [
-    "Driving Revenue: Deep understanding of DTC funnels and conversion strategies.",
-    "Mastering Technology: Proven expertise in platforms like Klaviyo.",
-    "Delivering ROI: Track record of measurable results for brands like yours.",
-    "Clear Communication: Professional, reliable collaboration."
   ];
 
   return (
@@ -91,55 +69,43 @@ const ForFoundersPage = () => {
         </div>
       </div>
 
-      {/* Pain Point Section */}
+      {/* Problem → Solution Section */}
       <section className="py-16 md:py-24 bg-[#F5F9FF]">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#0A2342]">
-              Chasing Growth Shouldn't Feel Like Burning Cash
+              Stop Burning Cash on Email Marketing That Doesn't Deliver
             </h2>
-            <div className="bg-white rounded-lg p-8 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors">
+            <div className="bg-white rounded-lg p-8 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors mb-8">
               <p className="text-lg text-[#0E3366] leading-relaxed mb-6">
                 You know email should be a major revenue driver, but finding the right talent feels impossible. 
-                Are you tired of pouring money into campaigns that flop? Frustrated by generic freelancers 
+                Tired of pouring money into campaigns that flop? Frustrated by generic freelancers 
                 who don't understand DTC? Wasting precious hours vetting candidates instead of scaling your brand?
               </p>
-              <p className="text-xl font-semibold text-[#2D82B7]">
+              <p className="text-xl font-semibold text-[#2D82B7] mb-6">
                 That struggle ends here.
+              </p>
+              <p className="text-lg text-[#0E3366] leading-relaxed">
+                Connect is the curated network built for Founders like you who demand results. We meticulously 
+                vet every provider for deep eCommerce email expertise (especially Klaviyo), strategic thinking, 
+                and a verifiable history of driving significant growth.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-8 text-[#0A2342]">
-              Connect: Your Bridge to Vetted Experts & Measurable Results
-            </h2>
-            <p className="text-lg text-[#0E3366] mb-8 leading-relaxed">
-              Connect isn't another crowded freelance platform. We are a curated network built for Founders 
-              like you who demand results. We meticulously vet every provider for deep eCommerce email expertise 
-              (especially Klaviyo), strategic thinking, and a verifiable history of driving significant growth. 
-              We filter out the noise, so you only connect with specialists capable of transforming your email channel.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* Benefits Section */}
-      <section className="py-16 md:py-24 bg-[#F5F9FF]">
+      <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
               Gain Control, Confidence, and Freedom
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {benefits.map((benefit, index) => (
-              <div key={index} className="bg-white rounded-lg p-6 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors">
+              <div key={index} className="bg-[#F5F9FF] rounded-lg p-6 border border-[#BFD7ED] hover:border-[#2D82B7] transition-colors">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="flex-shrink-0">
                     {benefit.icon}
@@ -154,7 +120,7 @@ const ForFoundersPage = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16 md:py-24 bg-white">
+      <section className="py-16 md:py-24 bg-[#F5F9FF]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
@@ -179,30 +145,6 @@ const ForFoundersPage = () => {
         </div>
       </section>
 
-      {/* Provider Quality Section */}
-      <section className="py-16 md:py-24 bg-[#F5F9FF]">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#0A2342]">
-                Partners Invested in Your Success
-              </h2>
-              <p className="text-lg text-[#0E3366] mb-8">
-                Connect providers are verified strategic partners focused on:
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-6">
-              {qualityPoints.map((point, index) => (
-                <div key={index} className="flex items-start gap-3 bg-white rounded-lg p-6 border border-[#BFD7ED]">
-                  <CheckCircle className="h-6 w-6 text-[#2D82B7] flex-shrink-0 mt-1" />
-                  <p className="text-[#0E3366]">{point}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Call to Action Section */}
       <section className="py-16 md:py-20 bg-[#0A2342]">
         <div className="container mx-auto px-4">
@@ -212,7 +154,7 @@ const ForFoundersPage = () => {
             </h2>
             <p className="text-xl max-w-3xl mx-auto mb-8 text-[#BFD7ED]">
               Stop searching, start scaling. Sign up free today and connect with the vetted email marketing 
-              expert who will help you achieve predictable growth and reclaim your time.
+              expert who will help you achieve predictable growth.
             </p>
             <Button 
               size="lg" 
