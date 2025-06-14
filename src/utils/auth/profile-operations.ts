@@ -48,7 +48,7 @@ export const createProfile = async (
     logAuth(`Creating profile for user: ${userId} with role: ${role}`);
     
     // Set initial account_status based on role
-    const accountStatus = 'pending_profile'; // All users start with pending_profile
+    const accountStatus = 'pending_profile';
     
     const { data, error } = await supabase
       .from('profiles')
@@ -60,7 +60,7 @@ export const createProfile = async (
         role,
         account_status: accountStatus,
         onboarding_complete: false,
-        approved: role === 'founder' ? true : false // Founders auto-approved, providers need manual approval
+        approved: role === 'founder' ? true : false
       })
       .select()
       .single();
@@ -172,7 +172,7 @@ export const completeOnboarding = async (userId: string, role: 'founder' | 'prov
     logAuth(`Completing onboarding for user: ${userId} with role: ${role}`);
     
     // Determine the next status based on role
-    const nextStatus = role === 'provider' ? 'pending_application' : 'active';
+    const nextStatus = role === 'provider' ? 'active' : 'active';
     
     const updates: Partial<Profile> = {
       onboarding_complete: true,

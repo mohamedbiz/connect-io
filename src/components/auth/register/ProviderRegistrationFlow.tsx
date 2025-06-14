@@ -65,9 +65,9 @@ const ProviderRegistrationFlow = () => {
 
       if (!error) {
         console.log('Provider registration successful');
-        toast.success('Registration successful! Redirecting to application...');
+        toast.success('Registration successful! Please complete your application.');
         
-        // Small delay to show success message, then redirect
+        // Redirect to provider application page after successful registration
         setTimeout(() => {
           navigate('/provider-application', { replace: true });
         }, 1500);

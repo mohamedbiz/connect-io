@@ -104,6 +104,9 @@ const AuthCallback = () => {
         console.log('Auth callback: Provider detected, checking status for redirection');
         
         if (profile.account_status === 'pending_profile') {
+          console.log('Auth callback: Provider needs to complete application');
+          navigate('/provider-application', { replace: true });
+        } else if (profile.account_status === 'pending_application') {
           console.log('Auth callback: Provider needs to complete onboarding');
           navigate('/provider/onboarding', { replace: true });
         } else {

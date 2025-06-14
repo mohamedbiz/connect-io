@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, ArrowRight, User, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { updateProfile } from '@/utils/auth/profile-operations';
 import { NewApplicationProvider } from './NewApplicationContext';
 import { NewApplicationProgress } from './NewApplicationProgress';
 import { NewApplicationStep } from './NewApplicationStep';
 import { NewApplicationNavigation } from './NewApplicationNavigation';
 
 const NewProviderApplicationFlow = () => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [applicationStatus, setApplicationStatus] = useState<'draft' | 'submitted' | 'approved' | 'rejected'>('draft');
@@ -23,7 +24,7 @@ const NewProviderApplicationFlow = () => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setComponentLoading(false);
-    }, 5000); // 5 second timeout
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, []);
@@ -76,6 +77,8 @@ const NewProviderApplicationFlow = () => {
     }
 
     try {
+      console.log('Submitting provider application:', formData);
+
       // Submit the application to Supabase
       const { error } = await supabase
         .from('provider_applications')
@@ -88,31 +91,29 @@ const NewProviderApplicationFlow = () => {
 
       if (error) throw error;
 
-      // Update user profile to mark as provider
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          role: 'provider',
-          business_name: formData.full_name + ' Email Marketing',
-          portfolio_url: formData.portfolio_url,
-          first_name: formData.full_name.split(' ')[0],
-          last_name: formData.full_name.split(' ').slice(1).join(' ')
-        })
-        .eq('id', user.id);
+      // Update profile status to pending_application
+      const updatedProfile = await updateProfile(user.id, {
+        account_status: 'pending_application',
+        business_name: formData.businessName || formData.full_name + ' Services',
+        portfolio_url: formData.portfolio_url
+      });
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
+      if (updatedProfile) {
+        console.log('Profile updated successfully after application submission');
+        await refreshProfile();
+        
+        setIsSubmitted(true);
+        setApplicationStatus('submitted');
+        
+        toast.success('Application submitted successfully! We\'ll review it and get back to you soon.');
+        
+        // Redirect to onboarding after a delay
+        setTimeout(() => {
+          navigate('/provider/onboarding', { replace: true });
+        }, 3000);
+      } else {
+        throw new Error('Failed to update profile status');
       }
-
-      setIsSubmitted(true);
-      setApplicationStatus('submitted');
-      
-      toast.success('Application submitted successfully! We\'ll review it and get back to you soon.');
-      
-      // Redirect to provider dashboard after a delay
-      setTimeout(() => {
-        navigate('/provider-dashboard', { replace: true });
-      }, 3000);
 
     } catch (error) {
       console.error('Application submission error:', error);
@@ -178,7 +179,7 @@ const NewProviderApplicationFlow = () => {
                 Congratulations! Your provider application has been approved.
               </p>
               <Button 
-                onClick={() => navigate('/provider-dashboard')}
+                onClick={() => navigate('/provider/dashboard')}
                 className="bg-[#2D82B7] hover:bg-[#3D9AD1]"
               >
                 Go to Dashboard <ArrowRight className="h-4 w-4 ml-2" />
@@ -196,9 +197,9 @@ const NewProviderApplicationFlow = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
                 <Button 
                   variant="outline"
-                  onClick={() => navigate('/provider-dashboard')}
+                  onClick={() => navigate('/provider/onboarding')}
                 >
-                  View Dashboard
+                  Continue Setup
                 </Button>
                 <Button onClick={() => navigate('/')}>
                   Return Home

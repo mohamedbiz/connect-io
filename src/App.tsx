@@ -11,6 +11,8 @@ import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
 import FounderOnboardingPage from "./pages/founder/FounderOnboardingPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
 import ProviderOnboardingPage from "./pages/provider/ProviderOnboardingPage";
+import ProviderSignupPage from "./pages/provider/ProviderSignupPage";
+import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ProtectedRoute, { PublicOnlyRoute } from "./components/auth/ProtectedRoute";
@@ -31,6 +33,20 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/auth-callback" element={<AuthCallback />} />
+          
+          {/* Provider public routes */}
+          <Route path="/provider-signup" element={
+            <PublicOnlyRoute>
+              <ProviderSignupPage />
+            </PublicOnlyRoute>
+          } />
+          
+          {/* Provider application route - requires authentication */}
+          <Route path="/provider-application" element={
+            <ProtectedRoute allowedRoles={['provider']}>
+              <ProviderApplicationPage />
+            </ProtectedRoute>
+          } />
           
           {/* Founder routes */}
           <Route path="/founder/onboarding" element={
