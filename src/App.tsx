@@ -15,6 +15,8 @@ import ProviderSignupPage from "./pages/provider/ProviderSignupPage";
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
+import ForFoundersPage from "./pages/ForFoundersPage";
+import ForProvidersPage from "./pages/ForProvidersPage";
 import ProtectedRoute, { PublicOnlyRoute } from "./components/auth/ProtectedRoute";
 
 // Create a client
@@ -27,6 +29,8 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/for-founders" element={<ForFoundersPage />} />
+          <Route path="/for-providers" element={<ForProvidersPage />} />
           <Route path="/auth" element={
             <PublicOnlyRoute>
               <AuthPage />
