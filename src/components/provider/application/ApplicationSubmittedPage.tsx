@@ -1,12 +1,39 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Mail, FileText } from 'lucide-react';
+import { CheckCircle2, Clock, Mail, FileText, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useProviderApplications } from '@/hooks/useProviderApplications';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ApplicationSubmittedPage = () => {
   const navigate = useNavigate();
+  const { myApplication, isLoadingMyApplication } = useProviderApplications();
+  const { profile } = useAuth();
+
+  // Auto-refresh application status every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (myApplication?.status === 'approved') {
+        navigate('/provider/onboarding');
+      } else if (myApplication?.status === 'rejected') {
+        navigate('/provider-application-rejected');
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [myApplication?.status, navigate]);
+
+  if (isLoadingMyApplication) {
+    return (
+      <div className="container mx-auto py-10 px-4 max-w-4xl">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-4xl">
@@ -23,6 +50,18 @@ const ApplicationSubmittedPage = () => {
           <p className="text-blue-100 mt-2">
             Thank you for applying to join Connect's network of elite email marketing specialists
           </p>
+          {myApplication && (
+            <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-3">
+              <p className="text-sm">
+                Application Status: <span className="font-semibold capitalize">{myApplication.status}</span>
+              </p>
+              {myApplication.automated_score && (
+                <p className="text-sm">
+                  Initial Score: <span className="font-semibold">{myApplication.automated_score}/100</span>
+                </p>
+              )}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-8">
@@ -38,9 +77,9 @@ const ApplicationSubmittedPage = () => {
                     <span className="text-green-600 font-semibold text-sm">1</span>
                   </div>
                   <div>
-                    <h3 className="font-medium text-green-800">Application Review</h3>
+                    <h3 className="font-medium text-green-800">Automated Review</h3>
                     <p className="text-green-700 text-sm">
-                      Our team will carefully review your application and professional profiles within 2-3 business days.
+                      Our system automatically evaluates your application for initial scoring and qualification.
                     </p>
                   </div>
                 </div>
@@ -50,9 +89,9 @@ const ApplicationSubmittedPage = () => {
                     <span className="text-green-600 font-semibold text-sm">2</span>
                   </div>
                   <div>
-                    <h3 className="font-medium text-green-800">Profile Verification</h3>
+                    <h3 className="font-medium text-green-800">Manual Review</h3>
                     <p className="text-green-700 text-sm">
-                      We'll verify your LinkedIn profile and portfolio website to ensure authenticity and quality.
+                      Our team reviews your LinkedIn profile, portfolio, and case study within 2-3 business days.
                     </p>
                   </div>
                 </div>
@@ -80,15 +119,15 @@ const ApplicationSubmittedPage = () => {
                 <ul className="space-y-2 text-blue-700">
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-sm">Review: 2-3 business days</span>
+                    <span className="text-sm">Automated review: Immediate</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-sm">Decision: Within 1 week</span>
+                    <span className="text-sm">Manual review: 2-3 business days</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    <span className="text-sm">Profile setup: If approved</span>
+                    <span className="text-sm">Final decision: Within 1 week</span>
                   </li>
                 </ul>
               </div>
@@ -144,12 +183,14 @@ const ApplicationSubmittedPage = () => {
               >
                 Return to Home
               </Button>
-              <Button 
-                onClick={() => navigate('/provider/dashboard')}
-                className="bg-[#2D82B7] hover:bg-[#1E5A8A] text-white"
-              >
-                Go to Dashboard
-              </Button>
+              {myApplication?.status === 'approved' && (
+                <Button 
+                  onClick={() => navigate('/provider/onboarding')}
+                  className="bg-[#2D82B7] hover:bg-[#1E5A8A] text-white"
+                >
+                  Continue to Onboarding
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>

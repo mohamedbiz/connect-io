@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProviderApplications } from '@/hooks/useProviderApplications';
 import { toast } from 'sonner';
 
@@ -110,6 +111,7 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
   const [formData, setFormData] = useState<NewProviderApplicationData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
   const { submitApplication: submitToAPI, isSubmitting } = useProviderApplications();
+  const navigate = useNavigate();
   
   const totalSteps = 5;
 
@@ -199,10 +201,13 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
     try {
       await submitToAPI(formData);
       toast.success('Application submitted successfully!');
+      // Navigate to submission confirmation page
+      navigate('/provider-application-submitted');
     } catch (error) {
+      console.error('Failed to submit application:', error);
       toast.error('Failed to submit application. Please try again.');
     }
-  }, [formData, validateStep, submitToAPI, totalSteps]);
+  }, [formData, validateStep, submitToAPI, totalSteps, navigate]);
 
   const value: NewApplicationContextType = {
     formData,

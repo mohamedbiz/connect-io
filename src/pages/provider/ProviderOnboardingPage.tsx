@@ -1,12 +1,12 @@
 
 import React from 'react';
 import Layout from '@/components/layout/Layout';
-import UnifiedOnboardingFlow from '@/components/onboarding/UnifiedOnboardingFlow';
+import ProviderOnboardingFlow from '@/components/provider/onboarding/ProviderOnboardingFlow';
 
 const ProviderOnboardingPage = () => {
   return (
     <Layout>
-      <UnifiedOnboardingFlow role="provider" />
+      <ProviderOnboardingFlow />
     </Layout>
   );
 };

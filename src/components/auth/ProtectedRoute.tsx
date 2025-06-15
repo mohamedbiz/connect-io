@@ -2,6 +2,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProviderApplications } from '@/hooks/useProviderApplications';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -12,10 +13,11 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: ProtectedRouteProps) => {
   const { user, profile, loading, isAuthenticated } = useAuth();
+  const { myApplication, isLoadingMyApplication } = useProviderApplications();
   const location = useLocation();
 
   // Show loading spinner while auth state is being determined
-  if (loading) {
+  if (loading || (profile?.role === 'provider' && isLoadingMyApplication)) {
     console.log('ProtectedRoute: Loading auth state...');
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -43,26 +45,44 @@ const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: Pr
   if (profile?.role === 'provider') {
     const currentPath = location.pathname;
     console.log('ProtectedRoute: Processing provider flow', { 
-      status: profile.account_status, 
+      status: profile.account_status,
+      applicationStatus: myApplication?.status,
       currentPath 
     });
 
     // Provider needs to complete application first
-    if (profile.account_status === 'pending_profile' && !currentPath.includes('/provider-application')) {
+    if (!myApplication && !currentPath.includes('/provider-application')) {
       console.log('ProtectedRoute: Provider needs to complete application');
       return <Navigate to="/provider-application" replace />;
     }
 
-    // Provider application submitted, redirect to onboarding
-    if (profile.account_status === 'pending_application' && !currentPath.includes('/provider/onboarding')) {
-      console.log('ProtectedRoute: Provider application submitted, redirect to onboarding');
-      return <Navigate to="/provider/onboarding" replace />;
-    }
-
-    // Provider is active, can access dashboard
-    if (profile.account_status === 'active' && currentPath.includes('/provider-application')) {
-      console.log('ProtectedRoute: Provider is active, redirect to dashboard');
-      return <Navigate to="/provider/dashboard" replace />;
+    // Provider application submitted - route based on status
+    if (myApplication) {
+      switch (myApplication.status) {
+        case 'submitted':
+        case 'in_review':
+          if (!currentPath.includes('/provider-application-submitted')) {
+            return <Navigate to="/provider-application-submitted" replace />;
+          }
+          break;
+          
+        case 'approved':
+          // If approved but onboarding not complete
+          if (profile.account_status === 'pending_application' && !currentPath.includes('/provider/onboarding')) {
+            return <Navigate to="/provider/onboarding" replace />;
+          }
+          // If onboarding complete, allow dashboard access
+          if (profile.account_status === 'active' && currentPath.includes('/provider-application')) {
+            return <Navigate to="/provider/dashboard" replace />;
+          }
+          break;
+          
+        case 'rejected':
+          if (!currentPath.includes('/provider-application-rejected')) {
+            return <Navigate to="/provider-application-rejected" replace />;
+          }
+          break;
+      }
     }
   }
 
@@ -94,8 +114,9 @@ const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: Pr
 // Public route that redirects authenticated users based on their status
 export const PublicOnlyRoute = ({ children, redirectPath = '/' }: { children: React.ReactNode; redirectPath?: string }) => {
   const { isAuthenticated, loading, profile } = useAuth();
+  const { myApplication, isLoadingMyApplication } = useProviderApplications();
 
-  if (loading) {
+  if (loading || (profile?.role === 'provider' && isLoadingMyApplication)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
@@ -110,16 +131,31 @@ export const PublicOnlyRoute = ({ children, redirectPath = '/' }: { children: Re
   if (isAuthenticated && profile) {
     console.log('PublicOnlyRoute: User authenticated, determining redirect', { 
       role: profile.role, 
-      status: profile.account_status 
+      status: profile.account_status,
+      applicationStatus: myApplication?.status
     });
     
     if (profile.role === 'provider') {
-      if (profile.account_status === 'pending_profile') {
+      // No application yet
+      if (!myApplication) {
         return <Navigate to="/provider-application" replace />;
-      } else if (profile.account_status === 'pending_application') {
-        return <Navigate to="/provider/onboarding" replace />;
-      } else if (profile.account_status === 'active') {
-        return <Navigate to="/provider/dashboard" replace />;
+      }
+      
+      // Route based on application status
+      switch (myApplication.status) {
+        case 'submitted':
+        case 'in_review':
+          return <Navigate to="/provider-application-submitted" replace />;
+        case 'approved':
+          if (profile.account_status === 'pending_application') {
+            return <Navigate to="/provider/onboarding" replace />;
+          } else {
+            return <Navigate to="/provider/dashboard" replace />;
+          }
+        case 'rejected':
+          return <Navigate to="/provider-application-rejected" replace />;
+        default:
+          return <Navigate to="/provider-application" replace />;
       }
     } else if (profile.role === 'founder') {
       if (profile.account_status === 'pending_profile') {
