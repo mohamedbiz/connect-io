@@ -7,6 +7,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/home/HomePage";
 import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
+import FounderSignInPage from "./pages/auth/FounderSignInPage";
+import ProviderSignInPage from "./pages/auth/ProviderSignInPage";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
 import FounderOnboardingPage from "./pages/founder/FounderOnboardingPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
@@ -34,6 +36,20 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/for-founders" element={<ForFoundersPage />} />
           <Route path="/for-providers" element={<ForProvidersPage />} />
+          
+          {/* Dedicated sign-in pages */}
+          <Route path="/founder/signin" element={
+            <PublicOnlyRoute>
+              <FounderSignInPage />
+            </PublicOnlyRoute>
+          } />
+          <Route path="/provider/signin" element={
+            <PublicOnlyRoute>
+              <ProviderSignInPage />
+            </PublicOnlyRoute>
+          } />
+          
+          {/* Legacy auth page for backward compatibility */}
           <Route path="/auth" element={
             <PublicOnlyRoute>
               <AuthPage />

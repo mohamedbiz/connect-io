@@ -14,10 +14,12 @@ const IndexPage = () => {
 
   // Navigation handler for role-specific CTAs
   const handleRoleSelection = (role: 'founder' | 'provider') => {
-    // Store the selected role in session storage for persistence
-    sessionStorage.setItem('selectedRole', role);
-    // Navigate to auth page with role parameter
-    navigate(`/auth?register=true&type=${role}`);
+    // Navigate directly to the dedicated sign-in pages
+    if (role === 'founder') {
+      navigate('/founder/signin');
+    } else {
+      navigate('/provider/signin');
+    }
   };
 
   return (
