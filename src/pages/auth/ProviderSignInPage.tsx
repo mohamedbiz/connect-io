@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,6 @@ const ProviderSignInPage = () => {
   });
   
   const { login, register } = useAuth();
-  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -53,7 +53,7 @@ const ProviderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Account created successfully!');
-          navigate('/provider/onboarding');
+          // Let PublicOnlyRoute handle redirection based on actual status
         }
       } else {
         // Sign in
@@ -63,7 +63,7 @@ const ProviderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Welcome back!');
-          navigate('/provider-application');
+          // Let PublicOnlyRoute handle redirection based on actual status
         }
       }
     } catch (error: any) {
