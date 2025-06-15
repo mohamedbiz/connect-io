@@ -11,39 +11,29 @@ interface ExperienceFocusStepProps {
   updateFormData: (data: Partial<NewProviderApplicationData>) => void;
 }
 
-const EXPERTISE_AREAS = [
-  "Strategy",
-  "Automation Setup", 
-  "Copywriting",
-  "Design",
-  "Deliverability",
-  "List Management",
-  "Analytics & Reporting"
+const PRIMARY_INDUSTRIES = [
+  "Fashion/Apparel",
+  "Beauty/Cosmetics", 
+  "Health/Wellness",
+  "Home/Decor",
+  "Food/Beverage",
+  "Other"
 ];
 
 const EMAIL_PLATFORMS = [
   "Klaviyo",
-  "Omnisend",
   "Mailchimp",
+  "Omnisend",
   "ActiveCampaign",
-  "ConvertKit",
-  "Constant Contact",
   "Other"
 ];
 
-const YEARS_OPTIONS = [
-  { value: "1-2 years", label: "1-2 years" },
-  { value: "3-4 years", label: "3-4 years" },
-  { value: "5-7 years", label: "5-7 years" },
-  { value: "8+ years", label: "8+ years" }
-];
-
 export const ExperienceFocusStep = ({ formData, updateFormData }: ExperienceFocusStepProps) => {
-  const handleExpertiseChange = (area: string, checked: boolean) => {
+  const handleIndustryChange = (industry: string, checked: boolean) => {
     const updated = checked 
-      ? [...formData.expertise_areas, area]
-      : formData.expertise_areas.filter(a => a !== area);
-    updateFormData({ expertise_areas: updated });
+      ? [...(formData.primary_industries || []), industry]
+      : (formData.primary_industries || []).filter(i => i !== industry);
+    updateFormData({ primary_industries: updated });
   };
 
   const handlePlatformChange = (platform: string, checked: boolean) => {
@@ -57,107 +47,27 @@ export const ExperienceFocusStep = ({ formData, updateFormData }: ExperienceFocu
   };
 
   const hasKlaviyoExpertise = formData.email_platforms.includes("Klaviyo");
-  const hasMinimumExpertise = formData.expertise_areas.length >= 2;
-  const hasValidExperience = formData.years_email_marketing && formData.years_ecommerce;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Experience & Focus</h2>
+        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Technical Skills Assessment</h2>
         <p className="text-gray-600 mb-6">
-          Tell us about your email marketing experience and areas of expertise. 
-          We prioritize specialists with deep eCommerce experience and Klaviyo expertise.
+          Tell us about your platform expertise and industry experience.
         </p>
       </div>
 
       <Alert className="border-blue-200 bg-blue-50">
         <InfoIcon className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
-          <strong>Minimum Requirements:</strong> We require at least 1-2 years of email marketing experience, direct eCommerce/DTC experience, and Klaviyo expertise.
+          <strong>Requirements:</strong> We prioritize specialists with Klaviyo expertise and proven eCommerce experience.
         </AlertDescription>
       </Alert>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="years_email_marketing" className="text-sm font-medium">
-              Years of Email Marketing Experience <span className="text-red-500">*</span>
-            </Label>
-            <Select 
-              value={formData.years_email_marketing} 
-              onValueChange={(value) => updateFormData({ years_email_marketing: value })}
-            >
-              <SelectTrigger className={!formData.years_email_marketing ? "border-red-300" : ""}>
-                <SelectValue placeholder="Select years of experience" />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!formData.years_email_marketing && (
-              <p className="text-xs text-red-600">Please select your email marketing experience</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="years_ecommerce" className="text-sm font-medium">
-              Years Working with eCommerce/DTC Brands <span className="text-red-500">*</span>
-            </Label>
-            <Select 
-              value={formData.years_ecommerce} 
-              onValueChange={(value) => updateFormData({ years_ecommerce: value })}
-            >
-              <SelectTrigger className={!formData.years_ecommerce ? "border-red-300" : ""}>
-                <SelectValue placeholder="Select eCommerce experience" />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS_OPTIONS.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!formData.years_ecommerce && (
-              <p className="text-xs text-red-600">Please select your eCommerce experience</p>
-            )}
-          </div>
-        </div>
-
         <div className="space-y-3">
           <Label className="text-sm font-medium">
-            Primary Areas of Email Marketing Expertise <span className="text-red-500">*</span>
-          </Label>
-          <p className="text-xs text-gray-600 mb-3">Select at least 2 areas where you have strong expertise</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {EXPERTISE_AREAS.map(area => (
-              <div key={area} className="flex items-center space-x-2">
-                <Checkbox
-                  id={area}
-                  checked={formData.expertise_areas.includes(area)}
-                  onCheckedChange={(checked) => handleExpertiseChange(area, checked as boolean)}
-                />
-                <Label htmlFor={area} className="text-sm">{area}</Label>
-              </div>
-            ))}
-          </div>
-          
-          {formData.expertise_areas.length > 0 && !hasMinimumExpertise && (
-            <p className="text-xs text-red-600">Please select at least 2 areas of expertise</p>
-          )}
-          {formData.expertise_areas.length === 0 && (
-            <p className="text-xs text-red-600">Please select your areas of expertise</p>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">
-            Key Email Platform Expertise <span className="text-red-500">*</span>
+            Primary ESP Platforms Used <span className="text-red-500">*</span>
           </Label>
           <p className="text-xs text-gray-600 mb-3">Select all platforms where you have hands-on experience</p>
           
@@ -190,19 +100,66 @@ export const ExperienceFocusStep = ({ formData, updateFormData }: ExperienceFocu
             <Alert className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                ⚠ Klaviyo expertise is required for all Connect providers. Please select Klaviyo if you have experience with this platform.
+                ⚠ Klaviyo expertise is required for all Connect providers.
               </AlertDescription>
             </Alert>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="klaviyo_proficiency" className="text-sm font-medium">
+            Proficiency Level with Klaviyo <span className="text-red-500">*</span>
+          </Label>
+          <Select 
+            value={formData.klaviyo_proficiency} 
+            onValueChange={(value) => updateFormData({ klaviyo_proficiency: value })}
+          >
+            <SelectTrigger className={!formData.klaviyo_proficiency ? "border-red-300" : ""}>
+              <SelectValue placeholder="Rate your Klaviyo proficiency (1=Beginner, 5=Expert)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1 - Beginner</SelectItem>
+              <SelectItem value="2">2 - Basic</SelectItem>
+              <SelectItem value="3">3 - Intermediate</SelectItem>
+              <SelectItem value="4">4 - Advanced</SelectItem>
+              <SelectItem value="5">5 - Expert</SelectItem>
+            </SelectContent>
+          </Select>
+          {!formData.klaviyo_proficiency && (
+            <p className="text-xs text-red-600">Please rate your Klaviyo proficiency</p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
+            Primary Industries Served <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-gray-600 mb-3">Select all industries where you have experience</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {PRIMARY_INDUSTRIES.map(industry => (
+              <div key={industry} className="flex items-center space-x-2">
+                <Checkbox
+                  id={industry}
+                  checked={(formData.primary_industries || []).includes(industry)}
+                  onCheckedChange={(checked) => handleIndustryChange(industry, checked as boolean)}
+                />
+                <Label htmlFor={industry} className="text-sm">{industry}</Label>
+              </div>
+            ))}
+          </div>
+          
+          {(!formData.primary_industries || formData.primary_industries.length === 0) && (
+            <p className="text-xs text-red-600">Please select at least one industry</p>
           )}
         </div>
       </div>
 
       <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-900 mb-2">Why These Requirements Matter</h3>
+        <h3 className="font-semibold text-gray-900 mb-2">Why This Matters</h3>
         <ul className="text-sm text-gray-700 space-y-1">
           <li>• <strong>Klaviyo expertise:</strong> Most of our founder clients use Klaviyo as their primary platform</li>
-          <li>• <strong>eCommerce experience:</strong> DTC brands have unique needs different from other industries</li>
-          <li>• <strong>Multiple expertise areas:</strong> Demonstrates depth and ability to handle complex projects</li>
+          <li>• <strong>Industry experience:</strong> Different verticals have unique email marketing needs and best practices</li>
         </ul>
       </div>
 

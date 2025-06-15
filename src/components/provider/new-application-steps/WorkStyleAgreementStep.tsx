@@ -1,9 +1,9 @@
 
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, MessageSquare, Clock, Shield } from "lucide-react";
+import { CheckCircle, InfoIcon } from "lucide-react";
 import { NewProviderApplicationData } from "../application/NewApplicationContext";
 
 interface WorkStyleAgreementStepProps {
@@ -11,164 +11,199 @@ interface WorkStyleAgreementStepProps {
   updateFormData: (data: Partial<NewProviderApplicationData>) => void;
 }
 
+const COMMUNICATION_CHANNELS = [
+  "Email",
+  "Slack", 
+  "Video calls",
+  "Other"
+];
+
+const PROJECT_MANAGEMENT_TOOLS = [
+  "Asana",
+  "Trello",
+  "Monday",
+  "ClickUp",
+  "Other"
+];
+
 export const WorkStyleAgreementStep = ({ formData, updateFormData }: WorkStyleAgreementStepProps) => {
-  const validateWordCount = (text: string, minWords: number) => {
-    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-    return words.length >= minWords;
+  const handleCommunicationChannelChange = (channel: string, checked: boolean) => {
+    const updated = checked 
+      ? [...(formData.communication_channels || []), channel]
+      : (formData.communication_channels || []).filter(c => c !== channel);
+    updateFormData({ communication_channels: updated });
   };
 
-  const communicationWordCount = formData.communication_process.trim().split(/\s+/).filter(w => w.length > 0).length;
-  const availabilityWordCount = formData.availability_capacity.trim().split(/\s+/).filter(w => w.length > 0).length;
-
-  const isReadyToSubmit = formData.terms_agreement && 
-    validateWordCount(formData.communication_process, 15) && 
-    validateWordCount(formData.availability_capacity, 10);
+  const handleProjectToolChange = (tool: string, checked: boolean) => {
+    const updated = checked 
+      ? [...(formData.project_management_tools || []), tool]
+      : (formData.project_management_tools || []).filter(t => t !== tool);
+    updateFormData({ project_management_tools: updated });
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Work Style & Agreement</h2>
+        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Work Style & Collaboration</h2>
         <p className="text-gray-600 mb-6">
-          Help us understand how you work with clients and confirm your agreement to our platform terms. 
-          This helps founders know what to expect when working with you.
+          Help us understand your work preferences and availability for Connect clients.
         </p>
       </div>
 
+      <Alert className="border-blue-200 bg-blue-50">
+        <InfoIcon className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-800">
+          <strong>Professional Collaboration:</strong> Connect clients expect responsive, professional communication and reliable project delivery.
+        </AlertDescription>
+      </Alert>
+
       <div className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="communication_process" className="text-sm font-medium flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Communication Process & Frequency <span className="text-red-500">*</span>
+          <Label htmlFor="communication_frequency" className="text-sm font-medium">
+            Preferred Communication Frequency <span className="text-red-500">*</span>
           </Label>
-          <Textarea 
-            id="communication_process" 
-            value={formData.communication_process}
-            onChange={(e) => updateFormData({ communication_process: e.target.value })}
-            placeholder="Describe your typical communication style, frequency, and methods..."
-            rows={4}
-            required
-            className={!validateWordCount(formData.communication_process, 15) ? "border-red-300" : ""}
-          />
-          <div className="flex justify-between text-xs">
-            <span className={communicationWordCount < 15 ? "text-red-600" : "text-gray-500"}>
-              {communicationWordCount}/15 words minimum
-            </span>
-            {!validateWordCount(formData.communication_process, 15) && communicationWordCount > 0 && (
-              <span className="text-red-600">Please provide more detail (minimum 15 words)</span>
-            )}
+          <Select 
+            value={formData.communication_frequency} 
+            onValueChange={(value) => updateFormData({ communication_frequency: value })}
+          >
+            <SelectTrigger className={!formData.communication_frequency ? "border-red-300" : ""}>
+              <SelectValue placeholder="Select preferred communication frequency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="2-3x weekly">2-3x weekly</SelectItem>
+              <SelectItem value="Weekly">Weekly</SelectItem>
+            </SelectContent>
+          </Select>
+          {!formData.communication_frequency && (
+            <p className="text-xs text-red-600">Please select your preferred communication frequency</p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
+            Preferred Communication Channels <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-gray-600 mb-3">Select all that apply</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {COMMUNICATION_CHANNELS.map(channel => (
+              <div key={channel} className="flex items-center space-x-2">
+                <Checkbox
+                  id={channel}
+                  checked={(formData.communication_channels || []).includes(channel)}
+                  onCheckedChange={(checked) => handleCommunicationChannelChange(channel, checked as boolean)}
+                />
+                <Label htmlFor={channel} className="text-sm">{channel}</Label>
+              </div>
+            ))}
           </div>
-          <div className="bg-blue-50 p-3 rounded text-xs text-gray-700">
-            <strong>Good examples:</strong>
-            <ul className="mt-1 space-y-1">
-              <li>• "Weekly email updates every Friday with progress reports and next week's priorities..."</li>
-              <li>• "Bi-weekly 30-minute strategy calls plus Slack for urgent questions..."</li>
-              <li>• "Monthly performance reviews with detailed analytics and recommendations..."</li>
-            </ul>
+          
+          {(!formData.communication_channels || formData.communication_channels.length === 0) && (
+            <p className="text-xs text-red-600">Please select at least one communication channel</p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
+            Project Management Tools Experience
+          </Label>
+          <p className="text-xs text-gray-600 mb-3">Select all tools you have experience with</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {PROJECT_MANAGEMENT_TOOLS.map(tool => (
+              <div key={tool} className="flex items-center space-x-2">
+                <Checkbox
+                  id={tool}
+                  checked={(formData.project_management_tools || []).includes(tool)}
+                  onCheckedChange={(checked) => handleProjectToolChange(tool, checked as boolean)}
+                />
+                <Label htmlFor={tool} className="text-sm">{tool}</Label>
+              </div>
+            ))}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="availability_capacity" className="text-sm font-medium flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Availability & Capacity for New Projects <span className="text-red-500">*</span>
+          <Label htmlFor="hours_available" className="text-sm font-medium">
+            Hours Available per Week for Connect Clients <span className="text-red-500">*</span>
           </Label>
-          <Textarea 
-            id="availability_capacity" 
-            value={formData.availability_capacity}
-            onChange={(e) => updateFormData({ availability_capacity: e.target.value })}
-            placeholder="Describe your working hours, time zone, and project capacity..."
-            rows={3}
-            required
-            className={!validateWordCount(formData.availability_capacity, 10) ? "border-red-300" : ""}
-          />
-          <div className="flex justify-between text-xs">
-            <span className={availabilityWordCount < 10 ? "text-red-600" : "text-gray-500"}>
-              {availabilityWordCount}/10 words minimum
-            </span>
-            {!validateWordCount(formData.availability_capacity, 10) && availabilityWordCount > 0 && (
-              <span className="text-red-600">Please provide more detail (minimum 10 words)</span>
-            )}
-          </div>
-          <div className="bg-green-50 p-3 rounded text-xs text-gray-700">
-            <strong>Include information about:</strong>
-            <ul className="mt-1 space-y-1">
-              <li>• Your typical working hours and time zone</li>
-              <li>• How many clients you can take on simultaneously</li>
-              <li>• Your preferred project duration and engagement type</li>
-              <li>• Any seasonal availability changes</li>
-            </ul>
-          </div>
+          <Select 
+            value={formData.hours_available} 
+            onValueChange={(value) => updateFormData({ hours_available: value })}
+          >
+            <SelectTrigger className={!formData.hours_available ? "border-red-300" : ""}>
+              <SelectValue placeholder="Select hours available per week" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5-10">5-10 hours</SelectItem>
+              <SelectItem value="10-20">10-20 hours</SelectItem>
+              <SelectItem value="20-30">20-30 hours</SelectItem>
+              <SelectItem value="30+">30+ hours</SelectItem>
+            </SelectContent>
+          </Select>
+          {!formData.hours_available && (
+            <p className="text-xs text-red-600">Please select your available hours per week</p>
+          )}
         </div>
 
-        <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Platform Agreement
-          </h3>
-          
-          <div className="flex items-start space-x-3">
+        <div className="space-y-2">
+          <Label htmlFor="response_time" className="text-sm font-medium">
+            Typical Response Time to Client Requests <span className="text-red-500">*</span>
+          </Label>
+          <Select 
+            value={formData.response_time} 
+            onValueChange={(value) => updateFormData({ response_time: value })}
+          >
+            <SelectTrigger className={!formData.response_time ? "border-red-300" : ""}>
+              <SelectValue placeholder="Select typical response time" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Same day">Same day</SelectItem>
+              <SelectItem value="Within 24 hours">Within 24 hours</SelectItem>
+              <SelectItem value="Within 48 hours">Within 48 hours</SelectItem>
+            </SelectContent>
+          </Select>
+          {!formData.response_time && (
+            <p className="text-xs text-red-600">Please select your typical response time</p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="terms_agreement"
               checked={formData.terms_agreement}
               onCheckedChange={(checked) => updateFormData({ terms_agreement: checked as boolean })}
-              className="mt-1"
+              required
             />
-            <div className="space-y-1">
-              <Label htmlFor="terms_agreement" className="text-sm font-medium">
-                I acknowledge understanding of Connect's platform terms and focus on quality connections <span className="text-red-500">*</span>
-              </Label>
-              <p className="text-xs text-gray-600">
-                Connect facilitates connections between providers and eCommerce businesses. 
-                We focus on quality matches, professional standards, and successful long-term partnerships.
-              </p>
-            </div>
+            <Label htmlFor="terms_agreement" className="text-sm">
+              I agree to Connect's platform terms and provider guidelines <span className="text-red-500">*</span>
+            </Label>
           </div>
-
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="client_references_willing"
-              checked={formData.client_references_willing}
-              onCheckedChange={(checked) => updateFormData({ client_references_willing: checked as boolean })}
-              className="mt-1"
-            />
-            <div className="space-y-1">
-              <Label htmlFor="client_references_willing" className="text-sm font-medium">
-                Willing to provide client references upon request (Optional)
-              </Label>
-              <p className="text-xs text-gray-600">
-                This adds credibility to your application but is not required for submission. 
-                References may be requested during the review process for top-tier approval.
-              </p>
-            </div>
-          </div>
+          {!formData.terms_agreement && (
+            <p className="text-xs text-red-600">You must agree to the terms to proceed</p>
+          )}
         </div>
       </div>
 
-      {isReadyToSubmit ? (
+      {formData.terms_agreement && (
         <Alert className="border-green-200 bg-green-50">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            <strong>Ready to Submit!</strong> Your application is complete and ready for review. 
-            Our team will review it within 2-3 business days.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertDescription className="text-yellow-800">
-            <strong>Almost Ready!</strong> Please complete all required fields and accept the platform terms to submit your application.
+            ✓ Ready to submit! Your application will be reviewed within 2 business days.
           </AlertDescription>
         </Alert>
       )}
 
-      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <h3 className="font-semibold text-blue-900 mb-2">What Happens Next?</h3>
-        <ol className="text-sm text-blue-800 space-y-1">
-          <li>1. Our team reviews your application and professional profiles</li>
-          <li>2. We may reach out for clarification or additional information if needed</li>
-          <li>3. You'll receive an email notification with our decision within 2-3 business days</li>
-          <li>4. If approved, you'll be able to complete your public provider profile</li>
-          <li>5. Once live, qualified founders can discover and connect with you</li>
-        </ol>
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="font-semibold text-gray-900 mb-2">What Happens Next?</h3>
+        <ul className="text-sm text-gray-700 space-y-1">
+          <li>• Your application will be reviewed by our team</li>
+          <li>• We'll evaluate your experience, case study, and fit for our client base</li>
+          <li>• You'll receive an email notification about your application status</li>
+          <li>• If approved, you'll gain access to the Connect provider platform</li>
+        </ul>
       </div>
 
       <div className="text-sm text-gray-500 mt-6">

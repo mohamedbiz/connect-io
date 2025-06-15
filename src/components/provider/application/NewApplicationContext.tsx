@@ -8,31 +8,38 @@ export interface NewProviderApplicationData {
   full_name: string;
   email: string;
   location: string;
+  years_email_marketing: string;
+  average_client_revenue: string;
+  connect_interest: string;
   
-  // Professional Presence
+  // Key Achievements & Professional Presence
+  significant_revenue_increase: string;
+  best_results_achieved: string;
   linkedin_url: string;
   portfolio_url: string;
   
   // Experience & Focus
-  years_email_marketing: string;
-  years_ecommerce: string;
   email_platforms: string[];
-  expertise_areas: string[];
+  klaviyo_proficiency: string;
+  primary_industries: string[];
   klaviyo_required: boolean;
   
   // Case Study
   case_study: {
     client_industry: string;
-    challenge_goal: string;
-    strategy_solution: string;
-    quantifiable_results: string;
+    approach_implementation: string;
+    baseline_metrics: string;
+    results_achieved: string;
+    esp_platform_used: string;
   };
   
   // Work Style & Agreement
-  communication_process: string;
-  availability_capacity: string;
+  communication_frequency: string;
+  communication_channels: string[];
+  project_management_tools: string[];
+  hours_available: string;
+  response_time: string;
   terms_agreement: boolean;
-  client_references_willing: boolean;
 }
 
 interface NewApplicationContextType {
@@ -53,23 +60,30 @@ const initialFormData: NewProviderApplicationData = {
   full_name: '',
   email: '',
   location: '',
+  years_email_marketing: '',
+  average_client_revenue: '',
+  connect_interest: '',
+  significant_revenue_increase: '',
+  best_results_achieved: '',
   linkedin_url: '',
   portfolio_url: '',
-  years_email_marketing: '',
-  years_ecommerce: '',
   email_platforms: [],
-  expertise_areas: [],
+  klaviyo_proficiency: '',
+  primary_industries: [],
   klaviyo_required: false,
   case_study: {
     client_industry: '',
-    challenge_goal: '',
-    strategy_solution: '',
-    quantifiable_results: '',
+    approach_implementation: '',
+    baseline_metrics: '',
+    results_achieved: '',
+    esp_platform_used: '',
   },
-  communication_process: '',
-  availability_capacity: '',
+  communication_frequency: '',
+  communication_channels: [],
+  project_management_tools: [],
+  hours_available: '',
+  response_time: '',
   terms_agreement: false,
-  client_references_willing: false,
 };
 
 const NewApplicationContext = createContext<NewApplicationContextType | undefined>(undefined);
@@ -117,31 +131,37 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
         if (!formData.full_name.trim()) errors.push('Full name is required');
         if (!formData.email.trim()) errors.push('Email is required');
         if (!formData.location.trim()) errors.push('Location is required');
+        if (!formData.years_email_marketing) errors.push('Years of email marketing experience is required');
+        if (!formData.average_client_revenue) errors.push('Average client revenue range is required');
+        if (!formData.connect_interest.trim()) errors.push('Connect interest explanation is required');
         break;
         
-      case 1: // Professional Presence
+      case 1: // Key Achievements & Professional Presence
+        if (!formData.significant_revenue_increase.trim()) errors.push('Significant revenue increase description is required');
+        if (!formData.best_results_achieved.trim()) errors.push('Best results achieved description is required');
         if (!formData.linkedin_url.trim()) errors.push('LinkedIn URL is required');
-        if (!formData.portfolio_url.trim()) errors.push('Portfolio URL is required');
         break;
         
       case 2: // Experience & Focus
-        if (!formData.years_email_marketing) errors.push('Email marketing experience is required');
-        if (!formData.years_ecommerce) errors.push('eCommerce experience is required');
         if (formData.email_platforms.length === 0) errors.push('At least one email platform is required');
         if (!formData.email_platforms.includes('Klaviyo')) errors.push('Klaviyo expertise is required');
-        if (formData.expertise_areas.length < 2) errors.push('At least 2 expertise areas are required');
+        if (!formData.klaviyo_proficiency) errors.push('Klaviyo proficiency level is required');
+        if (!formData.primary_industries || formData.primary_industries.length === 0) errors.push('At least one industry is required');
         break;
         
       case 3: // Case Study
-        if (!formData.case_study.client_industry.trim()) errors.push('Client industry is required');
-        if (!formData.case_study.challenge_goal.trim()) errors.push('Challenge/goal is required');
-        if (!formData.case_study.strategy_solution.trim()) errors.push('Strategy/solution is required');
-        if (!formData.case_study.quantifiable_results.trim()) errors.push('Quantifiable results are required');
+        if (!formData.case_study.client_industry.trim()) errors.push('Client industry and challenge is required');
+        if (!formData.case_study.approach_implementation.trim()) errors.push('Approach and implementation is required');
+        if (!formData.case_study.baseline_metrics.trim()) errors.push('Baseline metrics are required');
+        if (!formData.case_study.results_achieved.trim()) errors.push('Results achieved are required');
+        if (!formData.case_study.esp_platform_used.trim()) errors.push('ESP platform used is required');
         break;
         
       case 4: // Work Style & Agreement
-        if (!formData.communication_process.trim()) errors.push('Communication process is required');
-        if (!formData.availability_capacity.trim()) errors.push('Availability/capacity is required');
+        if (!formData.communication_frequency) errors.push('Communication frequency is required');
+        if (!formData.communication_channels || formData.communication_channels.length === 0) errors.push('At least one communication channel is required');
+        if (!formData.hours_available) errors.push('Hours available per week is required');
+        if (!formData.response_time) errors.push('Response time is required');
         if (!formData.terms_agreement) errors.push('Terms agreement is required');
         break;
     }
