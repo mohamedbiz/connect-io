@@ -8,6 +8,7 @@ import ProblemSection from "@/components/home/ProblemSection";
 import SolutionSection from "@/components/home/SolutionSection";
 import HowItWorks from "@/components/home/HowItWorks";
 import BenefitsSection from "@/components/home/BenefitsSection";
+import ProviderFlowTester from "@/components/dev/ProviderFlowTester";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -23,6 +24,9 @@ const HomePage = () => {
     }
   };
 
+  // Show development tools in development environment
+  const isDevelopment = import.meta.env.DEV;
+
   return (
     <Layout>
       <Hero onRoleSelection={handleRoleSelection} />
@@ -30,6 +34,17 @@ const HomePage = () => {
       <SolutionSection />
       <HowItWorks />
       <BenefitsSection />
+      
+      {isDevelopment && (
+        <div className="py-8 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-center text-lg font-semibold text-gray-700 mb-4">
+              Development Tools
+            </h2>
+            <ProviderFlowTester />
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

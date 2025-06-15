@@ -38,7 +38,14 @@ export const useProviderNavigation = () => {
       return;
     }
 
-    // If provider is authenticated, route based on application status
+    // If provider is authenticated, route based on application status and account status
+    console.log('useProviderNavigation: Determining navigation based on status', {
+      hasApplication: applicationStatus.hasApplication,
+      applicationStatus: applicationStatus.status,
+      accountStatus: profile.account_status,
+      approved: profile.approved
+    });
+
     if (!applicationStatus.hasApplication) {
       // No application submitted yet
       console.log('useProviderNavigation: No application found, redirecting to application page');
@@ -55,12 +62,17 @@ export const useProviderNavigation = () => {
         navigate('/provider-application-submitted');
         break;
       case 'approved':
+        // Check account status to determine if onboarding is needed
         if (profile.account_status === 'pending_application') {
           console.log('useProviderNavigation: Application approved, redirecting to onboarding');
           navigate('/provider/onboarding');
-        } else {
+        } else if (profile.account_status === 'active') {
           console.log('useProviderNavigation: Provider active, redirecting to dashboard');
           navigate('/provider/dashboard');
+        } else {
+          // Fallback: if approved but status unclear, go to onboarding
+          console.log('useProviderNavigation: Application approved but unclear status, redirecting to onboarding');
+          navigate('/provider/onboarding');
         }
         break;
       case 'rejected':

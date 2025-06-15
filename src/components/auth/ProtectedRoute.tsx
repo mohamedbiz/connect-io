@@ -48,7 +48,8 @@ const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: Pr
       accountStatus: profile.account_status,
       applicationStatus: myApplication?.status,
       hasApplication: !!myApplication,
-      currentPath 
+      currentPath,
+      approved: profile.approved
     });
 
     // Provider needs to complete application first
@@ -59,7 +60,11 @@ const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: Pr
 
     // Provider application submitted - route based on status
     if (myApplication) {
-      console.log('ProtectedRoute: Provider has application', { status: myApplication.status });
+      console.log('ProtectedRoute: Provider has application', { 
+        status: myApplication.status,
+        approved: profile.approved,
+        accountStatus: profile.account_status
+      });
       
       switch (myApplication.status) {
         case 'submitted':
@@ -80,6 +85,11 @@ const ProtectedRoute = ({ children, allowedRoles = [], requiredStatus = [] }: Pr
           if (profile.account_status === 'active' && currentPath.includes('/provider-application')) {
             console.log('ProtectedRoute: Provider active, redirecting to dashboard');
             return <Navigate to="/provider/dashboard" replace />;
+          }
+          // Allow access to onboarding page if application is approved
+          if (currentPath === '/provider/onboarding' && profile.approved) {
+            console.log('ProtectedRoute: Allowing access to onboarding page');
+            // Allow through - don't redirect
           }
           break;
           
