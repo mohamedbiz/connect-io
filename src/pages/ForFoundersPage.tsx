@@ -44,7 +44,7 @@ const ForFoundersPage = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <div className="bg-[#0A2342] py-16 md:py-24">
+      <div className="bg-gradient-to-b from-[#0D1F3F] via-[#18427A] to-[#B0D4F1] py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
