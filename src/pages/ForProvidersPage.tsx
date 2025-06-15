@@ -61,7 +61,7 @@ const ForProvidersPage = () => {
               className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
               asChild
             >
-              <Link to="/provider-application">
+              <Link to="/provider/signin">
                 Apply for Qualified Leads
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>
@@ -162,7 +162,7 @@ const ForProvidersPage = () => {
               className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
               asChild
             >
-              <Link to="/provider-application">
+              <Link to="/provider/signin">
                 Apply to Join Connect Now
                 <ArrowRight className="ml-1 h-5 w-5" />
               </Link>

@@ -1,4 +1,3 @@
-
 import { ArrowRight, CheckCircle, Mail, TrendingUp, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -141,7 +140,7 @@ const ForFounders = () => {
                 className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
                 asChild
               >
-                <Link to="/auth?register=true&type=founder">
+                <Link to="/founder/signin">
                   Connect with Specialists
                   <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>
