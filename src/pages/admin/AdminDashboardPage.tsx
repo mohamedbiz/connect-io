@@ -4,11 +4,7 @@ import Layout from '@/components/layout/Layout';
 import ProviderApplicationsPage from './ProviderApplicationsPage';
 
 const AdminDashboardPage = () => {
-  return (
-    <Layout>
-      <ProviderApplicationsPage />
-    </Layout>
-  );
+  return <ProviderApplicationsPage />;
 };
 
 export default AdminDashboardPage;
