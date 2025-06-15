@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useProviderNavigation } from '@/hooks/useProviderNavigation';
 import Layout from "@/components/layout/Layout";
 import Hero from "@/components/home/Hero";
 import ProblemSection from "@/components/home/ProblemSection";
@@ -10,14 +11,15 @@ import BenefitsSection from "@/components/home/BenefitsSection";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { navigateToProviderFlow } = useProviderNavigation();
 
   // Navigation handler for role-specific CTAs
   const handleRoleSelection = (role: 'founder' | 'provider') => {
-    // Navigate directly to the dedicated sign-in pages
     if (role === 'founder') {
       navigate('/founder/signin');
     } else {
-      navigate('/provider/signin');
+      // Use smart navigation for providers
+      navigateToProviderFlow();
     }
   };
 

@@ -1,10 +1,11 @@
-
 import Layout from "@/components/layout/Layout";
 import { ArrowRight, Users, Target, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { useProviderNavigation } from "@/hooks/useProviderNavigation";
 
 const ForProvidersPage = () => {
+  const { navigateToProviderFlow } = useProviderNavigation();
+
   const benefits = [
     {
       icon: <Users className="h-8 w-8 text-[#2D82B7]" />,
@@ -59,12 +60,10 @@ const ForProvidersPage = () => {
             <Button 
               size="lg" 
               className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
-              asChild
+              onClick={navigateToProviderFlow}
             >
-              <Link to="/provider/signin">
-                Apply for Qualified Leads
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </Link>
+              Apply for Qualified Leads
+              <ArrowRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
         </div>
@@ -159,13 +158,11 @@ const ForProvidersPage = () => {
             </p>
             <Button 
               size="lg" 
-              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors" 
-              asChild
+              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
+              onClick={navigateToProviderFlow}
             >
-              <Link to="/provider/signin">
-                Apply to Join Connect Now
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </Link>
+              Apply to Join Connect Now
+              <ArrowRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
         </div>

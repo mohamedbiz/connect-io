@@ -2,6 +2,7 @@
 import { CheckCircle, Users, Coins, Folder, AlertTriangle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useProviderNavigation } from "@/hooks/useProviderNavigation";
 
 const PAIN_POINTS = [
   "Spending countless hours searching for quality clients.",
@@ -35,6 +36,8 @@ const BRIDGE_BENEFITS = [
 ];
 
 const ForProviders = () => {
+  const { navigateToProviderFlow } = useProviderNavigation();
+
   return (
     <section className="py-16 md:py-24 bg-white" id="for-providers">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -164,13 +167,11 @@ const ForProviders = () => {
               </div>
               <Button 
                 size="lg" 
-                className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white" 
-                asChild
+                className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white"
+                onClick={navigateToProviderFlow}
               >
-                <Link to="/provider-apply">
-                  Apply as a Provider
-                  <ArrowRight className="ml-1 h-5 w-5" />
-                </Link>
+                Apply as a Provider
+                <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
             </div>
           </div>

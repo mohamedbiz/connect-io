@@ -2,8 +2,11 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useProviderNavigation } from "@/hooks/useProviderNavigation";
 
 const CTASection = () => {
+  const { navigateToProviderFlow } = useProviderNavigation();
+
   return (
     <section className="py-16 md:py-20 bg-[#0A2342]">
       <div className="container mx-auto px-4">
@@ -30,13 +33,11 @@ const CTASection = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:border-white transition-colors" 
-              asChild
+              className="border-[#BFD7ED] text-[#BFD7ED] hover:bg-[#0E3366]/80 hover:border-white transition-colors"
+              onClick={navigateToProviderFlow}
             >
-              <Link to="/auth?register=true&type=provider">
-                I Offer Email Expertise (Provider)
-                <ArrowRight className="ml-1 h-5 w-5" />
-              </Link>
+              I Offer Email Expertise (Provider)
+              <ArrowRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
         </div>
