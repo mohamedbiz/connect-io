@@ -5,7 +5,6 @@ import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/home/HomePage";
-import AuthPage from "./pages/AuthPage";
 import AuthCallback from "./pages/AuthCallback";
 import FounderSignInPage from "./pages/auth/FounderSignInPage";
 import ProviderSignInPage from "./pages/auth/ProviderSignInPage";
@@ -49,12 +48,6 @@ function App() {
             </PublicOnlyRoute>
           } />
           
-          {/* Legacy auth page for backward compatibility */}
-          <Route path="/auth" element={
-            <PublicOnlyRoute>
-              <AuthPage />
-            </PublicOnlyRoute>
-          } />
           <Route path="/auth-callback" element={<AuthCallback />} />
           
           {/* Provider public routes */}
