@@ -4,51 +4,61 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { DollarSign } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProviderApplications } from "@/hooks/useProviderApplications";
-import { useMatches } from "@/hooks/useMatches";
-import { toast } from "sonner";
-import ErrorFallback from "@/components/ErrorFallback";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// Import refactored components
-import StatsOverview from "@/components/provider/dashboard/StatsOverview";
-import OverviewTab from "@/components/provider/dashboard/OverviewTab";
-import MatchesTab from "@/components/provider/dashboard/MatchesTab";
-import PaymentsTab from "@/components/provider/dashboard/PaymentsTab";
-import ResourcesTab from "@/components/provider/dashboard/ResourcesTab";
-import ApplicationStatusTab from "@/components/provider/dashboard/ApplicationStatusTab";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle, Clock, AlertCircle, XCircle, User, Mail, Calendar, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProviderDashboard = () => {
   const { user, profile, loading, error } = useAuth();
   const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    activeClients: 0,
-    totalRevenue: 0,
-    projectsCompleted: 0,
-    averageRating: 0,
-  });
-  const [activeTab, setActiveTab] = useState<string>("overview");
-  
-  const { matches } = useMatches();
-  const { myApplication } = useProviderApplications();
+  const [applicationStatus, setApplicationStatus] = useState<any>(null);
+  const [providerProfile, setProviderProfile] = useState<any>(null);
+  const [statusLoading, setStatusLoading] = useState(true);
 
-  // Compute some real stats from matches
+  // Fetch application status and provider profile
   useEffect(() => {
-    if (matches) {
-      setStats(prev => ({
-        ...prev,
-        activeClients: matches.filter(m => m.status === 'accepted').length
-      }));
+    const fetchProviderData = async () => {
+      if (!user) return;
+
+      try {
+        // Fetch application status
+        const { data: application } = await supabase
+          .from('provider_applications')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        setApplicationStatus(application);
+
+        // Fetch provider profile
+        const { data: providerProfileData } = await supabase
+          .from('provider_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        setProviderProfile(providerProfileData);
+      } catch (error) {
+        console.error('Error fetching provider data:', error);
+      } finally {
+        setStatusLoading(false);
+      }
+    };
+
+    if (user && !loading) {
+      fetchProviderData();
     }
-  }, [matches]);
+  }, [user, loading]);
 
   // Protect this route
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        navigate("/login");
+        navigate("/provider/signin");
         return;
       } 
       
@@ -59,35 +69,66 @@ const ProviderDashboard = () => {
     }
   }, [user, profile, loading, navigate]);
 
-  // Show notification if application is pending
-  useEffect(() => {
-    if (myApplication && myApplication.status === 'submitted') {
-      toast.info("Your provider application is under review", {
-        duration: 5000,
-      });
-    }
-  }, [myApplication]);
-
   const handleCompleteApplication = () => {
     navigate("/provider/onboarding");
   };
 
-  // Authentication error case
-  if (error && error.includes('fetch')) {
-    return (
-      <Layout>
-        <div className="container mx-auto py-10 px-4">
-          <ErrorFallback 
-            error={new Error(error)}
-            message="There was a problem with authentication. Please try refreshing the page."
-            resetErrorBoundary={() => window.location.reload()}
-          />
-        </div>
-      </Layout>
-    );
-  }
+  const getStatusInfo = () => {
+    if (!profile) return null;
 
-  if (loading) {
+    switch (profile.account_status) {
+      case 'pending_profile':
+        return {
+          icon: <User className="h-5 w-5" />,
+          title: "Complete Your Application",
+          description: "Please complete your provider application to get matched with clients.",
+          color: "bg-blue-50 border-blue-200",
+          titleColor: "text-blue-800",
+          descColor: "text-blue-700",
+          action: (
+            <Button onClick={handleCompleteApplication} className="bg-blue-500 hover:bg-blue-600 text-white">
+              Complete Application
+            </Button>
+          )
+        };
+      case 'pending_application':
+        return {
+          icon: <Clock className="h-5 w-5" />,
+          title: "Application Under Review",
+          description: "Your application is being reviewed. You'll receive an email update within 2-3 business days.",
+          color: "bg-amber-50 border-amber-200",
+          titleColor: "text-amber-800",
+          descColor: "text-amber-700"
+        };
+      case 'active':
+        return {
+          icon: <CheckCircle className="h-5 w-5" />,
+          title: "Application Approved!",
+          description: "Congratulations! You can now receive client matches and grow your business.",
+          color: "bg-green-50 border-green-200",
+          titleColor: "text-green-800",
+          descColor: "text-green-700"
+        };
+      case 'rejected':
+        return {
+          icon: <XCircle className="h-5 w-5" />,
+          title: "Application Not Approved",
+          description: "Unfortunately, your application was not approved at this time. You can reapply after addressing the feedback.",
+          color: "bg-red-50 border-red-200",
+          titleColor: "text-red-800",
+          descColor: "text-red-700",
+          action: (
+            <Button onClick={handleCompleteApplication} variant="outline" className="border-red-300 text-red-700 hover:bg-red-50">
+              Reapply
+            </Button>
+          )
+        };
+      default:
+        return null;
+    }
+  };
+
+  if (loading || statusLoading) {
     return (
       <Layout>
         <div className="container mx-auto py-10 px-4">
@@ -107,7 +148,7 @@ const ProviderDashboard = () => {
             <p className="text-center text-lg text-[#0E3366]">Please log in to access your dashboard</p>
             <Button 
               variant="default"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate("/provider/signin")}
               className="mt-4"
             >
               Go to Login
@@ -117,6 +158,8 @@ const ProviderDashboard = () => {
       </Layout>
     );
   }
+
+  const statusInfo = getStatusInfo();
 
   return (
     <Layout>
@@ -128,75 +171,191 @@ const ProviderDashboard = () => {
               Welcome back, {profile?.first_name || profile?.email?.split('@')[0]}
             </p>
           </div>
-          <div className="space-x-2">
-            <Button 
-              className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors"
-              onClick={() => navigate("/payments")}
-            >
-              <DollarSign className="h-4 w-4 mr-1" />
-              Payments
-            </Button>
-            <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white transition-colors">
-              View Profile
-            </Button>
-          </div>
         </div>
 
-        {profile?.account_status === 'pending_application' && (
-          <Alert className="mb-6 bg-amber-50 border-amber-200">
-            <AlertTitle className="text-amber-800">Complete Your Application</AlertTitle>
-            <AlertDescription className="text-amber-700">
-              <p className="mb-4">
-                Welcome! Please complete your provider application to get matched with clients.
-              </p>
-              <Button 
-                onClick={handleCompleteApplication}
-                className="bg-amber-500 hover:bg-amber-600 text-white"
-              >
-                Complete Application
-              </Button>
-            </AlertDescription>
+        {/* Status Alert */}
+        {statusInfo && (
+          <Alert className={`mb-6 ${statusInfo.color}`}>
+            <div className="flex items-start space-x-3">
+              <div className={statusInfo.titleColor}>
+                {statusInfo.icon}
+              </div>
+              <div className="flex-1">
+                <AlertTitle className={statusInfo.titleColor}>
+                  {statusInfo.title}
+                </AlertTitle>
+                <AlertDescription className={statusInfo.descColor}>
+                  <p className="mb-3">{statusInfo.description}</p>
+                  {statusInfo.action}
+                </AlertDescription>
+              </div>
+            </div>
           </Alert>
         )}
 
-        {/* Stats Grid */}
-        <StatsOverview stats={stats} />
+        {/* Application Details */}
+        {applicationStatus && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Application Status
+                <Badge variant={
+                  applicationStatus.status === 'approved' ? 'default' :
+                  applicationStatus.status === 'submitted' || applicationStatus.status === 'in_review' ? 'secondary' :
+                  applicationStatus.status === 'rejected' ? 'destructive' : 'outline'
+                }>
+                  {applicationStatus.status?.replace('_', ' ').toUpperCase()}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Submitted</p>
+                    <p className="font-medium">
+                      {applicationStatus.submitted_at ? 
+                        new Date(applicationStatus.submitted_at).toLocaleDateString() : 
+                        'N/A'
+                      }
+                    </p>
+                  </div>
+                </div>
+                
+                {applicationStatus.reviewed_at && (
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Reviewed</p>
+                      <p className="font-medium">
+                        {new Date(applicationStatus.reviewed_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-        {/* Tabs */}
-        <Tabs 
-          defaultValue="overview" 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="mb-8"
-        >
-          <TabsList className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="matches">Client Matches</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
-            <TabsTrigger value="application">Application Status</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview">
-            <OverviewTab setActiveTab={setActiveTab} />
-          </TabsContent>
-          
-          <TabsContent value="matches">
-            <MatchesTab />
-          </TabsContent>
-          
-          <TabsContent value="payments">
-            <PaymentsTab />
-          </TabsContent>
-          
-          <TabsContent value="resources">
-            <ResourcesTab />
-          </TabsContent>
-          
-          <TabsContent value="application">
-            <ApplicationStatusTab />
-          </TabsContent>
-        </Tabs>
+                {applicationStatus.automated_score && (
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="text-sm text-gray-500">Score</p>
+                      <p className="font-medium">{applicationStatus.automated_score}/100</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {applicationStatus.reviewer_notes && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-700 mb-1">Reviewer Notes:</p>
+                  <p className="text-sm text-gray-600">{applicationStatus.reviewer_notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Provider Profile */}
+        {providerProfile && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{providerProfile.headline}</h3>
+                  <p className="text-gray-600">{providerProfile.years_experience} years experience</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Primary Platform:</p>
+                  <p className="text-gray-600">{providerProfile.primary_esp}</p>
+                </div>
+
+                {providerProfile.industries_served && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Industries Served:</p>
+                    <p className="text-gray-600">{providerProfile.industries_served.join(', ')}</p>
+                  </div>
+                )}
+
+                {providerProfile.approach_description && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Approach:</p>
+                    <p className="text-gray-600">{providerProfile.approach_description}</p>
+                  </div>
+                )}
+
+                {providerProfile.portfolio_url && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Portfolio:</p>
+                    <a 
+                      href={providerProfile.portfolio_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 flex items-center space-x-1"
+                    >
+                      <span>View Portfolio</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabs for additional functionality */}
+        {profile.account_status === 'active' && (
+          <Tabs defaultValue="overview" className="mt-8">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="matches">Client Matches</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Dashboard Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Welcome to your provider dashboard! Client matching features will be available here soon.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="matches">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Client Matches</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Client matching is coming soon. You'll be able to view and respond to potential clients here.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="messages">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Messages</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Messages with clients will appear here once the messaging system is implemented.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </Layout>
   );

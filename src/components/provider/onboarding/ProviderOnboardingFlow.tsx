@@ -1,17 +1,22 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import ExpertiseStep from './ExpertiseStep';
+import IndustriesStep from './IndustriesStep';
+import ApplicationSubmissionStep from './ApplicationSubmissionStep';
 
-interface OnboardingData {
-  profileCompleted: boolean;
-  dashboardViewed: boolean;
+interface ApplicationData {
+  headline?: string;
+  yearsExperience?: string;
+  primaryEsp?: string;
+  approachDescription?: string;
+  portfolioUrl?: string;
+  industriesServed?: string[];
 }
 
 const ProviderOnboardingFlow = () => {
@@ -19,138 +24,134 @@ const ProviderOnboardingFlow = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
-    profileCompleted: false,
-    dashboardViewed: false
-  });
+  const [applicationData, setApplicationData] = useState<ApplicationData>({});
 
   const totalSteps = 3;
 
-  useEffect(() => {
-    if (!user || !profile || profile.role !== 'provider') {
-      navigate('/');
+  const updateApplicationData = (data: Partial<ApplicationData>) => {
+    setApplicationData(prev => ({ ...prev, ...data }));
+  };
+
+  const goToNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const submitApplication = async () => {
+    if (!user) {
+      toast.error('You must be logged in to submit an application');
       return;
     }
-
-    // Check if already completed onboarding
-    if (profile.account_status === 'active') {
-      navigate('/provider/dashboard');
-      return;
-    }
-  }, [user, profile, navigate]);
-
-  const completeOnboarding = async () => {
-    if (!user) return;
 
     setLoading(true);
+    
     try {
-      // Update profile to active status
-      const { error } = await supabase
+      console.log('Submitting provider application:', applicationData);
+
+      // Create provider profile
+      const { error: profileError } = await supabase
+        .from('provider_profiles')
+        .upsert({
+          user_id: user.id,
+          headline: applicationData.headline,
+          years_experience: applicationData.yearsExperience,
+          primary_esp: applicationData.primaryEsp,
+          industries_served: applicationData.industriesServed,
+          approach_description: applicationData.approachDescription,
+          portfolio_url: applicationData.portfolioUrl
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (profileError) {
+        console.error('Error creating provider profile:', profileError);
+        throw profileError;
+      }
+
+      // Create provider application
+      const { error: applicationError } = await supabase
+        .from('provider_applications')
+        .upsert({
+          user_id: user.id,
+          application_data: applicationData,
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (applicationError) {
+        console.error('Error creating provider application:', applicationError);
+        throw applicationError;
+      }
+
+      // Update main profile status
+      const { error: statusError } = await supabase
         .from('profiles')
         .update({
-          account_status: 'active',
+          account_status: 'pending_application',
           onboarding_complete: true
         })
         .eq('id', user.id);
 
-      if (error) throw error;
+      if (statusError) {
+        console.error('Error updating profile status:', statusError);
+        throw statusError;
+      }
 
       // Refresh profile to get updated status
       await refreshProfile();
       
-      toast.success('Onboarding completed! Welcome to Connect.');
+      toast.success('Application submitted successfully! You will receive an email update within 2-3 business days.');
+      
+      // Navigate to dashboard to show application status
       navigate('/provider/dashboard');
+
     } catch (error) {
-      console.error('Error completing onboarding:', error);
-      toast.error('Failed to complete onboarding. Please try again.');
+      console.error('Error submitting application:', error);
+      toast.error('Failed to submit application. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getStepContent = () => {
+  const getStepComponent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-[#0A2342] mb-2">
-                Congratulations! You've been approved!
-              </h2>
-              <p className="text-gray-600">
-                Welcome to Connect's network of elite email marketing specialists. 
-                Let's get you set up to start connecting with eCommerce founders.
-              </p>
-            </div>
-          </div>
+          <ExpertiseStep
+            data={applicationData}
+            updateData={updateApplicationData}
+            onNext={goToNextStep}
+          />
         );
-      
       case 2:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-[#0A2342] mb-4">
-              How Connect Works
-            </h2>
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-800 mb-2">🎯 Quality Connections</h3>
-                <p className="text-blue-700 text-sm">
-                  Connect carefully vets both providers and founders to ensure high-quality matches.
-                </p>
-              </div>
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-800 mb-2">📈 Your Dashboard</h3>
-                <p className="text-green-700 text-sm">
-                  Track potential client matches, manage conversations, and monitor your performance.
-                </p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-purple-800 mb-2">💼 Professional Network</h3>
-                <p className="text-purple-700 text-sm">
-                  Join a network of vetted professionals focused on email marketing excellence.
-                </p>
-              </div>
-            </div>
-          </div>
+          <IndustriesStep
+            data={applicationData}
+            updateData={updateApplicationData}
+            onNext={goToNextStep}
+            onBack={goToPreviousStep}
+          />
         );
-      
       case 3:
         return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-[#0A2342] mb-4">
-              Ready to Get Started?
-            </h2>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">Next Steps:</h3>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Access your provider dashboard</li>
-                  <li>• Review potential client matches</li>
-                  <li>• Complete your public profile if needed</li>
-                  <li>• Start connecting with eCommerce founders</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <ApplicationSubmissionStep
+            data={applicationData}
+            onBack={goToPreviousStep}
+            onComplete={submitApplication}
+            loading={loading}
+          />
         );
-      
       default:
         return null;
-    }
-  };
-
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      completeOnboarding();
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
     }
   };
 
@@ -167,8 +168,11 @@ const ProviderOnboardingFlow = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-center text-2xl text-[#0A2342]">
-            Provider Onboarding
+            Provider Application
           </CardTitle>
+          <p className="text-center text-gray-600 mt-2">
+            Join Connect's network of elite email marketing specialists
+          </p>
           <div className="mt-4">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Step {currentStep} of {totalSteps}</span>
@@ -178,31 +182,7 @@ const ProviderOnboardingFlow = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {getStepContent()}
-          
-          <div className="flex justify-between mt-8 pt-6 border-t">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-            >
-              Back
-            </Button>
-
-            <Button
-              onClick={handleNext}
-              disabled={loading}
-              className="bg-[#2D82B7] hover:bg-[#1E5A8A]"
-            >
-              {loading ? (
-                'Completing...'
-              ) : currentStep === totalSteps ? (
-                'Complete Onboarding'
-              ) : (
-                'Next'
-              )}
-            </Button>
-          </div>
+          {getStepComponent()}
         </CardContent>
       </Card>
     </div>
