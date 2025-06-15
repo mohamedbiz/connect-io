@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -64,7 +63,7 @@ const ProviderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Welcome back!');
-          navigate('/provider/dashboard');
+          navigate('/provider-application');
         }
       }
     } catch (error: any) {
