@@ -33,6 +33,11 @@ export interface NewProviderApplicationData {
   client_references_willing: boolean;
 }
 
+interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
 interface NewApplicationContextType {
   formData: NewProviderApplicationData;
   updateFormData: (data: Partial<NewProviderApplicationData>) => void;
@@ -42,6 +47,7 @@ interface NewApplicationContextType {
   nextStep: () => void;
   prevStep: () => void;
   isValid: (step: number) => boolean;
+  validateCurrentStep: () => ValidationResult;
   submitApplication: () => Promise<void>;
   isSubmitting: boolean;
 }
@@ -110,6 +116,44 @@ export const NewApplicationProvider: React.FC<{ children: React.ReactNode }> = (
     }
   };
 
+  const validateCurrentStep = (): ValidationResult => {
+    const errors: string[] = [];
+    
+    switch (currentStep) {
+      case 0: // Basic Information
+        if (!formData.full_name.trim()) errors.push('Full name is required');
+        if (!formData.email.trim()) errors.push('Email is required');
+        if (!formData.location.trim()) errors.push('Location is required');
+        break;
+      case 1: // Professional Presence
+        if (!formData.linkedin_url.trim()) errors.push('LinkedIn URL is required');
+        if (!formData.portfolio_url.trim()) errors.push('Portfolio URL is required');
+        break;
+      case 2: // Experience & Focus
+        if (!formData.years_email_marketing) errors.push('Email marketing experience is required');
+        if (!formData.years_ecommerce) errors.push('eCommerce experience is required');
+        if (formData.expertise_areas.length === 0) errors.push('At least one expertise area is required');
+        if (!formData.email_platforms.includes('Klaviyo')) errors.push('Klaviyo expertise is required');
+        break;
+      case 3: // Case Study
+        if (!formData.case_study.client_industry.trim()) errors.push('Client industry is required');
+        if (!formData.case_study.challenge_goal.trim()) errors.push('Challenge/goal is required');
+        if (!formData.case_study.strategy_solution.trim()) errors.push('Strategy/solution is required');
+        if (!formData.case_study.quantifiable_results.trim()) errors.push('Quantifiable results are required');
+        break;
+      case 4: // Work Style & Agreement
+        if (!formData.communication_process.trim()) errors.push('Communication process is required');
+        if (!formData.availability_capacity.trim()) errors.push('Availability is required');
+        if (!formData.terms_agreement) errors.push('Terms agreement is required');
+        break;
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
   const isValid = (step: number): boolean => {
     switch (step) {
       case 0: // Basic Information
@@ -166,6 +210,7 @@ export const NewApplicationProvider: React.FC<{ children: React.ReactNode }> = (
         nextStep,
         prevStep,
         isValid,
+        validateCurrentStep,
         submitApplication,
         isSubmitting,
       }}

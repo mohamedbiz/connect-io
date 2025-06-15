@@ -13,6 +13,9 @@ import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
 import ProviderOnboardingPage from "./pages/provider/ProviderOnboardingPage";
 import ProviderSignupPage from "./pages/provider/ProviderSignupPage";
 import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage";
+import ProviderApplicationSubmittedPage from "./pages/provider/ApplicationSubmittedPage";
+import ProviderApplicationApprovedPage from "./pages/provider/ApplicationApprovedPage";
+import ProviderApplicationRejectedPage from "./pages/provider/ApplicationRejectedPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ForFoundersPage from "./pages/ForFoundersPage";
@@ -45,10 +48,25 @@ function App() {
             </PublicOnlyRoute>
           } />
           
-          {/* Provider application route - requires authentication */}
+          {/* Provider application routes - requires authentication */}
           <Route path="/provider-application" element={
             <ProtectedRoute allowedRoles={['provider']}>
               <ProviderApplicationPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/provider-application-submitted" element={
+            <ProtectedRoute allowedRoles={['provider']}>
+              <ProviderApplicationSubmittedPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/provider-application-approved" element={
+            <ProtectedRoute allowedRoles={['provider']}>
+              <ProviderApplicationApprovedPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/provider-application-rejected" element={
+            <ProtectedRoute allowedRoles={['provider']}>
+              <ProviderApplicationRejectedPage />
             </ProtectedRoute>
           } />
           
