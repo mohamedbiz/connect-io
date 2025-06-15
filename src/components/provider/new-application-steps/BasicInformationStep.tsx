@@ -2,6 +2,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
@@ -12,7 +13,24 @@ interface BasicInformationStepProps {
   updateFormData: (data: Partial<NewProviderApplicationData>) => void;
 }
 
+const EMAIL_MARKETING_EXPERTISE = [
+  "Strategy",
+  "Automation Setup",
+  "Copywriting",
+  "Design",
+  "Deliverability",
+  "List Management",
+  "Analytics & Reporting"
+];
+
 export const BasicInformationStep = ({ formData, updateFormData }: BasicInformationStepProps) => {
+  const handleExpertiseChange = (expertise: string, checked: boolean) => {
+    const updated = checked 
+      ? [...formData.email_marketing_expertise, expertise]
+      : formData.email_marketing_expertise.filter(e => e !== expertise);
+    updateFormData({ email_marketing_expertise: updated });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -67,13 +85,13 @@ export const BasicInformationStep = ({ formData, updateFormData }: BasicInformat
 
         <div className="space-y-2">
           <Label htmlFor="location" className="text-sm font-medium">
-            Location <span className="text-red-500">*</span>
+            Location (Country/Timezone) <span className="text-red-500">*</span>
           </Label>
           <Input 
             id="location" 
             value={formData.location}
             onChange={(e) => updateFormData({ location: e.target.value })}
-            placeholder="City, Country"
+            placeholder="City, Country or Timezone"
             required
             className={!formData.location ? "border-red-300 focus:border-red-500" : ""}
           />
@@ -102,6 +120,53 @@ export const BasicInformationStep = ({ formData, updateFormData }: BasicInformat
           </Select>
           {!formData.years_email_marketing && (
             <p className="text-xs text-red-600">Please select your experience level</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="years_ecommerce_experience" className="text-sm font-medium">
+            Years of Experience Working with eCommerce/DTC Brands <span className="text-red-500">*</span>
+          </Label>
+          <Select 
+            value={formData.years_ecommerce_experience} 
+            onValueChange={(value) => updateFormData({ years_ecommerce_experience: value })}
+          >
+            <SelectTrigger className={!formData.years_ecommerce_experience ? "border-red-300" : ""}>
+              <SelectValue placeholder="Select eCommerce experience" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0-1">0-1 years</SelectItem>
+              <SelectItem value="1-3">1-3 years</SelectItem>
+              <SelectItem value="3-5">3-5 years</SelectItem>
+              <SelectItem value="5+">5+ years</SelectItem>
+            </SelectContent>
+          </Select>
+          {!formData.years_ecommerce_experience && (
+            <p className="text-xs text-red-600">Please select your eCommerce experience</p>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">
+            Primary Areas of Email Marketing Expertise <span className="text-red-500">*</span>
+          </Label>
+          <p className="text-xs text-gray-600 mb-3">Select all areas where you have hands-on expertise</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {EMAIL_MARKETING_EXPERTISE.map(expertise => (
+              <div key={expertise} className="flex items-center space-x-2">
+                <Checkbox
+                  id={expertise}
+                  checked={formData.email_marketing_expertise.includes(expertise)}
+                  onCheckedChange={(checked) => handleExpertiseChange(expertise, checked as boolean)}
+                />
+                <Label htmlFor={expertise} className="text-sm">{expertise}</Label>
+              </div>
+            ))}
+          </div>
+          
+          {formData.email_marketing_expertise.length === 0 && (
+            <p className="text-xs text-red-600">Please select at least one expertise area</p>
           )}
         </div>
 

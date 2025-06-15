@@ -172,6 +172,22 @@ export const WorkStyleAgreementStep = ({ formData, updateFormData }: WorkStyleAg
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Checkbox
+              id="client_references_willing"
+              checked={formData.client_references_willing}
+              onCheckedChange={(checked) => updateFormData({ client_references_willing: checked as boolean })}
+            />
+            <Label htmlFor="client_references_willing" className="text-sm">
+              Willing to provide client references upon request
+            </Label>
+          </div>
+          <p className="text-xs text-gray-500 ml-6">
+            This helps us verify your work quality and professionalism
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox
               id="terms_agreement"
               checked={formData.terms_agreement}
               onCheckedChange={(checked) => updateFormData({ terms_agreement: checked as boolean })}

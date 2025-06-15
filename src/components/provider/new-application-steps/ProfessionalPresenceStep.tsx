@@ -15,7 +15,7 @@ export const ProfessionalPresenceStep = ({ formData, updateFormData }: Professio
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Key Achievements & Portfolio</h2>
+        <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">Professional Presence & Portfolio</h2>
         <p className="text-gray-600 mb-6">
           Share your most significant results and provide links to your professional presence.
         </p>
@@ -97,18 +97,23 @@ export const ProfessionalPresenceStep = ({ formData, updateFormData }: Professio
 
         <div className="space-y-2">
           <Label htmlFor="portfolio_url" className="text-sm font-medium">
-            Portfolio/Website URL (Optional)
+            Portfolio/Website URL <span className="text-red-500">*</span>
           </Label>
           <Input 
             id="portfolio_url" 
             type="url"
             value={formData.portfolio_url}
             onChange={(e) => updateFormData({ portfolio_url: e.target.value })}
-            placeholder="https://yourportfolio.com or additional work examples"
+            placeholder="https://yourportfolio.com or your website"
+            required
+            className={!formData.portfolio_url ? "border-red-300 focus:border-red-500" : ""}
           />
           <p className="text-xs text-gray-500">
-            Website, portfolio, or additional profile where we can see more examples of your work
+            Your personal website, portfolio, or professional profile showcasing your email marketing work
           </p>
+          {!formData.portfolio_url && (
+            <p className="text-xs text-red-600">Portfolio/Website URL is required</p>
+          )}
         </div>
       </div>
 
