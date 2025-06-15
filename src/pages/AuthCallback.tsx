@@ -6,7 +6,7 @@ import Layout from '@/components/layout/Layout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { ensureProfileExists } from '@/utils/auth/profile-operations';
+import { ensureUserProfileExists } from '@/utils/profile/profileCreation';
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,14 @@ const AuthCallback = () => {
             // Ensure profile exists with correct role
             try {
               console.log('Auth callback: Ensuring profile exists for user:', data.session.user.id);
-              const profileResult = await ensureProfileExists(data.session.user);
+              const profileResult = await ensureUserProfileExists(
+                data.session.user,
+                null, // currentProfile
+                0, // lastFetchTime
+                () => {}, // setProfileLoading
+                () => {}, // setProfile
+                () => {} // setProfileError
+              );
               
               if (profileResult) {
                 console.log('Auth callback: Profile created/updated successfully', profileResult);
