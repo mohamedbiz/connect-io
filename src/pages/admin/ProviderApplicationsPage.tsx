@@ -10,6 +10,8 @@ import EnhancedReviewDialog from "@/components/admin/provider-applications/Enhan
 import ApplicationTabs from "@/components/admin/provider-applications/ApplicationTabs";
 import ApplicationMetrics from "@/components/admin/provider-applications/ApplicationMetrics";
 import EnhancedApplicationsTable from "@/components/admin/provider-applications/EnhancedApplicationsTable";
+import NotificationSettings from "@/components/admin/provider-applications/NotificationSettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ProviderApplicationsPage = () => {
   const { user, profile, loading } = useAuth();
@@ -121,7 +123,7 @@ const ProviderApplicationsPage = () => {
           <div>
             <h1 className="text-3xl font-bold">Provider Applications</h1>
             <p className="text-muted-foreground">
-              Review and manage provider applications with enhanced scoring and verification
+              Review and manage provider applications with enhanced scoring, verification, and automated notifications
             </p>
           </div>
         </div>
@@ -129,24 +131,36 @@ const ProviderApplicationsPage = () => {
         {/* Metrics Overview */}
         <ApplicationMetrics applications={allApplications} />
         
-        {/* Application Tabs */}
-        <ApplicationTabs
-          pendingApplications={pendingApplications}
-          inReviewApplications={inReviewApplications}
-          approvedApplications={approvedApplications}
-          rejectedApplications={rejectedApplications}
-          onReviewClick={handleReviewClick}
-          currentTab={currentTab}
-          setCurrentTab={setCurrentTab}
-        />
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="applications" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="applications">Applications Management</TabsTrigger>
+            <TabsTrigger value="notifications">Notification Settings</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="applications" className="space-y-6">
+            {/* Application Tabs */}
+            <ApplicationTabs
+              pendingApplications={pendingApplications}
+              inReviewApplications={inReviewApplications}
+              approvedApplications={approvedApplications}
+              rejectedApplications={rejectedApplications}
+              onReviewClick={handleReviewClick}
+              currentTab={currentTab}
+              setCurrentTab={setCurrentTab}
+            />
 
-        {/* Enhanced Applications Table */}
-        <div className="mt-6">
-          <EnhancedApplicationsTable
-            applications={getCurrentApplications()}
-            onReviewClick={handleReviewClick}
-          />
-        </div>
+            {/* Enhanced Applications Table */}
+            <EnhancedApplicationsTable
+              applications={getCurrentApplications()}
+              onReviewClick={handleReviewClick}
+            />
+          </TabsContent>
+          
+          <TabsContent value="notifications">
+            <NotificationSettings applications={allApplications} />
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Enhanced Review Dialog */}

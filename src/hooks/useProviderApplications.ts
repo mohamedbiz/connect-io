@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProviderApplication } from '@/types/supabase-custom-types';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { emailNotificationService } from '@/services/emailNotificationService';
 
 export const useProviderApplications = () => {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ export const useProviderApplications = () => {
     return data || [];
   };
 
-  // For admin - update application status
+  // For admin - update application status with email notification
   const updateApplicationStatus = async ({ 
     applicationId, 
     status, 
@@ -69,12 +70,76 @@ export const useProviderApplications = () => {
         accepted: status === 'approved'
       })
       .eq('id', applicationId)
-      .select()
+      .select(`
+        *,
+        profiles:user_id(first_name, last_name, email)
+      `)
       .single();
 
     if (error) {
       console.error('Error updating provider application:', error);
       throw error;
+    }
+
+    // Send email notification
+    if (data && data.profiles) {
+      const profile = data.profiles;
+      const applicantName = `${profile.first_name} ${profile.last_name}`;
+      const applicantEmail = profile.email;
+
+      // Send notification in the background
+      emailNotificationService.sendStatusUpdateEmail(
+        applicationId,
+        status,
+        applicantEmail,
+        applicantName,
+        reviewerNotes
+      ).catch(error => {
+        console.error('Failed to send email notification:', error);
+        // Don't throw error - email failure shouldn't break the status update
+      });
+    }
+
+    return data;
+  };
+
+  // Submit new application with email notification
+  const submitApplication = async (applicationData: any) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('provider_applications')
+      .insert({
+        user_id: user.id,
+        application_data: applicationData,
+        status: 'submitted',
+        submitted_at: new Date().toISOString()
+      })
+      .select(`
+        *,
+        profiles:user_id(first_name, last_name, email)
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error submitting application:', error);
+      throw error;
+    }
+
+    // Send submission confirmation email
+    if (data && data.profiles) {
+      const profile = data.profiles;
+      const applicantName = `${profile.first_name} ${profile.last_name}`;
+      const applicantEmail = profile.email;
+
+      emailNotificationService.sendStatusUpdateEmail(
+        data.id,
+        'submitted',
+        applicantEmail,
+        applicantName
+      ).catch(error => {
+        console.error('Failed to send submission confirmation email:', error);
+      });
     }
 
     return data;
@@ -98,12 +163,24 @@ export const useProviderApplications = () => {
   const updateStatusMutation = useMutation({
     mutationFn: updateApplicationStatus,
     onSuccess: () => {
-      toast.success('Application status updated successfully');
+      toast.success('Application status updated and notification sent');
       queryClient.invalidateQueries({ queryKey: ['allProviderApplications'] });
       queryClient.invalidateQueries({ queryKey: ['myProviderApplication', user?.id] });
     },
     onError: (error) => {
       toast.error(`Failed to update application: ${error.message}`);
+    }
+  });
+
+  // Mutation for submitting application
+  const submitApplicationMutation = useMutation({
+    mutationFn: submitApplication,
+    onSuccess: () => {
+      toast.success('Application submitted successfully! Confirmation email sent.');
+      queryClient.invalidateQueries({ queryKey: ['myProviderApplication', user?.id] });
+    },
+    onError: (error) => {
+      toast.error(`Failed to submit application: ${error.message}`);
     }
   });
 
@@ -117,6 +194,9 @@ export const useProviderApplications = () => {
     refetch: () => allApplicationsQuery.refetch(),
     
     updateApplicationStatus: updateStatusMutation.mutate,
-    isUpdating: updateStatusMutation.isPending
+    isUpdating: updateStatusMutation.isPending,
+    
+    submitApplication: submitApplicationMutation.mutate,
+    isSubmitting: submitApplicationMutation.isPending
   };
 };

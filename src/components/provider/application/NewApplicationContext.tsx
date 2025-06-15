@@ -1,11 +1,14 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useProviderApplications } from '@/hooks/useProviderApplications';
+import { automationService } from '@/services/providerApplicationAutomation';
 
-export interface NewProviderApplicationData {
+interface ApplicationData {
   // Basic Information
   full_name: string;
   email: string;
   location: string;
+  timezone: string;
   
   // Professional Presence
   linkedin_url: string;
@@ -14,208 +17,252 @@ export interface NewProviderApplicationData {
   // Experience & Focus
   years_email_marketing: string;
   years_ecommerce: string;
-  expertise_areas: string[];
   email_platforms: string[];
-  klaviyo_required: boolean;
+  expertise_areas: string[];
   
   // Case Study
-  case_study: {
+  case_studies: Array<{
     client_industry: string;
-    challenge_goal: string;
-    strategy_solution: string;
-    quantifiable_results: string;
-  };
+    initial_situation: string;
+    strategy_implemented: string;
+    results_achieved: string;
+    timeline: string;
+  }>;
   
   // Work Style & Agreement
-  communication_process: string;
-  availability_capacity: string;
-  terms_agreement: boolean;
-  client_references_willing: boolean;
+  availability: string;
+  hourly_rate: string;
+  performance_guarantee: 'yes' | 'no';
+  terms_accepted: boolean;
+  klaviyo_expertise_confirmed: boolean;
 }
 
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
-interface NewApplicationContextType {
-  formData: NewProviderApplicationData;
-  updateFormData: (data: Partial<NewProviderApplicationData>) => void;
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-  totalSteps: number;
-  nextStep: () => void;
-  prevStep: () => void;
-  isValid: (step: number) => boolean;
-  validateCurrentStep: () => ValidationResult;
+interface ApplicationContextType {
+  applicationData: ApplicationData;
+  updateApplicationData: (updates: Partial<ApplicationData>) => void;
   submitApplication: () => Promise<void>;
   isSubmitting: boolean;
+  validationErrors: Record<string, string>;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  canProceedToStep: (step: number) => boolean;
+  getApplicationScore: () => any;
 }
 
-const initialFormData: NewProviderApplicationData = {
-  // Basic Information
+const initialApplicationData: ApplicationData = {
   full_name: '',
   email: '',
   location: '',
-  
-  // Professional Presence
+  timezone: '',
   linkedin_url: '',
   portfolio_url: '',
-  
-  // Experience & Focus
   years_email_marketing: '',
   years_ecommerce: '',
-  expertise_areas: [],
   email_platforms: [],
-  klaviyo_required: false,
-  
-  // Case Study
-  case_study: {
-    client_industry: '',
-    challenge_goal: '',
-    strategy_solution: '',
-    quantifiable_results: '',
-  },
-  
-  // Work Style & Agreement
-  communication_process: '',
-  availability_capacity: '',
-  terms_agreement: false,
-  client_references_willing: false,
+  expertise_areas: [],
+  case_studies: [],
+  availability: '',
+  hourly_rate: '',
+  performance_guarantee: 'no',
+  terms_accepted: false,
+  klaviyo_expertise_confirmed: false,
 };
 
-const NewApplicationContext = createContext<NewApplicationContextType | undefined>(undefined);
+const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
 
-export const useNewApplicationContext = () => {
-  const context = useContext(NewApplicationContext);
+export const useApplicationContext = () => {
+  const context = useContext(ApplicationContext);
   if (!context) {
-    throw new Error('useNewApplicationContext must be used within NewApplicationProvider');
+    throw new Error('useApplicationContext must be used within an ApplicationProvider');
   }
   return context;
 };
 
-export const NewApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [formData, setFormData] = useState<NewProviderApplicationData>(initialFormData);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const totalSteps = 5;
+interface ApplicationProviderProps {
+  children: React.ReactNode;
+}
 
-  const updateFormData = (data: Partial<NewProviderApplicationData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
+export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({ children }) => {
+  const [applicationData, setApplicationData] = useState<ApplicationData>(initialApplicationData);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [currentStep, setCurrentStep] = useState(1);
+  
+  const { submitApplication: submitToAPI, isSubmitting } = useProviderApplications();
 
-  const nextStep = () => {
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(prev => prev + 1);
-    }
-  };
+  const updateApplicationData = useCallback((updates: Partial<ApplicationData>) => {
+    setApplicationData(prev => ({ ...prev, ...updates }));
+    // Clear validation errors for updated fields
+    const updatedFields = Object.keys(updates);
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      updatedFields.forEach(field => {
+        delete newErrors[field];
+      });
+      return newErrors;
+    });
+  }, []);
 
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    }
-  };
-
-  const validateCurrentStep = (): ValidationResult => {
-    const errors: string[] = [];
+  const validateStep = useCallback((step: number): boolean => {
+    const errors: Record<string, string> = {};
     
-    switch (currentStep) {
-      case 0: // Basic Information
-        if (!formData.full_name.trim()) errors.push('Full name is required');
-        if (!formData.email.trim()) errors.push('Email is required');
-        if (!formData.location.trim()) errors.push('Location is required');
-        break;
-      case 1: // Professional Presence
-        if (!formData.linkedin_url.trim()) errors.push('LinkedIn URL is required');
-        if (!formData.portfolio_url.trim()) errors.push('Portfolio URL is required');
-        break;
-      case 2: // Experience & Focus
-        if (!formData.years_email_marketing) errors.push('Email marketing experience is required');
-        if (!formData.years_ecommerce) errors.push('eCommerce experience is required');
-        if (formData.expertise_areas.length === 0) errors.push('At least one expertise area is required');
-        if (!formData.email_platforms.includes('Klaviyo')) errors.push('Klaviyo expertise is required');
-        break;
-      case 3: // Case Study
-        if (!formData.case_study.client_industry.trim()) errors.push('Client industry is required');
-        if (!formData.case_study.challenge_goal.trim()) errors.push('Challenge/goal is required');
-        if (!formData.case_study.strategy_solution.trim()) errors.push('Strategy/solution is required');
-        if (!formData.case_study.quantifiable_results.trim()) errors.push('Quantifiable results are required');
-        break;
-      case 4: // Work Style & Agreement
-        if (!formData.communication_process.trim()) errors.push('Communication process is required');
-        if (!formData.availability_capacity.trim()) errors.push('Availability is required');
-        if (!formData.terms_agreement) errors.push('Terms agreement is required');
-        break;
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  };
-
-  const isValid = (step: number): boolean => {
     switch (step) {
-      case 0: // Basic Information
-        return !!(formData.full_name && formData.email && formData.location);
-      case 1: // Professional Presence
-        return !!(formData.linkedin_url && formData.portfolio_url);
-      case 2: // Experience & Focus
-        return !!(
-          formData.years_email_marketing && 
-          formData.years_ecommerce && 
-          formData.expertise_areas.length > 0 && 
-          formData.email_platforms.includes('Klaviyo')
-        );
-      case 3: // Case Study
-        return !!(
-          formData.case_study.client_industry &&
-          formData.case_study.challenge_goal &&
-          formData.case_study.strategy_solution &&
-          formData.case_study.quantifiable_results
-        );
-      case 4: // Work Style & Agreement
-        return !!(
-          formData.communication_process &&
-          formData.availability_capacity &&
-          formData.terms_agreement
-        );
-      default:
-        return false;
+      case 1: // Basic Information
+        if (!applicationData.full_name.trim()) errors.full_name = 'Full name is required';
+        if (!applicationData.email.trim()) errors.email = 'Email is required';
+        if (!applicationData.location.trim()) errors.location = 'Location is required';
+        if (!applicationData.timezone) errors.timezone = 'Timezone is required';
+        break;
+        
+      case 2: // Professional Presence
+        if (!applicationData.linkedin_url.trim()) {
+          errors.linkedin_url = 'LinkedIn URL is required';
+        } else if (!isValidUrl(applicationData.linkedin_url)) {
+          errors.linkedin_url = 'Please enter a valid LinkedIn URL';
+        }
+        if (!applicationData.portfolio_url.trim()) {
+          errors.portfolio_url = 'Portfolio URL is required';
+        } else if (!isValidUrl(applicationData.portfolio_url)) {
+          errors.portfolio_url = 'Please enter a valid portfolio URL';
+        }
+        break;
+        
+      case 3: // Experience & Focus
+        if (!applicationData.years_email_marketing) {
+          errors.years_email_marketing = 'Email marketing experience is required';
+        }
+        if (!applicationData.years_ecommerce) {
+          errors.years_ecommerce = 'eCommerce experience is required';
+        }
+        if (applicationData.email_platforms.length === 0) {
+          errors.email_platforms = 'At least one email platform is required';
+        }
+        if (!applicationData.email_platforms.includes('Klaviyo')) {
+          errors.klaviyo_expertise = 'Klaviyo expertise is required';
+        }
+        if (applicationData.expertise_areas.length === 0) {
+          errors.expertise_areas = 'At least one expertise area is required';
+        }
+        if (!applicationData.klaviyo_expertise_confirmed) {
+          errors.klaviyo_expertise_confirmed = 'You must confirm your Klaviyo expertise';
+        }
+        break;
+        
+      case 4: // Case Study
+        if (applicationData.case_studies.length === 0) {
+          errors.case_studies = 'At least one case study is required';
+        } else {
+          applicationData.case_studies.forEach((study, index) => {
+            if (!study.client_industry.trim()) {
+              errors[`case_study_${index}_industry`] = 'Client industry is required';
+            }
+            if (!study.initial_situation.trim()) {
+              errors[`case_study_${index}_situation`] = 'Initial situation is required';
+            } else if (study.initial_situation.trim().split(' ').length < 20) {
+              errors[`case_study_${index}_situation`] = 'Initial situation must be at least 20 words';
+            }
+            if (!study.strategy_implemented.trim()) {
+              errors[`case_study_${index}_strategy`] = 'Strategy implemented is required';
+            } else if (study.strategy_implemented.trim().split(' ').length < 30) {
+              errors[`case_study_${index}_strategy`] = 'Strategy must be at least 30 words';
+            }
+            if (!study.results_achieved.trim()) {
+              errors[`case_study_${index}_results`] = 'Results achieved is required';
+            } else if (study.results_achieved.trim().split(' ').length < 15) {
+              errors[`case_study_${index}_results`] = 'Results must be at least 15 words';
+            }
+            if (!study.timeline.trim()) {
+              errors[`case_study_${index}_timeline`] = 'Timeline is required';
+            }
+          });
+        }
+        break;
+        
+      case 5: // Work Style & Agreement
+        if (!applicationData.availability) {
+          errors.availability = 'Availability is required';
+        }
+        if (!applicationData.hourly_rate) {
+          errors.hourly_rate = 'Hourly rate is required';
+        }
+        if (!applicationData.performance_guarantee) {
+          errors.performance_guarantee = 'Performance guarantee preference is required';
+        }
+        if (!applicationData.terms_accepted) {
+          errors.terms_accepted = 'You must accept the terms and conditions';
+        }
+        break;
     }
-  };
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [applicationData]);
 
-  const submitApplication = async () => {
-    setIsSubmitting(true);
-    try {
-      // TODO: Implement actual submission logic
-      console.log('Submitting application:', formData);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulated API call
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      throw error;
-    } finally {
-      setIsSubmitting(false);
+  const canProceedToStep = useCallback((step: number): boolean => {
+    if (step <= currentStep) return true;
+    
+    // Check if all previous steps are valid
+    for (let i = 1; i < step; i++) {
+      if (!validateStep(i)) return false;
     }
+    return true;
+  }, [currentStep, validateStep]);
+
+  const getApplicationScore = useCallback(() => {
+    return automationService.calculateScore(applicationData);
+  }, [applicationData]);
+
+  const submitApplication = useCallback(async () => {
+    // Validate all steps
+    let isValid = true;
+    for (let i = 1; i <= 5; i++) {
+      if (!validateStep(i)) {
+        isValid = false;
+      }
+    }
+    
+    if (!isValid) {
+      throw new Error('Please fix all validation errors before submitting');
+    }
+
+    // Calculate automated score
+    const score = automationService.calculateScore(applicationData);
+    
+    // Prepare submission data
+    const submissionData = {
+      ...applicationData,
+      automated_score: score.score,
+      approval_tier: score.tier,
+      auto_approved: score.autoApproved,
+      score_breakdown: score.breakdown
+    };
+
+    await submitToAPI(submissionData);
+  }, [applicationData, validateStep, submitToAPI]);
+
+  const value: ApplicationContextType = {
+    applicationData,
+    updateApplicationData,
+    submitApplication,
+    isSubmitting,
+    validationErrors,
+    currentStep,
+    setCurrentStep,
+    canProceedToStep,
+    getApplicationScore,
   };
 
   return (
-    <NewApplicationContext.Provider
-      value={{
-        formData,
-        updateFormData,
-        currentStep,
-        setCurrentStep,
-        totalSteps,
-        nextStep,
-        prevStep,
-        isValid,
-        validateCurrentStep,
-        submitApplication,
-        isSubmitting,
-      }}
-    >
+    <ApplicationContext.Provider value={value}>
       {children}
-    </NewApplicationContext.Provider>
+    </ApplicationContext.Provider>
   );
 };
+
+function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
