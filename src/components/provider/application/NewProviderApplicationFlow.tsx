@@ -1,237 +1,108 @@
 
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ArrowRight, User, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { updateProfile } from '@/utils/auth/profile-operations';
-import { NewApplicationProvider } from './NewApplicationContext';
-import { NewApplicationProgress } from './NewApplicationProgress';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { NewApplicationProvider, useNewApplicationContext } from './NewApplicationContext';
 import { NewApplicationStep } from './NewApplicationStep';
-import { NewApplicationNavigation } from './NewApplicationNavigation';
 
-const NewProviderApplicationFlow = () => {
-  const { user, profile, loading, refreshProfile } = useAuth();
-  const navigate = useNavigate();
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [applicationStatus, setApplicationStatus] = useState<'draft' | 'submitted' | 'approved' | 'rejected'>('draft');
-  const [componentLoading, setComponentLoading] = useState(true);
+const ApplicationFlowContent = () => {
+  const { 
+    currentStep, 
+    totalSteps, 
+    nextStep, 
+    prevStep, 
+    isValid, 
+    submitApplication, 
+    isSubmitting 
+  } = useNewApplicationContext();
 
-  // Add component loading timeout
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setComponentLoading(false);
-    }, 5000);
+  const stepTitles = [
+    'Basic Information',
+    'Professional Presence',
+    'Experience & Focus',
+    'Proof of Results',
+    'Work Style & Agreement'
+  ];
 
-    return () => clearTimeout(timeout);
-  }, []);
+  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
-  // Set component loading to false when auth loading is done
-  useEffect(() => {
-    if (!loading) {
-      setComponentLoading(false);
-    }
-  }, [loading]);
-
-  // Check if user has already submitted an application
-  useEffect(() => {
-    const checkApplicationStatus = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('provider_applications')
-          .select('status')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking application status:', error);
-          return;
-        }
-
-        if (data) {
-          setApplicationStatus(data.status);
-          if (data.status === 'submitted' || data.status === 'approved' || data.status === 'rejected') {
-            setIsSubmitted(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking application:', error);
-      }
-    };
-
-    checkApplicationStatus();
-  }, [user]);
-
-  // Handle final application submission
-  const handleFinalSubmit = async (formData: any) => {
-    if (!user) {
-      toast.error('Please sign in to submit your application');
-      return;
-    }
-
-    try {
-      console.log('Submitting provider application:', formData);
-
-      // Submit the application to Supabase
-      const { error } = await supabase
-        .from('provider_applications')
-        .insert({
-          user_id: user.id,
-          application_data: formData,
-          status: 'submitted',
-          submitted_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      // Update profile status to pending_application
-      const updatedProfile = await updateProfile(user.id, {
-        account_status: 'pending_application',
-        business_name: formData.businessName || formData.full_name + ' Services',
-        portfolio_url: formData.portfolio_url
-      });
-
-      if (updatedProfile) {
-        console.log('Profile updated successfully after application submission');
-        await refreshProfile();
-        
-        setIsSubmitted(true);
-        setApplicationStatus('submitted');
-        
-        toast.success('Application submitted successfully! We\'ll review it and get back to you soon.');
-        
-        // Redirect to onboarding after a delay
-        setTimeout(() => {
-          navigate('/provider/onboarding', { replace: true });
-        }, 3000);
-      } else {
-        throw new Error('Failed to update profile status');
-      }
-
-    } catch (error) {
-      console.error('Application submission error:', error);
-      toast.error('Failed to submit application. Please try again.');
+  const handleNext = () => {
+    if (currentStep === totalSteps - 1) {
+      submitApplication();
+    } else {
+      nextStep();
     }
   };
 
-  if (loading || componentLoading) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2D82B7] mx-auto mb-4"></div>
-            <p className="text-[#0E3366] mb-4">Loading application...</p>
-            {componentLoading && (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setComponentLoading(false);
-                  window.location.reload();
-                }}
-                className="mt-4"
-              >
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Taking too long? Refresh page
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <Card className="max-w-md mx-auto p-6 text-center">
-          <User className="h-12 w-12 mx-auto mb-4 text-[#2D82B7]" />
-          <h3 className="text-lg font-semibold mb-2">Sign in Required</h3>
-          <p className="text-gray-600 mb-4">
-            Please sign in to access the provider application form.
-          </p>
-          <Button onClick={() => navigate('/provider-signup')}>
-            Sign Up as Provider
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <Card className="max-w-2xl mx-auto p-8 text-center">
-          <CheckCircle className="h-16 w-16 mx-auto mb-6 text-green-500" />
-          <h2 className="text-2xl font-bold mb-4 text-[#0A2342]">
-            Application {applicationStatus === 'approved' ? 'Approved!' : 'Submitted!'}
-          </h2>
-          
-          {applicationStatus === 'approved' ? (
-            <div className="space-y-4">
-              <p className="text-[#0E3366] text-lg">
-                Congratulations! Your provider application has been approved.
-              </p>
-              <Button 
-                onClick={() => navigate('/provider/dashboard')}
-                className="bg-[#2D82B7] hover:bg-[#3D9AD1]"
-              >
-                Go to Dashboard <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-[#0E3366] text-lg">
-                Thank you for submitting your provider application! 
-              </p>
-              <p className="text-gray-600">
-                Our team will review your application and get back to you within 2-3 business days. 
-                You'll receive an email notification once your application status changes.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/provider/onboarding')}
-                >
-                  Continue Setup
-                </Button>
-                <Button onClick={() => navigate('/')}>
-                  Return Home
-                </Button>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
-    );
-  }
+  const canProceed = isValid(currentStep);
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold mb-4 text-[#0A2342]">Provider Application</h1>
-          <p className="text-lg text-[#0E3366] max-w-2xl mx-auto">
-            Join our network of qualified Email Marketing Specialists and connect with 
-            eCommerce businesses looking for your expertise.
+    <div className="container mx-auto py-10 px-4 max-w-4xl">
+      <Card className="shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-[#0A2342] to-[#2D82B7] text-white">
+          <CardTitle className="text-center text-2xl font-bold">
+            Provider Application
+          </CardTitle>
+          <p className="text-center text-blue-100 mt-2">
+            Join Connect's network of elite email marketing specialists
           </p>
-        </div>
-        
-        <NewApplicationProvider>
-          <NewApplicationProgress />
-          <Card className="p-6">
-            <NewApplicationStep />
-            <NewApplicationNavigation handleSubmit={handleFinalSubmit} />
-          </Card>
-        </NewApplicationProvider>
-      </div>
+          
+          <div className="mt-6">
+            <div className="flex justify-between text-sm mb-2">
+              <span>Step {currentStep + 1} of {totalSteps}</span>
+              <span>{Math.round(progressPercentage)}% Complete</span>
+            </div>
+            <Progress value={progressPercentage} className="h-3 bg-blue-200" />
+            <p className="text-center text-sm text-blue-100 mt-2">
+              {stepTitles[currentStep]}
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-8">
+          <NewApplicationStep />
+          
+          <div className="flex justify-between mt-8 pt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 0}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed || isSubmitting}
+              className="flex items-center gap-2 bg-[#2D82B7] hover:bg-[#1E5A8A]"
+            >
+              {isSubmitting ? (
+                'Submitting...'
+              ) : currentStep === totalSteps - 1 ? (
+                'Submit Application'
+              ) : (
+                <>
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
+  );
+};
+
+const NewProviderApplicationFlow = () => {
+  return (
+    <NewApplicationProvider>
+      <ApplicationFlowContent />
+    </NewApplicationProvider>
   );
 };
 
