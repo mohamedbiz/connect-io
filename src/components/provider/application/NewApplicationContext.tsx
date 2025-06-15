@@ -1,14 +1,13 @@
 
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useProviderApplications } from '@/hooks/useProviderApplications';
-import { automationService } from '@/services/providerApplicationAutomation';
+import { toast } from 'sonner';
 
-interface ApplicationData {
+export interface NewProviderApplicationData {
   // Basic Information
   full_name: string;
   email: string;
   location: string;
-  timezone: string;
   
   // Professional Presence
   linkedin_url: string;
@@ -19,250 +18,180 @@ interface ApplicationData {
   years_ecommerce: string;
   email_platforms: string[];
   expertise_areas: string[];
+  klaviyo_required: boolean;
   
   // Case Study
-  case_studies: Array<{
+  case_study: {
     client_industry: string;
-    initial_situation: string;
-    strategy_implemented: string;
-    results_achieved: string;
-    timeline: string;
-  }>;
+    challenge_goal: string;
+    strategy_solution: string;
+    quantifiable_results: string;
+  };
   
   // Work Style & Agreement
-  availability: string;
-  hourly_rate: string;
-  performance_guarantee: 'yes' | 'no';
-  terms_accepted: boolean;
-  klaviyo_expertise_confirmed: boolean;
+  communication_process: string;
+  availability_capacity: string;
+  terms_agreement: boolean;
+  client_references_willing: boolean;
 }
 
-interface ApplicationContextType {
-  applicationData: ApplicationData;
-  updateApplicationData: (updates: Partial<ApplicationData>) => void;
+interface NewApplicationContextType {
+  formData: NewProviderApplicationData;
+  updateFormData: (data: Partial<NewProviderApplicationData>) => void;
+  currentStep: number;
+  totalSteps: number;
+  setCurrentStep: (step: number) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  isValid: (step: number) => boolean;
+  validateCurrentStep: () => { isValid: boolean; errors: string[] };
   submitApplication: () => Promise<void>;
   isSubmitting: boolean;
-  validationErrors: Record<string, string>;
-  currentStep: number;
-  setCurrentStep: (step: number) => void;
-  canProceedToStep: (step: number) => boolean;
-  getApplicationScore: () => any;
 }
 
-const initialApplicationData: ApplicationData = {
+const initialFormData: NewProviderApplicationData = {
   full_name: '',
   email: '',
   location: '',
-  timezone: '',
   linkedin_url: '',
   portfolio_url: '',
   years_email_marketing: '',
   years_ecommerce: '',
   email_platforms: [],
   expertise_areas: [],
-  case_studies: [],
-  availability: '',
-  hourly_rate: '',
-  performance_guarantee: 'no',
-  terms_accepted: false,
-  klaviyo_expertise_confirmed: false,
+  klaviyo_required: false,
+  case_study: {
+    client_industry: '',
+    challenge_goal: '',
+    strategy_solution: '',
+    quantifiable_results: '',
+  },
+  communication_process: '',
+  availability_capacity: '',
+  terms_agreement: false,
+  client_references_willing: false,
 };
 
-const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
+const NewApplicationContext = createContext<NewApplicationContextType | undefined>(undefined);
 
-export const useApplicationContext = () => {
-  const context = useContext(ApplicationContext);
+export const useNewApplicationContext = () => {
+  const context = useContext(NewApplicationContext);
   if (!context) {
-    throw new Error('useApplicationContext must be used within an ApplicationProvider');
+    throw new Error('useNewApplicationContext must be used within a NewApplicationProvider');
   }
   return context;
 };
 
-interface ApplicationProviderProps {
+interface NewApplicationProviderProps {
   children: React.ReactNode;
 }
 
-export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({ children }) => {
-  const [applicationData, setApplicationData] = useState<ApplicationData>(initialApplicationData);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [currentStep, setCurrentStep] = useState(1);
-  
+export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ children }) => {
+  const [formData, setFormData] = useState<NewProviderApplicationData>(initialFormData);
+  const [currentStep, setCurrentStep] = useState(0);
   const { submitApplication: submitToAPI, isSubmitting } = useProviderApplications();
+  
+  const totalSteps = 5;
 
-  const updateApplicationData = useCallback((updates: Partial<ApplicationData>) => {
-    setApplicationData(prev => ({ ...prev, ...updates }));
-    // Clear validation errors for updated fields
-    const updatedFields = Object.keys(updates);
-    setValidationErrors(prev => {
-      const newErrors = { ...prev };
-      updatedFields.forEach(field => {
-        delete newErrors[field];
-      });
-      return newErrors;
-    });
+  const updateFormData = useCallback((data: Partial<NewProviderApplicationData>) => {
+    setFormData(prev => ({ ...prev, ...data }));
   }, []);
 
-  const validateStep = useCallback((step: number): boolean => {
-    const errors: Record<string, string> = {};
+  const nextStep = useCallback(() => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  }, [currentStep, totalSteps]);
+
+  const prevStep = useCallback(() => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
+
+  const validateStep = useCallback((step: number): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
     
     switch (step) {
-      case 1: // Basic Information
-        if (!applicationData.full_name.trim()) errors.full_name = 'Full name is required';
-        if (!applicationData.email.trim()) errors.email = 'Email is required';
-        if (!applicationData.location.trim()) errors.location = 'Location is required';
-        if (!applicationData.timezone) errors.timezone = 'Timezone is required';
+      case 0: // Basic Information
+        if (!formData.full_name.trim()) errors.push('Full name is required');
+        if (!formData.email.trim()) errors.push('Email is required');
+        if (!formData.location.trim()) errors.push('Location is required');
         break;
         
-      case 2: // Professional Presence
-        if (!applicationData.linkedin_url.trim()) {
-          errors.linkedin_url = 'LinkedIn URL is required';
-        } else if (!isValidUrl(applicationData.linkedin_url)) {
-          errors.linkedin_url = 'Please enter a valid LinkedIn URL';
-        }
-        if (!applicationData.portfolio_url.trim()) {
-          errors.portfolio_url = 'Portfolio URL is required';
-        } else if (!isValidUrl(applicationData.portfolio_url)) {
-          errors.portfolio_url = 'Please enter a valid portfolio URL';
-        }
+      case 1: // Professional Presence
+        if (!formData.linkedin_url.trim()) errors.push('LinkedIn URL is required');
+        if (!formData.portfolio_url.trim()) errors.push('Portfolio URL is required');
         break;
         
-      case 3: // Experience & Focus
-        if (!applicationData.years_email_marketing) {
-          errors.years_email_marketing = 'Email marketing experience is required';
-        }
-        if (!applicationData.years_ecommerce) {
-          errors.years_ecommerce = 'eCommerce experience is required';
-        }
-        if (applicationData.email_platforms.length === 0) {
-          errors.email_platforms = 'At least one email platform is required';
-        }
-        if (!applicationData.email_platforms.includes('Klaviyo')) {
-          errors.klaviyo_expertise = 'Klaviyo expertise is required';
-        }
-        if (applicationData.expertise_areas.length === 0) {
-          errors.expertise_areas = 'At least one expertise area is required';
-        }
-        if (!applicationData.klaviyo_expertise_confirmed) {
-          errors.klaviyo_expertise_confirmed = 'You must confirm your Klaviyo expertise';
-        }
+      case 2: // Experience & Focus
+        if (!formData.years_email_marketing) errors.push('Email marketing experience is required');
+        if (!formData.years_ecommerce) errors.push('eCommerce experience is required');
+        if (formData.email_platforms.length === 0) errors.push('At least one email platform is required');
+        if (!formData.email_platforms.includes('Klaviyo')) errors.push('Klaviyo expertise is required');
+        if (formData.expertise_areas.length < 2) errors.push('At least 2 expertise areas are required');
         break;
         
-      case 4: // Case Study
-        if (applicationData.case_studies.length === 0) {
-          errors.case_studies = 'At least one case study is required';
-        } else {
-          applicationData.case_studies.forEach((study, index) => {
-            if (!study.client_industry.trim()) {
-              errors[`case_study_${index}_industry`] = 'Client industry is required';
-            }
-            if (!study.initial_situation.trim()) {
-              errors[`case_study_${index}_situation`] = 'Initial situation is required';
-            } else if (study.initial_situation.trim().split(' ').length < 20) {
-              errors[`case_study_${index}_situation`] = 'Initial situation must be at least 20 words';
-            }
-            if (!study.strategy_implemented.trim()) {
-              errors[`case_study_${index}_strategy`] = 'Strategy implemented is required';
-            } else if (study.strategy_implemented.trim().split(' ').length < 30) {
-              errors[`case_study_${index}_strategy`] = 'Strategy must be at least 30 words';
-            }
-            if (!study.results_achieved.trim()) {
-              errors[`case_study_${index}_results`] = 'Results achieved is required';
-            } else if (study.results_achieved.trim().split(' ').length < 15) {
-              errors[`case_study_${index}_results`] = 'Results must be at least 15 words';
-            }
-            if (!study.timeline.trim()) {
-              errors[`case_study_${index}_timeline`] = 'Timeline is required';
-            }
-          });
-        }
+      case 3: // Case Study
+        if (!formData.case_study.client_industry.trim()) errors.push('Client industry is required');
+        if (!formData.case_study.challenge_goal.trim()) errors.push('Challenge/goal is required');
+        if (!formData.case_study.strategy_solution.trim()) errors.push('Strategy/solution is required');
+        if (!formData.case_study.quantifiable_results.trim()) errors.push('Quantifiable results are required');
         break;
         
-      case 5: // Work Style & Agreement
-        if (!applicationData.availability) {
-          errors.availability = 'Availability is required';
-        }
-        if (!applicationData.hourly_rate) {
-          errors.hourly_rate = 'Hourly rate is required';
-        }
-        if (!applicationData.performance_guarantee) {
-          errors.performance_guarantee = 'Performance guarantee preference is required';
-        }
-        if (!applicationData.terms_accepted) {
-          errors.terms_accepted = 'You must accept the terms and conditions';
-        }
+      case 4: // Work Style & Agreement
+        if (!formData.communication_process.trim()) errors.push('Communication process is required');
+        if (!formData.availability_capacity.trim()) errors.push('Availability/capacity is required');
+        if (!formData.terms_agreement) errors.push('Terms agreement is required');
         break;
     }
     
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [applicationData]);
+    return { isValid: errors.length === 0, errors };
+  }, [formData]);
 
-  const canProceedToStep = useCallback((step: number): boolean => {
-    if (step <= currentStep) return true;
-    
-    // Check if all previous steps are valid
-    for (let i = 1; i < step; i++) {
-      if (!validateStep(i)) return false;
-    }
-    return true;
-  }, [currentStep, validateStep]);
+  const isValid = useCallback((step: number): boolean => {
+    return validateStep(step).isValid;
+  }, [validateStep]);
 
-  const getApplicationScore = useCallback(() => {
-    return automationService.calculateScore(applicationData);
-  }, [applicationData]);
+  const validateCurrentStep = useCallback(() => {
+    return validateStep(currentStep);
+  }, [validateStep, currentStep]);
 
   const submitApplication = useCallback(async () => {
     // Validate all steps
-    let isValid = true;
-    for (let i = 1; i <= 5; i++) {
-      if (!validateStep(i)) {
-        isValid = false;
+    for (let i = 0; i < totalSteps; i++) {
+      const validation = validateStep(i);
+      if (!validation.isValid) {
+        validation.errors.forEach(error => toast.error(error));
+        return;
       }
     }
-    
-    if (!isValid) {
-      throw new Error('Please fix all validation errors before submitting');
+
+    try {
+      await submitToAPI(formData);
+      toast.success('Application submitted successfully!');
+    } catch (error) {
+      toast.error('Failed to submit application. Please try again.');
     }
+  }, [formData, validateStep, submitToAPI, totalSteps]);
 
-    // Calculate automated score
-    const score = automationService.calculateScore(applicationData);
-    
-    // Prepare submission data
-    const submissionData = {
-      ...applicationData,
-      automated_score: score.score,
-      approval_tier: score.tier,
-      auto_approved: score.autoApproved,
-      score_breakdown: score.breakdown
-    };
-
-    await submitToAPI(submissionData);
-  }, [applicationData, validateStep, submitToAPI]);
-
-  const value: ApplicationContextType = {
-    applicationData,
-    updateApplicationData,
+  const value: NewApplicationContextType = {
+    formData,
+    updateFormData,
+    currentStep,
+    totalSteps,
+    setCurrentStep,
+    nextStep,
+    prevStep,
+    isValid,
+    validateCurrentStep,
     submitApplication,
     isSubmitting,
-    validationErrors,
-    currentStep,
-    setCurrentStep,
-    canProceedToStep,
-    getApplicationScore,
   };
 
   return (
-    <ApplicationContext.Provider value={value}>
+    <NewApplicationContext.Provider value={value}>
       {children}
-    </ApplicationContext.Provider>
+    </NewApplicationContext.Provider>
   );
 };
-
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
