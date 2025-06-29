@@ -21,7 +21,9 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ForFoundersPage from "./pages/ForFoundersPage";
 import ForProvidersPage from "./pages/ForProvidersPage";
-import ProtectedRoute, { PublicOnlyRoute } from "./components/auth/ProtectedRoute";
+import RoleSelectionStep from "./components/auth/RoleSelectionStep";
+import EnhancedProtectedRoute from "./components/auth/EnhancedProtectedRoute";
+import DashboardRedirect from "./components/auth/DashboardRedirect";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -35,79 +37,71 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/for-founders" element={<ForFoundersPage />} />
           <Route path="/for-providers" element={<ForProvidersPage />} />
+          <Route path="/get-started" element={<RoleSelectionStep />} />
+          
+          {/* Smart dashboard redirect */}
+          <Route path="/dashboard" element={<DashboardRedirect />} />
           
           {/* Dedicated sign-in pages */}
-          <Route path="/founder/signin" element={
-            <PublicOnlyRoute>
-              <FounderSignInPage />
-            </PublicOnlyRoute>
-          } />
-          <Route path="/provider/signin" element={
-            <PublicOnlyRoute>
-              <ProviderSignInPage />
-            </PublicOnlyRoute>
-          } />
+          <Route path="/founder/signin" element={<FounderSignInPage />} />
+          <Route path="/provider/signin" element={<ProviderSignInPage />} />
           
           <Route path="/auth-callback" element={<AuthCallback />} />
           
           {/* Provider public routes */}
-          <Route path="/provider-signup" element={
-            <PublicOnlyRoute>
-              <ProviderSignupPage />
-            </PublicOnlyRoute>
-          } />
+          <Route path="/provider-signup" element={<ProviderSignupPage />} />
           
           {/* Provider application routes - requires authentication */}
           <Route path="/provider-application" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
               <ProviderApplicationPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           <Route path="/provider-application-submitted" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
               <ProviderApplicationSubmittedPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           <Route path="/provider-application-approved" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
               <ProviderApplicationApprovedPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           <Route path="/provider-application-rejected" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
               <ProviderApplicationRejectedPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           
           {/* Founder routes */}
           <Route path="/founder/onboarding" element={
-            <ProtectedRoute allowedRoles={['founder']}>
+            <EnhancedProtectedRoute allowedRoles={['founder']} requireOnboarding={false}>
               <FounderOnboardingPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           <Route path="/founder/dashboard" element={
-            <ProtectedRoute allowedRoles={['founder']}>
+            <EnhancedProtectedRoute allowedRoles={['founder']} requireOnboarding={true}>
               <FounderDashboardPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           
           {/* Provider routes */}
           <Route path="/provider/onboarding" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
               <ProviderOnboardingPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           <Route path="/provider/dashboard" element={
-            <ProtectedRoute allowedRoles={['provider']}>
+            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={true}>
               <ProviderDashboardPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <EnhancedProtectedRoute allowedRoles={['admin']}>
               <AdminDashboardPage />
-            </ProtectedRoute>
+            </EnhancedProtectedRoute>
           } />
           
           {/* 404 */}

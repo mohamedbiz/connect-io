@@ -2,12 +2,23 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Users, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeroProps {
-  onRoleSelection: (role: 'founder' | 'provider') => void;
+  onRoleSelection?: (role: 'founder' | 'provider') => void;
 }
 
 const Hero = ({ onRoleSelection }: HeroProps) => {
+  const navigate = useNavigate();
+
+  const handleRoleSelection = (role: 'founder' | 'provider') => {
+    if (onRoleSelection) {
+      onRoleSelection(role);
+    } else {
+      navigate(`/${role}/signin`);
+    }
+  };
+
   return (
     <section className="bg-gradient-to-br from-[#0A2342] via-[#0E3366] to-[#2D82B7] text-white py-20 px-4">
       <div className="container mx-auto max-w-6xl text-center">
@@ -26,7 +37,7 @@ const Hero = ({ onRoleSelection }: HeroProps) => {
           <Button 
             size="lg" 
             className="w-full md:w-auto bg-white text-[#0A2342] hover:bg-[#f8fafc] border-2 border-white px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 rounded-lg" 
-            onClick={() => onRoleSelection('founder')}
+            onClick={() => handleRoleSelection('founder')}
           >
             <Target className="w-5 h-5 mr-2" />
             Grow My eCommerce Brand
@@ -37,7 +48,7 @@ const Hero = ({ onRoleSelection }: HeroProps) => {
           <Button 
             size="lg" 
             className="w-full md:w-auto bg-white text-[#0A2342] hover:bg-[#f8fafc] border-2 border-white px-8 py-4 text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 rounded-lg"
-            onClick={() => onRoleSelection('provider')}
+            onClick={() => handleRoleSelection('provider')}
           >
             <Users className="w-5 h-5 mr-2" />
             Access Quality Clients
