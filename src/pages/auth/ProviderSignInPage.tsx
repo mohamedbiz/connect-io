@@ -36,13 +36,16 @@ const ProviderSignInPage = () => {
         // Sign up validation
         if (!formData.firstName.trim() || !formData.lastName.trim()) {
           toast.error('Please enter your first and last name');
+          setLoading(false);
           return;
         }
         if (!formData.termsAccepted) {
           toast.error('Please accept the terms and conditions');
+          setLoading(false);
           return;
         }
 
+        console.log('ProviderSignInPage: Attempting registration for provider');
         const { error } = await register(formData.email, formData.password, {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -50,23 +53,29 @@ const ProviderSignInPage = () => {
         });
 
         if (error) {
+          console.error('ProviderSignInPage: Registration error', error);
           toast.error(error.message);
         } else {
+          console.log('ProviderSignInPage: Registration successful');
           toast.success('Account created successfully!');
           // PublicOnlyRoute will handle redirection automatically
         }
       } else {
         // Sign in
+        console.log('ProviderSignInPage: Attempting login for provider');
         const { error } = await login(formData.email, formData.password);
         
         if (error) {
+          console.error('ProviderSignInPage: Login error', error);
           toast.error(error.message);
         } else {
+          console.log('ProviderSignInPage: Login successful');
           toast.success('Welcome back!');
           // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {
+      console.error('ProviderSignInPage: Unexpected error', error);
       toast.error(error.message || 'An error occurred');
     } finally {
       setLoading(false);

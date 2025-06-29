@@ -36,13 +36,16 @@ const FounderSignInPage = () => {
         // Sign up validation
         if (!formData.firstName.trim() || !formData.lastName.trim()) {
           toast.error('Please enter your first and last name');
+          setLoading(false);
           return;
         }
         if (!formData.termsAccepted) {
           toast.error('Please accept the terms and conditions');
+          setLoading(false);
           return;
         }
 
+        console.log('FounderSignInPage: Attempting registration for founder');
         const { error } = await register(formData.email, formData.password, {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -50,23 +53,29 @@ const FounderSignInPage = () => {
         });
 
         if (error) {
+          console.error('FounderSignInPage: Registration error', error);
           toast.error(error.message);
         } else {
+          console.log('FounderSignInPage: Registration successful');
           toast.success('Account created successfully!');
           // PublicOnlyRoute will handle redirection automatically
         }
       } else {
         // Sign in
+        console.log('FounderSignInPage: Attempting login for founder');
         const { error } = await login(formData.email, formData.password);
         
         if (error) {
+          console.error('FounderSignInPage: Login error', error);
           toast.error(error.message);
         } else {
+          console.log('FounderSignInPage: Login successful');
           toast.success('Welcome back!');
           // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {
+      console.error('FounderSignInPage: Unexpected error', error);
       toast.error(error.message || 'An error occurred');
     } finally {
       setLoading(false);

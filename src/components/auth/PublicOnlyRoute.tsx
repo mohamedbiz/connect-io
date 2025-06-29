@@ -22,39 +22,50 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
         isOnboardingComplete
       });
 
-      // Provider-specific routing
-      if (role === 'provider') {
-        if (!applicationStatus) {
-          navigate('/provider-application', { replace: true });
-        } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-          navigate('/provider-application-submitted', { replace: true });
-        } else if (applicationStatus === 'rejected') {
-          navigate('/provider-application-rejected', { replace: true });
-        } else if (applicationStatus === 'approved') {
-          if (!isOnboardingComplete) {
-            navigate('/provider/onboarding', { replace: true });
-          } else {
-            navigate('/provider/dashboard', { replace: true });
+      // Add a small delay to ensure auth state has fully propagated
+      setTimeout(() => {
+        // Provider-specific routing
+        if (role === 'provider') {
+          if (!applicationStatus) {
+            console.log('PublicOnlyRoute: Provider needs to complete application');
+            navigate('/provider-application', { replace: true });
+          } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
+            console.log('PublicOnlyRoute: Provider application submitted, showing status page');
+            navigate('/provider-application-submitted', { replace: true });
+          } else if (applicationStatus === 'rejected') {
+            console.log('PublicOnlyRoute: Provider application rejected');
+            navigate('/provider-application-rejected', { replace: true });
+          } else if (applicationStatus === 'approved') {
+            if (!isOnboardingComplete) {
+              console.log('PublicOnlyRoute: Provider approved, needs onboarding');
+              navigate('/provider/onboarding', { replace: true });
+            } else {
+              console.log('PublicOnlyRoute: Provider fully onboarded, redirecting to dashboard');
+              navigate('/provider/dashboard', { replace: true });
+            }
           }
+          return;
         }
-        return;
-      }
 
-      // Founder routing
-      if (role === 'founder') {
-        if (!isOnboardingComplete) {
-          navigate('/founder/onboarding', { replace: true });
-        } else {
-          navigate('/founder/dashboard', { replace: true });
+        // Founder routing
+        if (role === 'founder') {
+          if (!isOnboardingComplete) {
+            console.log('PublicOnlyRoute: Founder needs onboarding');
+            navigate('/founder/onboarding', { replace: true });
+          } else {
+            console.log('PublicOnlyRoute: Founder onboarded, redirecting to dashboard');
+            navigate('/founder/dashboard', { replace: true });
+          }
+          return;
         }
-        return;
-      }
 
-      // Admin routing
-      if (role === 'admin') {
-        navigate('/admin/dashboard', { replace: true });
-        return;
-      }
+        // Admin routing
+        if (role === 'admin') {
+          console.log('PublicOnlyRoute: Admin user, redirecting to dashboard');
+          navigate('/admin/dashboard', { replace: true });
+          return;
+        }
+      }, 100); // Small delay to ensure state consistency
     }
   }, [status, role, applicationStatus, isOnboardingComplete, navigate]);
 
