@@ -26,39 +26,66 @@ export const useAuthWithRole = (): UserWithRole => {
   const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Separate function to fetch profile data
+  const fetchProfileData = async (userId: string) => {
+    try {
+      console.log('useAuthWithRole: Fetching profile data for user:', userId);
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          provider_profiles(*),
+          founder_profiles(*),
+          provider_applications(*)
+        `)
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('useAuthWithRole: Error fetching profile:', error);
+        return null;
+      }
+      
+      console.log('useAuthWithRole: Profile data fetched:', profileData);
+      return profileData;
+    } catch (err) {
+      console.error('useAuthWithRole: Exception fetching profile:', err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
+        console.log('useAuthWithRole: Initializing auth state');
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
         if (currentSession) {
+          console.log('useAuthWithRole: Found existing session');
           setSession(currentSession);
           setUser(currentSession.user);
           
-          // Fetch complete profile with related data
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select(`
-              *,
-              provider_profiles(*),
-              founder_profiles(*),
-              provider_applications(*)
-            `)
-            .eq('id', currentSession.user.id)
-            .single();
-          
-          if (mounted && profileData) {
-            setProfile(profileData);
-          }
+          // Defer profile fetching to avoid blocking auth state resolution
+          setTimeout(async () => {
+            if (mounted) {
+              const profileData = await fetchProfileData(currentSession.user.id);
+              if (mounted) {
+                setProfile(profileData);
+              }
+            }
+          }, 0);
+        } else {
+          console.log('useAuthWithRole: No existing session found');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('useAuthWithRole: Error initializing auth:', error);
       } finally {
         if (mounted) {
+          console.log('useAuthWithRole: Auth initialization complete, setting loading to false');
           setLoading(false);
         }
       }
@@ -66,37 +93,36 @@ export const useAuthWithRole = (): UserWithRole => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+    // Set up auth state change listener - NO ASYNC CALLS HERE
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
 
+      console.log('useAuthWithRole: Auth state changed:', event);
+      
+      // Synchronous state updates only
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false); // Always set loading to false when auth state changes
       
+      // Defer any async operations
       if (newSession?.user) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            provider_profiles(*),
-            founder_profiles(*),
-            provider_applications(*)
-          `)
-          .eq('id', newSession.user.id)
-          .single();
-        
-        if (mounted) {
-          setProfile(profileData);
-        }
+        console.log('useAuthWithRole: User authenticated, deferring profile fetch');
+        setTimeout(async () => {
+          if (mounted) {
+            const profileData = await fetchProfileData(newSession.user.id);
+            if (mounted) {
+              setProfile(profileData);
+            }
+          }
+        }, 0);
       } else {
+        console.log('useAuthWithRole: User not authenticated, clearing profile');
         setProfile(null);
-      }
-      
-      if (mounted) {
-        setLoading(false);
       }
     });
 
     return () => {
+      console.log('useAuthWithRole: Cleaning up auth state listener');
       mounted = false;
       subscription.unsubscribe();
     };
@@ -125,11 +151,22 @@ export const useAuthWithRole = (): UserWithRole => {
     return undefined;
   };
 
+  const status = loading ? 'loading' : (session ? 'authenticated' : 'unauthenticated');
+  
+  console.log('useAuthWithRole: Current state:', {
+    loading,
+    hasSession: !!session,
+    hasUser: !!user,
+    hasProfile: !!profile,
+    status,
+    role: profile?.role || null
+  });
+
   return {
     user,
     profile,
     role: profile?.role || null,
-    status: loading ? 'loading' : (session ? 'authenticated' : 'unauthenticated'),
+    status,
     isOnboardingComplete: profile ? getOnboardingStatus(profile) : false,
     applicationStatus: profile ? getApplicationStatus(profile) : undefined
   };

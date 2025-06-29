@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthWithRole } from '@/hooks/useAuthWithRole';
 import { Loader2 } from 'lucide-react';
@@ -11,6 +11,7 @@ interface PublicOnlyRouteProps {
 const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   const { status, role, isOnboardingComplete, applicationStatus } = useAuthWithRole();
   const navigate = useNavigate();
+  const [hasTriedRedirect, setHasTriedRedirect] = useState(false);
 
   useEffect(() => {
     console.log('PublicOnlyRoute: Auth state changed', { status, role, applicationStatus, isOnboardingComplete });
@@ -20,13 +21,15 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
       return;
     }
 
-    // Only redirect if user is actually authenticated
-    if (status === 'authenticated' && role) {
+    // Only redirect if user is actually authenticated and we haven't tried redirecting yet
+    if (status === 'authenticated' && role && !hasTriedRedirect) {
       console.log('PublicOnlyRoute: User is authenticated, redirecting based on role and status', {
         role,
         applicationStatus,
         isOnboardingComplete
       });
+
+      setHasTriedRedirect(true);
 
       // Add a small delay to ensure auth state has fully propagated
       setTimeout(() => {
@@ -72,11 +75,13 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
           return;
         }
       }, 100); // Small delay to ensure state consistency
-    } else {
+    } else if (status === 'unauthenticated') {
       console.log('PublicOnlyRoute: User is not authenticated, allowing access to public route');
+      setHasTriedRedirect(false); // Reset redirect flag for next auth attempt
     }
-  }, [status, role, applicationStatus, isOnboardingComplete, navigate]);
+  }, [status, role, applicationStatus, isOnboardingComplete, navigate, hasTriedRedirect]);
 
+  // Show loading while auth state is being determined
   if (status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -88,9 +93,8 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
     );
   }
 
-  // If user is authenticated, they should be redirected (handled in useEffect)
-  // Show loading while redirect happens
-  if (status === 'authenticated') {
+  // If user is authenticated, show loading while redirect happens
+  if (status === 'authenticated' && hasTriedRedirect) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
