@@ -16,9 +16,13 @@ const HomePage = () => {
 
   // Navigation handler for role-specific CTAs
   const handleRoleSelection = (role: 'founder' | 'provider') => {
+    console.log('HomePage: Role selection clicked', { role });
+    
     if (role === 'founder') {
+      console.log('HomePage: Navigating to founder signin');
       navigate('/founder/signin');
     } else {
+      console.log('HomePage: Initiating provider navigation flow');
       // Use smart navigation for providers
       navigateToProviderFlow();
     }

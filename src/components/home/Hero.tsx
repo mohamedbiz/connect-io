@@ -12,9 +12,13 @@ const Hero = ({ onRoleSelection }: HeroProps) => {
   const navigate = useNavigate();
 
   const handleRoleSelection = (role: 'founder' | 'provider') => {
+    console.log('Hero: Button clicked for role:', role);
+    
     if (onRoleSelection) {
+      console.log('Hero: Calling onRoleSelection callback');
       onRoleSelection(role);
     } else {
+      console.log('Hero: Using fallback navigation');
       navigate(`/${role}/signin`);
     }
   };

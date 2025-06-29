@@ -13,8 +13,14 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (status === 'loading') return;
+    console.log('PublicOnlyRoute: Auth state changed', { status, role, applicationStatus, isOnboardingComplete });
+    
+    if (status === 'loading') {
+      console.log('PublicOnlyRoute: Still loading auth state');
+      return;
+    }
 
+    // Only redirect if user is actually authenticated
     if (status === 'authenticated' && role) {
       console.log('PublicOnlyRoute: User is authenticated, redirecting based on role and status', {
         role,
@@ -66,6 +72,8 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
           return;
         }
       }, 100); // Small delay to ensure state consistency
+    } else {
+      console.log('PublicOnlyRoute: User is not authenticated, allowing access to public route');
     }
   }, [status, role, applicationStatus, isOnboardingComplete, navigate]);
 
@@ -94,6 +102,7 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   }
 
   // User is not authenticated, show the public content
+  console.log('PublicOnlyRoute: Rendering public content for unauthenticated user');
   return <>{children}</>;
 };
 

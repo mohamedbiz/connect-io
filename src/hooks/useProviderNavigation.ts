@@ -11,13 +11,20 @@ export const useProviderNavigation = () => {
       status,
       userRole: role,
       applicationStatus,
-      isOnboardingComplete
+      isOnboardingComplete,
+      user: user ? 'authenticated' : 'not authenticated'
     });
 
     // If not authenticated, go to sign-in
     if (status === 'unauthenticated' || !user) {
       console.log('useProviderNavigation: User not authenticated, redirecting to sign-in');
       navigate('/provider/signin');
+      return;
+    }
+
+    // If loading, wait for auth state to resolve
+    if (status === 'loading') {
+      console.log('useProviderNavigation: Auth state loading, waiting...');
       return;
     }
 
