@@ -4,9 +4,16 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/auth';
 
+// Extended profile type that includes joined data from Supabase query
+interface ExtendedProfile extends Profile {
+  provider_profiles?: any[];
+  founder_profiles?: any[];
+  provider_applications?: any[];
+}
+
 export interface UserWithRole {
   user: User | null;
-  profile: Profile | null;
+  profile: ExtendedProfile | null;
   role: 'founder' | 'provider' | 'admin' | null;
   status: 'loading' | 'authenticated' | 'unauthenticated';
   isOnboardingComplete: boolean;
@@ -16,7 +23,7 @@ export interface UserWithRole {
 export const useAuthWithRole = (): UserWithRole => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ExtendedProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -95,7 +102,7 @@ export const useAuthWithRole = (): UserWithRole => {
     };
   }, []);
 
-  const getOnboardingStatus = (profile: Profile): boolean => {
+  const getOnboardingStatus = (profile: ExtendedProfile): boolean => {
     if (!profile) return false;
     
     if (profile.role === 'provider') {
@@ -111,7 +118,7 @@ export const useAuthWithRole = (): UserWithRole => {
     return false;
   };
 
-  const getApplicationStatus = (profile: Profile): string | undefined => {
+  const getApplicationStatus = (profile: ExtendedProfile): string | undefined => {
     if (profile?.role === 'provider' && profile.provider_applications?.length > 0) {
       return profile.provider_applications[0].status;
     }
