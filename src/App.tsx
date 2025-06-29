@@ -24,6 +24,7 @@ import ForProvidersPage from "./pages/ForProvidersPage";
 import RoleSelectionStep from "./components/auth/RoleSelectionStep";
 import EnhancedProtectedRoute from "./components/auth/EnhancedProtectedRoute";
 import DashboardRedirect from "./components/auth/DashboardRedirect";
+import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -37,19 +38,35 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/for-founders" element={<ForFoundersPage />} />
           <Route path="/for-providers" element={<ForProvidersPage />} />
-          <Route path="/get-started" element={<RoleSelectionStep />} />
+          <Route path="/get-started" element={
+            <PublicOnlyRoute>
+              <RoleSelectionStep />
+            </PublicOnlyRoute>
+          } />
           
           {/* Smart dashboard redirect */}
           <Route path="/dashboard" element={<DashboardRedirect />} />
           
-          {/* Dedicated sign-in pages */}
-          <Route path="/founder/signin" element={<FounderSignInPage />} />
-          <Route path="/provider/signin" element={<ProviderSignInPage />} />
+          {/* Dedicated sign-in pages wrapped with PublicOnlyRoute */}
+          <Route path="/founder/signin" element={
+            <PublicOnlyRoute>
+              <FounderSignInPage />
+            </PublicOnlyRoute>
+          } />
+          <Route path="/provider/signin" element={
+            <PublicOnlyRoute>
+              <ProviderSignInPage />
+            </PublicOnlyRoute>
+          } />
           
           <Route path="/auth-callback" element={<AuthCallback />} />
           
           {/* Provider public routes */}
-          <Route path="/provider-signup" element={<ProviderSignupPage />} />
+          <Route path="/provider-signup" element={
+            <PublicOnlyRoute>
+              <ProviderSignupPage />
+            </PublicOnlyRoute>
+          } />
           
           {/* Provider application routes - requires authentication */}
           <Route path="/provider-application" element={

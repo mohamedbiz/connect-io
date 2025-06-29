@@ -22,7 +22,6 @@ const FounderSignInPage = () => {
   });
   
   const { login, register } = useAuth();
-  const navigate = useNavigate();
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -54,7 +53,7 @@ const FounderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Account created successfully!');
-          navigate('/founder/onboarding');
+          // PublicOnlyRoute will handle redirection automatically
         }
       } else {
         // Sign in
@@ -64,7 +63,7 @@ const FounderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Welcome back!');
-          navigate('/founder/dashboard');
+          // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {

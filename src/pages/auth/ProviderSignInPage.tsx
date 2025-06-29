@@ -53,7 +53,7 @@ const ProviderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Account created successfully!');
-          // Let PublicOnlyRoute handle redirection based on actual status
+          // PublicOnlyRoute will handle redirection automatically
         }
       } else {
         // Sign in
@@ -63,7 +63,7 @@ const ProviderSignInPage = () => {
           toast.error(error.message);
         } else {
           toast.success('Welcome back!');
-          // Let PublicOnlyRoute handle redirection based on actual status
+          // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {
