@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Users, Loader2, User } from 'lucide-react';
+import { Users, Loader2, Target } from 'lucide-react';
 import { toast } from 'sonner';
 
-const ProviderSignInPage = () => {
+const ProviderAuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ const ProviderSignInPage = () => {
 
     try {
       if (isSignUp) {
-        // Sign up validation
         if (!formData.firstName.trim() || !formData.lastName.trim()) {
           toast.error('Please enter your first and last name');
           setLoading(false);
@@ -45,7 +44,6 @@ const ProviderSignInPage = () => {
           return;
         }
 
-        console.log('ProviderSignInPage: Attempting registration for provider');
         const { error } = await register(formData.email, formData.password, {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -53,29 +51,20 @@ const ProviderSignInPage = () => {
         });
 
         if (error) {
-          console.error('ProviderSignInPage: Registration error', error);
           toast.error(error.message);
         } else {
-          console.log('ProviderSignInPage: Registration successful');
           toast.success('Account created successfully!');
-          // PublicOnlyRoute will handle redirection automatically
         }
       } else {
-        // Sign in
-        console.log('ProviderSignInPage: Attempting login for provider');
         const { error } = await login(formData.email, formData.password);
         
         if (error) {
-          console.error('ProviderSignInPage: Login error', error);
           toast.error(error.message);
         } else {
-          console.log('ProviderSignInPage: Login successful');
           toast.success('Welcome back!');
-          // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {
-      console.error('ProviderSignInPage: Unexpected error', error);
       toast.error(error.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -164,14 +153,7 @@ const ProviderSignInPage = () => {
                     required
                   />
                   <Label htmlFor="terms" className="text-sm text-gray-600">
-                    I agree to the{' '}
-                    <Link to="/terms" className="text-[#2D82B7] hover:underline">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link to="/privacy" className="text-[#2D82B7] hover:underline">
-                      Privacy Policy
-                    </Link>
+                    I agree to the Terms of Service and Privacy Policy
                   </Label>
                 </div>
               )}
@@ -214,10 +196,10 @@ const ProviderSignInPage = () => {
               </div>
 
               <Link
-                to="/founder/signin"
+                to="/auth/founder"
                 className="flex items-center justify-center w-full p-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
-                <User className="w-4 h-4 mr-2 text-[#2D82B7]" />
+                <Target className="w-4 h-4 mr-2 text-[#2D82B7]" />
                 <span className="text-gray-700">Join as a Founder instead</span>
               </Link>
             </div>
@@ -228,4 +210,4 @@ const ProviderSignInPage = () => {
   );
 };
 
-export default ProviderSignInPage;
+export default ProviderAuthPage;

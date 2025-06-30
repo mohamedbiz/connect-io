@@ -6,25 +6,15 @@ import { Toaster as SonnerToaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/home/HomePage";
 import AuthCallback from "./pages/AuthCallback";
-import FounderSignInPage from "./pages/auth/FounderSignInPage";
-import ProviderSignInPage from "./pages/auth/ProviderSignInPage";
+import FounderAuthPage from "./pages/auth/FounderAuthPage";
+import ProviderAuthPage from "./pages/auth/ProviderAuthPage";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
-import FounderOnboardingPage from "./pages/founder/FounderOnboardingPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
-import ProviderOnboardingPage from "./pages/provider/ProviderOnboardingPage";
-import ProviderSignupPage from "./pages/provider/ProviderSignupPage";
-import ProviderApplicationPage from "./pages/provider/ProviderApplicationPage";
-import ProviderApplicationSubmittedPage from "./pages/provider/ApplicationSubmittedPage";
-import ProviderApplicationApprovedPage from "./pages/provider/ApplicationApprovedPage";
-import ProviderApplicationRejectedPage from "./pages/provider/ApplicationRejectedPage";
+import ProviderApplicationStatusPage from "./pages/provider/ProviderApplicationStatusPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
-import ForFoundersPage from "./pages/ForFoundersPage";
-import ForProvidersPage from "./pages/ForProvidersPage";
-import RoleSelectionStep from "./components/auth/RoleSelectionStep";
-import EnhancedProtectedRoute from "./components/auth/EnhancedProtectedRoute";
-import DashboardRedirect from "./components/auth/DashboardRedirect";
-import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
+import RouteGuard from "./components/auth/RouteGuard";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -36,89 +26,59 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/for-founders" element={<ForFoundersPage />} />
-          <Route path="/for-providers" element={<ForProvidersPage />} />
-          <Route path="/get-started" element={
-            <PublicOnlyRoute>
-              <RoleSelectionStep />
-            </PublicOnlyRoute>
-          } />
           
           {/* Smart dashboard redirect */}
-          <Route path="/dashboard" element={<DashboardRedirect />} />
-          
-          {/* Dedicated sign-in pages wrapped with PublicOnlyRoute */}
-          <Route path="/founder/signin" element={
-            <PublicOnlyRoute>
-              <FounderSignInPage />
-            </PublicOnlyRoute>
+          <Route path="/dashboard" element={
+            <RouteGuard type="dashboard-redirect">
+              <div />
+            </RouteGuard>
           } />
-          <Route path="/provider/signin" element={
-            <PublicOnlyRoute>
-              <ProviderSignInPage />
-            </PublicOnlyRoute>
+          
+          {/* Unified auth pages */}
+          <Route path="/auth/founder" element={
+            <RouteGuard type="public-only">
+              <FounderAuthPage />
+            </RouteGuard>
+          } />
+          <Route path="/auth/provider" element={
+            <RouteGuard type="public-only">
+              <ProviderAuthPage />
+            </RouteGuard>
           } />
           
           <Route path="/auth-callback" element={<AuthCallback />} />
           
-          {/* Provider public routes */}
-          <Route path="/provider-signup" element={
-            <PublicOnlyRoute>
-              <ProviderSignupPage />
-            </PublicOnlyRoute>
+          {/* Dynamic provider application routes */}
+          <Route path="/provider/application/:status?" element={
+            <RouteGuard type="protected" allowedRoles={['provider']}>
+              <ProviderApplicationStatusPage />
+            </RouteGuard>
           } />
           
-          {/* Provider application routes - requires authentication */}
-          <Route path="/provider-application" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
-              <ProviderApplicationPage />
-            </EnhancedProtectedRoute>
-          } />
-          <Route path="/provider-application-submitted" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
-              <ProviderApplicationSubmittedPage />
-            </EnhancedProtectedRoute>
-          } />
-          <Route path="/provider-application-approved" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
-              <ProviderApplicationApprovedPage />
-            </EnhancedProtectedRoute>
-          } />
-          <Route path="/provider-application-rejected" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
-              <ProviderApplicationRejectedPage />
-            </EnhancedProtectedRoute>
+          {/* Dynamic onboarding routes */}
+          <Route path="/onboarding/:role" element={
+            <RouteGuard type="protected" allowedRoles={['founder', 'provider']}>
+              <OnboardingPage />
+            </RouteGuard>
           } />
           
-          {/* Founder routes */}
-          <Route path="/founder/onboarding" element={
-            <EnhancedProtectedRoute allowedRoles={['founder']} requireOnboarding={false}>
-              <FounderOnboardingPage />
-            </EnhancedProtectedRoute>
-          } />
+          {/* Dashboard routes */}
           <Route path="/founder/dashboard" element={
-            <EnhancedProtectedRoute allowedRoles={['founder']} requireOnboarding={true}>
+            <RouteGuard type="protected" allowedRoles={['founder']} requireOnboarding={true}>
               <FounderDashboardPage />
-            </EnhancedProtectedRoute>
+            </RouteGuard>
           } />
           
-          {/* Provider routes */}
-          <Route path="/provider/onboarding" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={false}>
-              <ProviderOnboardingPage />
-            </EnhancedProtectedRoute>
-          } />
           <Route path="/provider/dashboard" element={
-            <EnhancedProtectedRoute allowedRoles={['provider']} requireOnboarding={true}>
+            <RouteGuard type="protected" allowedRoles={['provider']} requireOnboarding={true}>
               <ProviderDashboardPage />
-            </EnhancedProtectedRoute>
+            </RouteGuard>
           } />
           
-          {/* Admin routes */}
           <Route path="/admin/dashboard" element={
-            <EnhancedProtectedRoute allowedRoles={['admin']}>
+            <RouteGuard type="protected" allowedRoles={['admin']}>
               <AdminDashboardPage />
-            </EnhancedProtectedRoute>
+            </RouteGuard>
           } />
           
           {/* 404 */}

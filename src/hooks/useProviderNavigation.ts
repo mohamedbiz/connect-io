@@ -21,49 +21,43 @@ export const useProviderNavigation = () => {
       return;
     }
 
-    // If not authenticated, go to sign-in
+    // If not authenticated, go to provider auth
     if (status === 'unauthenticated' || !user) {
-      console.log('useProviderNavigation: User not authenticated, redirecting to sign-in');
-      navigate('/provider/signin');
+      console.log('useProviderNavigation: User not authenticated, redirecting to auth');
+      navigate('/auth/provider');
       return;
     }
 
-    // If not a provider, go to sign-in
+    // If not a provider, go to provider auth
     if (role !== 'provider') {
-      console.log('useProviderNavigation: User is not a provider, redirecting to sign-in');
-      navigate('/provider/signin');
+      console.log('useProviderNavigation: User is not a provider, redirecting to auth');
+      navigate('/auth/provider');
       return;
     }
 
-    // Route based on application status
+    // Route based on application status using dynamic routes
     console.log('useProviderNavigation: Routing based on application status:', applicationStatus);
     
     if (!applicationStatus) {
-      // Provider needs to complete their application
       console.log('useProviderNavigation: Provider needs to complete application');
-      navigate('/provider-application');
+      navigate('/provider/application');
     } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-      // Application submitted, show status page
       console.log('useProviderNavigation: Application submitted, showing status page');
-      navigate('/provider-application-submitted');
+      navigate('/provider/application/submitted');
     } else if (applicationStatus === 'approved') {
       if (!isOnboardingComplete) {
-        // Application approved but onboarding not complete
         console.log('useProviderNavigation: Application approved, redirecting to onboarding');
-        navigate('/provider/onboarding');
+        navigate('/onboarding/provider');
       } else {
-        // Provider is fully onboarded
         console.log('useProviderNavigation: Provider fully onboarded, redirecting to dashboard');
         navigate('/provider/dashboard');
       }
     } else if (applicationStatus === 'rejected') {
-      // Provider was rejected, show rejection page
       console.log('useProviderNavigation: Provider rejected, showing rejection page');
-      navigate('/provider-application-rejected');
+      navigate('/provider/application/rejected');
     } else {
-      // Fallback to application for unknown statuses
       console.log('useProviderNavigation: Unknown status, redirecting to application');
-      navigate('/provider-application');
+      navigate('/provider/application');
     }
   };
 

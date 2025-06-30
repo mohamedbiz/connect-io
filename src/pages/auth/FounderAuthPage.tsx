@@ -1,16 +1,16 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Loader2, Users } from 'lucide-react';
+import { Target, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
-const FounderSignInPage = () => {
+const FounderAuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,7 +33,6 @@ const FounderSignInPage = () => {
 
     try {
       if (isSignUp) {
-        // Sign up validation
         if (!formData.firstName.trim() || !formData.lastName.trim()) {
           toast.error('Please enter your first and last name');
           setLoading(false);
@@ -45,7 +44,6 @@ const FounderSignInPage = () => {
           return;
         }
 
-        console.log('FounderSignInPage: Attempting registration for founder');
         const { error } = await register(formData.email, formData.password, {
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -53,29 +51,20 @@ const FounderSignInPage = () => {
         });
 
         if (error) {
-          console.error('FounderSignInPage: Registration error', error);
           toast.error(error.message);
         } else {
-          console.log('FounderSignInPage: Registration successful');
           toast.success('Account created successfully!');
-          // PublicOnlyRoute will handle redirection automatically
         }
       } else {
-        // Sign in
-        console.log('FounderSignInPage: Attempting login for founder');
         const { error } = await login(formData.email, formData.password);
         
         if (error) {
-          console.error('FounderSignInPage: Login error', error);
           toast.error(error.message);
         } else {
-          console.log('FounderSignInPage: Login successful');
           toast.success('Welcome back!');
-          // PublicOnlyRoute will handle redirection automatically
         }
       }
     } catch (error: any) {
-      console.error('FounderSignInPage: Unexpected error', error);
       toast.error(error.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -88,14 +77,14 @@ const FounderSignInPage = () => {
         <Card className="shadow-2xl border-0">
           <CardHeader className="space-y-1 text-center pb-8">
             <div className="mx-auto w-12 h-12 bg-[#2D82B7] rounded-full flex items-center justify-center mb-4">
-              <User className="w-6 h-6 text-white" />
+              <Target className="w-6 h-6 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              {isSignUp ? 'Grow Your eCommerce Brand' : 'Welcome Back, Founder'}
+              {isSignUp ? 'Join as a Founder' : 'Welcome Back, Founder'}
             </CardTitle>
             <CardDescription className="text-gray-600">
               {isSignUp 
-                ? 'Join Connect to find expert email marketing providers'
+                ? 'Grow your eCommerce brand with expert help'
                 : 'Sign in to your founder account'
               }
             </CardDescription>
@@ -164,14 +153,7 @@ const FounderSignInPage = () => {
                     required
                   />
                   <Label htmlFor="terms" className="text-sm text-gray-600">
-                    I agree to the{' '}
-                    <Link to="/terms" className="text-[#2D82B7] hover:underline">
-                      Terms of Service
-                    </Link>{' '}
-                    and{' '}
-                    <Link to="/privacy" className="text-[#2D82B7] hover:underline">
-                      Privacy Policy
-                    </Link>
+                    I agree to the Terms of Service and Privacy Policy
                   </Label>
                 </div>
               )}
@@ -214,7 +196,7 @@ const FounderSignInPage = () => {
               </div>
 
               <Link
-                to="/provider/signin"
+                to="/auth/provider"
                 className="flex items-center justify-center w-full p-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
                 <Users className="w-4 h-4 mr-2 text-[#2D82B7]" />
@@ -228,4 +210,4 @@ const FounderSignInPage = () => {
   );
 };
 
-export default FounderSignInPage;
+export default FounderAuthPage;

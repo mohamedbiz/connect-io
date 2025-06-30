@@ -19,8 +19,8 @@ const HomePage = () => {
     console.log('HomePage: Role selection clicked', { role });
     
     if (role === 'founder') {
-      console.log('HomePage: Navigating to founder signin');
-      navigate('/founder/signin');
+      console.log('HomePage: Navigating to founder auth');
+      navigate('/auth/founder');
     } else {
       console.log('HomePage: Initiating provider navigation flow');
       // Use smart navigation for providers
