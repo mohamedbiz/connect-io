@@ -20,6 +20,7 @@ export const useAuthStateManager = () => {
     let mounted = true;
 
     const initializeAuth = async () => {
+      console.log('useAuthStateManager: Initializing auth state');
       setLoading(true);
       
       try {
@@ -34,19 +35,16 @@ export const useAuthStateManager = () => {
 
         // Set session if exists
         if (currentSession) {
+          console.log('useAuthStateManager: Found existing session');
           setSession(currentSession);
           setUser(currentSession.user);
-          
-          // Get user profile data
-          const userProfile = await fetchProfile(currentSession.user.id);
-          if (mounted) {
-            setProfile(userProfile);
-          }
+        } else {
+          console.log('useAuthStateManager: No existing session found');
         }
 
         setError(null);
       } catch (err: any) {
-        console.error('Auth initialization error:', err);
+        console.error('useAuthStateManager: Auth initialization error:', err);
         if (mounted) {
           setError(err?.message || 'Failed to initialize authentication');
           // Clear any invalid session data
@@ -56,6 +54,7 @@ export const useAuthStateManager = () => {
         }
       } finally {
         if (mounted) {
+          console.log('useAuthStateManager: Setting loading to false after initialization');
           setLoading(false);
         }
       }
@@ -63,76 +62,48 @@ export const useAuthStateManager = () => {
     
     initializeAuth();
     
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('Auth state changed:', event);
+    // Set up auth state change listener - NO ASYNC CALLS HERE
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+      console.log('useAuthStateManager: Auth state changed:', event);
       
       if (!mounted) return;
 
-      // Update session state
+      // ONLY synchronous state updates in the callback
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false); // Always set loading to false when auth state changes
       
-      // Handle different auth events
-      switch (event) {
-        case 'SIGNED_IN':
-          if (newSession) {
+      // Defer ANY async operations using setTimeout
+      if (newSession?.user) {
+        console.log('useAuthStateManager: User authenticated, deferring profile fetch');
+        setTimeout(async () => {
+          if (mounted) {
             try {
-              // Get user profile data
               const userProfile = await fetchProfile(newSession.user.id);
               if (mounted) {
                 setProfile(userProfile);
               }
             } catch (err) {
-              console.error('Error fetching user data:', err);
+              console.error('useAuthStateManager: Error fetching profile:', err);
               if (mounted) {
                 setError('Error loading user profile');
               }
             }
           }
-          break;
-          
-        case 'SIGNED_OUT':
-          // Clear user data
-          setProfile(null);
-          break;
-          
-        case 'TOKEN_REFRESHED':
-          // Just update the session, no need to refetch user
-          break;
-          
-        case 'USER_UPDATED':
-          // Refresh user data
-          if (newSession) {
-            try {
-              const userProfile = await fetchProfile(newSession.user.id);
-              if (mounted) {
-                setProfile(userProfile);
-              }
-            } catch (err) {
-              console.error('Error updating user data:', err);
-              if (mounted) {
-                setError('Error updating user profile');
-              }
-            }
-          }
-          break;
-          
-        default:
-          break;
-      }
-      
-      if (mounted) {
-        setLoading(false);
+        }, 0);
+      } else {
+        console.log('useAuthStateManager: User not authenticated, clearing profile');
+        setProfile(null);
       }
     });
     
     // Clean up listener on unmount
     return () => {
+      console.log('useAuthStateManager: Cleaning up auth state listener');
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array - only run once
 
   return {
     user,

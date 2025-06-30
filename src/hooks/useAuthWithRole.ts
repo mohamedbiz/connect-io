@@ -68,16 +68,6 @@ export const useAuthWithRole = (): UserWithRole => {
           console.log('useAuthWithRole: Found existing session');
           setSession(currentSession);
           setUser(currentSession.user);
-          
-          // Defer profile fetching to avoid blocking auth state resolution
-          setTimeout(async () => {
-            if (mounted) {
-              const profileData = await fetchProfileData(currentSession.user.id);
-              if (mounted) {
-                setProfile(profileData);
-              }
-            }
-          }, 0);
         } else {
           console.log('useAuthWithRole: No existing session found');
         }

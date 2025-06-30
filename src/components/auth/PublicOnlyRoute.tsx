@@ -12,11 +12,22 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   const { status, role, isOnboardingComplete, applicationStatus } = useAuthWithRole();
   const navigate = useNavigate();
   const [hasTriedRedirect, setHasTriedRedirect] = useState(false);
+  const [timeoutReached, setTimeoutReached] = useState(false);
+
+  // Add a timeout fallback to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      console.log('PublicOnlyRoute: Timeout reached, forcing unauthenticated state');
+      setTimeoutReached(true);
+    }, 3000); // 3 second timeout
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     console.log('PublicOnlyRoute: Auth state changed', { status, role, applicationStatus, isOnboardingComplete });
     
-    if (status === 'loading') {
+    if (status === 'loading' && !timeoutReached) {
       console.log('PublicOnlyRoute: Still loading auth state');
       return;
     }
@@ -75,14 +86,14 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
           return;
         }
       }, 100); // Small delay to ensure state consistency
-    } else if (status === 'unauthenticated') {
-      console.log('PublicOnlyRoute: User is not authenticated, allowing access to public route');
+    } else if (status === 'unauthenticated' || timeoutReached) {
+      console.log('PublicOnlyRoute: User is not authenticated or timeout reached, allowing access to public route');
       setHasTriedRedirect(false); // Reset redirect flag for next auth attempt
     }
-  }, [status, role, applicationStatus, isOnboardingComplete, navigate, hasTriedRedirect]);
+  }, [status, role, applicationStatus, isOnboardingComplete, navigate, hasTriedRedirect, timeoutReached]);
 
-  // Show loading while auth state is being determined
-  if (status === 'loading') {
+  // Show loading while auth state is being determined (with timeout)
+  if (status === 'loading' && !timeoutReached) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
@@ -94,7 +105,7 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   }
 
   // If user is authenticated, show loading while redirect happens
-  if (status === 'authenticated' && hasTriedRedirect) {
+  if (status === 'authenticated' && hasTriedRedirect && !timeoutReached) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-3">
@@ -105,8 +116,8 @@ const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
     );
   }
 
-  // User is not authenticated, show the public content
-  console.log('PublicOnlyRoute: Rendering public content for unauthenticated user');
+  // User is not authenticated or timeout reached, show the public content
+  console.log('PublicOnlyRoute: Rendering public content for unauthenticated user or after timeout');
   return <>{children}</>;
 };
 
