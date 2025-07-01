@@ -14,6 +14,10 @@ import ProviderApplicationStatusPage from "./pages/provider/ProviderApplicationS
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
+import ForFoundersPage from "./pages/ForFoundersPage";
+import ForProvidersPage from "./pages/ForProvidersPage";
+import ProfilePage from "./pages/ProfilePage";
+import ProviderDirectoryPage from "./pages/ProviderDirectoryPage";
 import RouteGuard from "./components/auth/RouteGuard";
 
 // Create a client
@@ -26,6 +30,8 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
+          <Route path="/for-founders" element={<ForFoundersPage />} />
+          <Route path="/for-providers" element={<ForProvidersPage />} />
           
           {/* Smart dashboard redirect */}
           <Route path="/dashboard" element={
@@ -47,6 +53,10 @@ function App() {
           } />
           
           <Route path="/auth-callback" element={<AuthCallback />} />
+          
+          {/* Profile and directory pages */}
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/providers" element={<ProviderDirectoryPage />} />
           
           {/* Dynamic provider application routes */}
           <Route path="/provider/application/:status?" element={

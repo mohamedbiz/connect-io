@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Search, Star, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import RouteGuard from '@/components/auth/RouteGuard';
 import FeaturedBadge from '@/components/ui/featured-badge';
 
 const ProviderDirectoryPage = () => {
@@ -141,7 +140,7 @@ const ProviderDirectoryPage = () => {
   );
 
   return (
-    <ProtectedRoute>
+    <RouteGuard type="protected" allowedRoles={['founder']}>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Provider Directory</h1>
@@ -226,7 +225,7 @@ const ProviderDirectoryPage = () => {
           </div>
         )}
       </div>
-    </ProtectedRoute>
+    </RouteGuard>
   );
 };
 
