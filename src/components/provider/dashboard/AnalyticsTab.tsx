@@ -133,7 +133,7 @@ const AnalyticsTab = () => {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  label={(entry) => `${entry.name} ${(entry.percent * 100).toFixed(0)}%`}
+                  label={(entry) => `${entry.name} ${entry.value}%`}
                 >
                   {projectTypes.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -157,7 +157,7 @@ const AnalyticsTab = () => {
             </div>
             <div className="flex justify-between items-center p-3 bg-[#BFD7ED]/20 rounded-lg">
               <span className="text-[#0E3366] font-medium">Response Time</span>
-              <span className="text-[#0A2342] font-bold">< 2 hours</span>
+              <span className="text-[#0A2342] font-bold">&lt; 2 hours</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-[#BFD7ED]/20 rounded-lg">
               <span className="text-[#0E3366] font-medium">Client Retention</span>
