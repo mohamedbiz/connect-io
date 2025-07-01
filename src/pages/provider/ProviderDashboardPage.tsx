@@ -1,9 +1,9 @@
 
 import React from 'react';
-import ProviderDashboard from "@/pages/ProviderDashboard";
+import EnhancedProviderDashboard from "./EnhancedProviderDashboard";
 
 const ProviderDashboardPage = () => {
-  return <ProviderDashboard />;
+  return <EnhancedProviderDashboard />;
 };
 
 export default ProviderDashboardPage;
