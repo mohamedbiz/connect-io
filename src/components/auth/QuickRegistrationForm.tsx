@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { registerWithEmailAndPassword } from '@/utils/auth/auth-operations';
+import { supabase } from '@/integrations/supabase/client';
 
 interface QuickRegistrationFormProps {
   userType: 'founder' | 'provider';
@@ -37,33 +37,62 @@ const QuickRegistrationForm = ({ userType, onCancel }: QuickRegistrationFormProp
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ') || '';
 
-      // Create temporary password (user won't need to remember this in MVP)
-      const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+      // Generate a unique ID for this user session
+      const userId = crypto.randomUUID();
 
-      // Register the user
-      const { error } = await registerWithEmailAndPassword(
-        formData.email,
-        tempPassword,
-        {
+      // Save directly to database without authentication
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
           first_name: firstName,
           last_name: lastName,
-          role: userType
-        }
-      );
+          email: formData.email,
+          role: userType,
+          account_status: 'active',
+          onboarding_complete: false
+        });
 
       if (error) {
-        // For MVP: if user already exists, still proceed to next step
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        // Check if user already exists by email
+        if (error.message.includes('duplicate') || error.code === '23505') {
+          // User already exists, fetch their data and continue
+          const { data: existingUser, error: fetchError } = await supabase
+            .from('profiles')
+            .select('id, role')
+            .eq('email', formData.email)
+            .single();
+
+          if (fetchError) {
+            toast.error('Error retrieving user data');
+            return;
+          }
+
+          // Store user data in localStorage for session management
+          localStorage.setItem('current_user', JSON.stringify({
+            id: existingUser.id,
+            role: existingUser.role,
+            email: formData.email,
+            name: formData.fullName
+          }));
+
           toast.success('Welcome back! Continuing to next step...');
         } else {
-          toast.error(error.message);
+          toast.error('Error saving data. Please try again.');
           return;
         }
       } else {
-        toast.success('Registration successful!');
+        // Store user data in localStorage for session management
+        localStorage.setItem('current_user', JSON.stringify({
+          id: userId,
+          role: userType,
+          email: formData.email,
+          name: formData.fullName
+        }));
+        toast.success('Getting started!');
       }
 
-      // Simple MVP redirect based on user type - always execute unless there's a non-duplicate error
+      // Navigate based on user type
       if (userType === 'founder') {
         navigate('/founder/profile-completion');
       } else {
