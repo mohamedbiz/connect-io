@@ -193,7 +193,7 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
     try {
       await submitToAPI(formData);
       toast.success('Application submitted successfully!');
-      // Navigate to provider dashboard
+      // Navigate directly to provider dashboard for MVP
       navigate('/provider/dashboard');
     } catch (error) {
       console.error('Failed to submit application:', error);

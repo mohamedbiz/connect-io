@@ -17,7 +17,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   allowedRoles = [],
   requireOnboarding = false
 }) => {
-  const { user, role, status, isOnboardingComplete, applicationStatus } = useAuthWithRole();
+  const { user, role, status, isOnboardingComplete } = useAuthWithRole();
   const navigate = useNavigate();
   const location = useLocation();
   const [timeoutReached, setTimeoutReached] = useState(false);
@@ -44,34 +44,16 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         return;
       }
 
-      // Provider-specific routing
+      // Simple MVP routing based on role and onboarding status
       if (role === 'provider') {
-        if (!applicationStatus) {
+        if (!isOnboardingComplete) {
           navigate('/provider/application-questions');
           return;
         }
-        
-        if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-          navigate('/provider/application/submitted');
-          return;
-        }
-        
-        if (applicationStatus === 'rejected') {
-          navigate('/provider/application/rejected');
-          return;
-        }
-        
-        if (applicationStatus === 'approved') {
-          if (!isOnboardingComplete) {
-            navigate('/provider/application-questions');
-            return;
-          }
-          navigate('/provider/dashboard');
-          return;
-        }
+        navigate('/provider/dashboard');
+        return;
       }
 
-      // Founder routing
       if (role === 'founder') {
         if (!isOnboardingComplete) {
           navigate('/founder/profile-completion');
@@ -81,7 +63,6 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         return;
       }
 
-      // Admin routing
       if (role === 'admin') {
         navigate('/admin/dashboard');
         return;
@@ -90,13 +71,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       // Fallback
       navigate('/');
     }
-  }, [status, role, applicationStatus, isOnboardingComplete, navigate, type, timeoutReached]);
+  }, [status, role, isOnboardingComplete, navigate, type, timeoutReached]);
 
   // Handle protected routes
   useEffect(() => {
     if (type === 'protected' && status !== 'loading' && !timeoutReached) {
       if (status === 'unauthenticated') {
-        // Redirect to homepage instead of auth pages
         navigate('/', { state: { from: location.pathname } });
         return;
       }
@@ -109,34 +89,14 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         return;
       }
 
-      // Provider-specific routing logic
-      if (role === 'provider') {
-        const currentPath = location.pathname;
-        
-        if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-          if (!currentPath.includes('/provider/application/submitted')) {
-            navigate('/provider/application/submitted');
-            return;
-          }
-        } else if (applicationStatus === 'approved') {
-          if (!isOnboardingComplete && !currentPath.includes('/provider/application-questions')) {
-            navigate('/provider/application-questions');
-            return;
-          }
-        } else if (applicationStatus === 'rejected') {
-          if (!currentPath.includes('/provider/application/rejected')) {
-            navigate('/provider/application/rejected');
-            return;
-          }
-        } else if (!applicationStatus && !currentPath.includes('/provider/application-questions')) {
-          navigate('/provider/application-questions');
-          return;
-        }
-      }
-
-      // Founder routing - redirect to profile completion if needed
+      // Redirect to profile completion if needed
       if (role === 'founder' && !isOnboardingComplete && !location.pathname.includes('/founder/profile-completion')) {
         navigate('/founder/profile-completion');
+        return;
+      }
+
+      if (role === 'provider' && !isOnboardingComplete && !location.pathname.includes('/provider/application-questions')) {
+        navigate('/provider/application-questions');
         return;
       }
 
@@ -149,7 +109,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         }
       }
     }
-  }, [status, role, isOnboardingComplete, applicationStatus, navigate, location, allowedRoles, requireOnboarding, type, timeoutReached]);
+  }, [status, role, isOnboardingComplete, navigate, location, allowedRoles, requireOnboarding, type, timeoutReached]);
 
   // Loading state
   if ((status === 'loading' && !timeoutReached) || (type === 'dashboard-redirect' && status !== 'loading')) {

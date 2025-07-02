@@ -8,7 +8,6 @@ import HomePage from "./pages/home/HomePage";
 import AuthCallback from "./pages/AuthCallback";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
-import ProviderApplicationStatusPage from "./pages/provider/ProviderApplicationStatusPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ForFoundersPage from "./pages/ForFoundersPage";
@@ -61,13 +60,6 @@ function App() {
           {/* Profile and directory pages */}
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/providers" element={<ProviderDirectoryPage />} />
-          
-          {/* Dynamic provider application routes */}
-          <Route path="/provider/application/:status?" element={
-            <RouteGuard type="protected" allowedRoles={['provider']}>
-              <ProviderApplicationStatusPage />
-            </RouteGuard>
-          } />
           
           {/* Dashboard routes */}
           <Route path="/founder/dashboard" element={

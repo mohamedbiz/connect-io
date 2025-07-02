@@ -3,14 +3,13 @@ import { useAuthWithRole } from '@/hooks/useAuthWithRole';
 import { useNavigate } from 'react-router-dom';
 
 export const useProviderNavigation = () => {
-  const { user, role, status, applicationStatus, isOnboardingComplete } = useAuthWithRole();
+  const { user, role, status, isOnboardingComplete } = useAuthWithRole();
   const navigate = useNavigate();
 
   const navigateToProviderFlow = () => {
     console.log('useProviderNavigation: Starting provider flow navigation', {
       status,
       userRole: role,
-      applicationStatus,
       isOnboardingComplete,
       user: user ? 'authenticated' : 'not authenticated'
     });
@@ -35,29 +34,13 @@ export const useProviderNavigation = () => {
       return;
     }
 
-    // Route based on application status using dynamic routes
-    console.log('useProviderNavigation: Routing based on application status:', applicationStatus);
-    
-    if (!applicationStatus) {
+    // Simple MVP routing for providers
+    if (!isOnboardingComplete) {
       console.log('useProviderNavigation: Provider needs to complete application');
       navigate('/provider/application-questions');
-    } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-      console.log('useProviderNavigation: Application submitted, showing status page');
-      navigate('/provider/application/submitted');
-    } else if (applicationStatus === 'approved') {
-      if (!isOnboardingComplete) {
-        console.log('useProviderNavigation: Application approved, but profile not complete');
-        navigate('/provider/application-questions');
-      } else {
-        console.log('useProviderNavigation: Provider fully onboarded, redirecting to dashboard');
-        navigate('/provider/dashboard');
-      }
-    } else if (applicationStatus === 'rejected') {
-      console.log('useProviderNavigation: Provider rejected, showing rejection page');
-      navigate('/provider/application/rejected');
     } else {
-      console.log('useProviderNavigation: Unknown status, redirecting to application');
-      navigate('/provider/application-questions');
+      console.log('useProviderNavigation: Provider fully onboarded, redirecting to dashboard');
+      navigate('/provider/dashboard');
     }
   };
 

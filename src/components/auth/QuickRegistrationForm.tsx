@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ const QuickRegistrationForm = ({ userType, onCancel }: QuickRegistrationFormProp
         return;
       }
 
-      // Immediate redirect based on user type
+      // Simple MVP redirect based on user type
       if (userType === 'founder') {
         navigate('/founder/profile-completion');
       } else {
