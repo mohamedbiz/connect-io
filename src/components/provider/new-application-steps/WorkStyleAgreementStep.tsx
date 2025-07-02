@@ -1,7 +1,7 @@
 
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, InfoIcon } from "lucide-react";
 import { NewProviderApplicationData } from "../application/NewApplicationContext";
@@ -168,49 +168,14 @@ export const WorkStyleAgreementStep = ({ formData, updateFormData }: WorkStyleAg
             <p className="text-xs text-red-600">Please select your typical response time</p>
           )}
         </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="client_references_willing"
-              checked={formData.client_references_willing}
-              onCheckedChange={(checked) => updateFormData({ client_references_willing: checked as boolean })}
-            />
-            <Label htmlFor="client_references_willing" className="text-sm">
-              Willing to provide client references upon request
-            </Label>
-          </div>
-          <p className="text-xs text-gray-500 ml-6">
-            This helps us verify your work quality and professionalism
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="terms_agreement"
-              checked={formData.terms_agreement}
-              onCheckedChange={(checked) => updateFormData({ terms_agreement: checked as boolean })}
-              required
-            />
-            <Label htmlFor="terms_agreement" className="text-sm">
-              I agree to Connect's platform terms and provider guidelines <span className="text-red-500">*</span>
-            </Label>
-          </div>
-          {!formData.terms_agreement && (
-            <p className="text-xs text-red-600">You must agree to the terms to proceed</p>
-          )}
-        </div>
       </div>
 
-      {formData.terms_agreement && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            ✓ Ready to submit! Your application will be reviewed within 2 business days.
-          </AlertDescription>
-        </Alert>
-      )}
+      <Alert className="border-green-200 bg-green-50">
+        <CheckCircle className="h-4 w-4 text-green-600" />
+        <AlertDescription className="text-green-800">
+          ✓ Ready to submit! Your application will be reviewed within 2 business days.
+        </AlertDescription>
+      </Alert>
 
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="font-semibold text-gray-900 mb-2">What Happens Next?</h3>

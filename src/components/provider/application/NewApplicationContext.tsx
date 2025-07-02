@@ -13,7 +13,6 @@ export interface NewProviderApplicationData {
   years_ecommerce_experience: string;
   email_marketing_expertise: string[];
   average_client_revenue: string;
-  connect_interest: string;
   
   // Key Achievements & Professional Presence
   significant_revenue_increase: string;
@@ -42,8 +41,6 @@ export interface NewProviderApplicationData {
   project_management_tools: string[];
   hours_available: string;
   response_time: string;
-  client_references_willing: boolean;
-  terms_agreement: boolean;
 }
 
 interface NewApplicationContextType {
@@ -68,7 +65,6 @@ const initialFormData: NewProviderApplicationData = {
   years_ecommerce_experience: '',
   email_marketing_expertise: [],
   average_client_revenue: '',
-  connect_interest: '',
   significant_revenue_increase: '',
   best_results_achieved: '',
   linkedin_url: '',
@@ -89,8 +85,6 @@ const initialFormData: NewProviderApplicationData = {
   project_management_tools: [],
   hours_available: '',
   response_time: '',
-  client_references_willing: false,
-  terms_agreement: false,
 };
 
 const NewApplicationContext = createContext<NewApplicationContextType | undefined>(undefined);
@@ -143,7 +137,6 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
         if (!formData.years_ecommerce_experience) errors.push('Years of eCommerce experience is required');
         if (formData.email_marketing_expertise.length === 0) errors.push('At least one email marketing expertise area is required');
         if (!formData.average_client_revenue) errors.push('Average client revenue range is required');
-        if (!formData.connect_interest.trim()) errors.push('Connect interest explanation is required');
         break;
         
       case 1: // Key Achievements & Professional Presence
@@ -173,7 +166,6 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
         if (!formData.communication_channels || formData.communication_channels.length === 0) errors.push('At least one communication channel is required');
         if (!formData.hours_available) errors.push('Hours available per week is required');
         if (!formData.response_time) errors.push('Response time is required');
-        if (!formData.terms_agreement) errors.push('Terms agreement is required');
         break;
     }
     
@@ -201,8 +193,8 @@ export const NewApplicationProvider: React.FC<NewApplicationProviderProps> = ({ 
     try {
       await submitToAPI(formData);
       toast.success('Application submitted successfully!');
-      // Navigate to submission confirmation page
-      navigate('/provider-application-submitted');
+      // Navigate to provider dashboard
+      navigate('/provider/dashboard');
     } catch (error) {
       console.error('Failed to submit application:', error);
       toast.error('Failed to submit application. Please try again.');

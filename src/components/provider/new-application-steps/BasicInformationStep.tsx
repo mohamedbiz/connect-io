@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -190,30 +189,6 @@ export const BasicInformationStep = ({ formData, updateFormData }: BasicInformat
           </Select>
           {!formData.average_client_revenue && (
             <p className="text-xs text-red-600">Please select average client revenue range</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="connect_interest" className="text-sm font-medium">
-            Why are you interested in the Connect platform specifically? <span className="text-red-500">*</span>
-          </Label>
-          <Textarea 
-            id="connect_interest" 
-            value={formData.connect_interest}
-            onChange={(e) => updateFormData({ connect_interest: e.target.value })}
-            placeholder="Explain your interest in joining Connect (100 words max)"
-            required
-            rows={3}
-            maxLength={500}
-            className={!formData.connect_interest ? "border-red-300 focus:border-red-500" : ""}
-          />
-          <div className="flex justify-between items-center">
-            <div className="text-xs text-gray-500">
-              {formData.connect_interest?.length || 0}/500 characters (≈100 words max)
-            </div>
-          </div>
-          {!formData.connect_interest && (
-            <p className="text-xs text-red-600">Please explain your interest in Connect</p>
           )}
         </div>
       </div>
