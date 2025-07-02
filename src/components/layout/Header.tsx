@@ -62,39 +62,7 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
           )}
         </nav>
 
-        {/* Desktop Auth Buttons */}
-        {!hideAuth && (
-          <div className="hidden lg:flex items-center gap-4">
-            {!user || loading ? (
-              <>
-                <Button variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
-                  <Link to="/auth">Login</Link>
-                </Button>
-                <Button className="bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild>
-                  <Link to="/auth">Get Started</Link>
-                </Button>
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" asChild>
-                  <Link to={getDashboardLink()}>My Dashboard</Link>
-                </Button>
-                <span className="text-sm font-medium text-[#BFD7ED]">
-                  {profile?.first_name || user.email}
-                </span>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-[#BFD7ED] hover:bg-[#0E3366] hover:text-white" 
-                  onClick={handleLogout}
-                  disabled={loading}
-                >
-                  {loading ? 'Logging out...' : 'Logout'}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Desktop Auth Buttons - Removed for MVP */}
       </div>
 
       {/* Mobile Menu */}
@@ -113,33 +81,7 @@ const Header = ({ hideAuth = false }: HeaderProps) => {
                 <span>Resources</span>
               </Link>
             )}
-            <hr className="border-[#2D82B7]/30" />
-            
-            {!hideAuth && (
-              !user || loading ? (
-                <>
-                  <Link to="/auth" className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                    Login
-                  </Link>
-                  <Button className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" asChild onClick={() => setIsMenuOpen(false)}>
-                    <Link to="/auth">Get Started</Link>
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Link to={getDashboardLink()} className="text-[#BFD7ED] hover:text-white transition-colors py-2" onClick={() => setIsMenuOpen(false)}>
-                    My Dashboard
-                  </Link>
-                  <Button 
-                    className="w-full bg-[#2D82B7] hover:bg-[#3D9AD1] text-white border-none" 
-                    onClick={handleLogout}
-                    disabled={loading}
-                  >
-                    {loading ? 'Logging out...' : 'Logout'}
-                  </Button>
-                </>
-              )
-            )}
+            {/* Mobile Auth Buttons - Removed for MVP */}
           </div>
         </div>
       )}
