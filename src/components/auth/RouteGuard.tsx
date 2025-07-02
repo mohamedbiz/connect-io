@@ -35,19 +35,19 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   useEffect(() => {
     if (type === 'dashboard-redirect' && status !== 'loading' && !timeoutReached) {
       if (status === 'unauthenticated') {
-        navigate('/auth/founder');
+        navigate('/');
         return;
       }
 
       if (!role) {
-        navigate('/auth/founder');
+        navigate('/');
         return;
       }
 
       // Provider-specific routing
       if (role === 'provider') {
         if (!applicationStatus) {
-          navigate('/provider/application');
+          navigate('/provider/application-questions');
           return;
         }
         
@@ -63,7 +63,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         
         if (applicationStatus === 'approved') {
           if (!isOnboardingComplete) {
-            navigate('/onboarding/provider');
+            navigate('/provider/application-questions');
             return;
           }
           navigate('/provider/dashboard');
@@ -74,7 +74,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       // Founder routing
       if (role === 'founder') {
         if (!isOnboardingComplete) {
-          navigate('/onboarding/founder');
+          navigate('/founder/profile-completion');
           return;
         }
         navigate('/founder/dashboard');
@@ -92,54 +92,12 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     }
   }, [status, role, applicationStatus, isOnboardingComplete, navigate, type, timeoutReached]);
 
-  // Handle public-only routes
-  useEffect(() => {
-    if (type === 'public-only' && status === 'authenticated' && role) {
-      // Redirect authenticated users based on their role and status
-      if (role === 'provider') {
-        if (!applicationStatus) {
-          navigate('/provider/application');
-        } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
-          navigate('/provider/application/submitted');
-        } else if (applicationStatus === 'rejected') {
-          navigate('/provider/application/rejected');
-        } else if (applicationStatus === 'approved') {
-          if (!isOnboardingComplete) {
-            navigate('/onboarding/provider');
-          } else {
-            navigate('/provider/dashboard');
-          }
-        }
-        return;
-      }
-
-      if (role === 'founder') {
-        if (!isOnboardingComplete) {
-          navigate('/onboarding/founder');
-        } else {
-          navigate('/founder/dashboard');
-        }
-        return;
-      }
-
-      if (role === 'admin') {
-        navigate('/admin/dashboard');
-        return;
-      }
-    }
-  }, [status, role, applicationStatus, isOnboardingComplete, navigate, type]);
-
   // Handle protected routes
   useEffect(() => {
     if (type === 'protected' && status !== 'loading' && !timeoutReached) {
       if (status === 'unauthenticated') {
-        if (allowedRoles.includes('provider')) {
-          navigate('/auth/provider', { state: { from: location.pathname } });
-        } else if (allowedRoles.includes('founder')) {
-          navigate('/auth/founder', { state: { from: location.pathname } });
-        } else {
-          navigate('/');
-        }
+        // Redirect to homepage instead of auth pages
+        navigate('/', { state: { from: location.pathname } });
         return;
       }
 
@@ -161,8 +119,8 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
             return;
           }
         } else if (applicationStatus === 'approved') {
-          if (!isOnboardingComplete && !currentPath.includes('/onboarding/provider')) {
-            navigate('/onboarding/provider');
+          if (!isOnboardingComplete && !currentPath.includes('/provider/application-questions')) {
+            navigate('/provider/application-questions');
             return;
           }
         } else if (applicationStatus === 'rejected') {
@@ -170,17 +128,23 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
             navigate('/provider/application/rejected');
             return;
           }
-        } else if (!applicationStatus && !currentPath.includes('/provider/application')) {
-          navigate('/provider/application');
+        } else if (!applicationStatus && !currentPath.includes('/provider/application-questions')) {
+          navigate('/provider/application-questions');
           return;
         }
       }
 
-      // Onboarding requirements
+      // Founder routing - redirect to profile completion if needed
+      if (role === 'founder' && !isOnboardingComplete && !location.pathname.includes('/founder/profile-completion')) {
+        navigate('/founder/profile-completion');
+        return;
+      }
+
+      // Onboarding requirements for dashboards
       if (requireOnboarding && !isOnboardingComplete && role) {
-        const onboardingPath = `/onboarding/${role}`;
-        if (!location.pathname.includes(onboardingPath)) {
-          navigate(onboardingPath);
+        const completionPath = role === 'founder' ? '/founder/profile-completion' : '/provider/application-questions';
+        if (!location.pathname.includes(completionPath)) {
+          navigate(completionPath);
           return;
         }
       }
@@ -204,20 +168,6 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   // For dashboard redirect, don't render children - always redirect
   if (type === 'dashboard-redirect') {
     return null;
-  }
-
-  // For public-only routes, only show if user is not authenticated or timeout reached
-  if (type === 'public-only') {
-    if (status === 'authenticated' && role && !timeoutReached) {
-      return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Redirecting...</p>
-          </div>
-        </div>
-      );
-    }
   }
 
   // For protected routes, only show if authenticated and authorized

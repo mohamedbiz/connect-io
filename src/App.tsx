@@ -6,13 +6,10 @@ import { Toaster as SonnerToaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/home/HomePage";
 import AuthCallback from "./pages/AuthCallback";
-import FounderAuthPage from "./pages/auth/FounderAuthPage";
-import ProviderAuthPage from "./pages/auth/ProviderAuthPage";
 import FounderDashboardPage from "./pages/founder/FounderDashboardPage";
 import ProviderDashboardPage from "./pages/provider/ProviderDashboardPage";
 import ProviderApplicationStatusPage from "./pages/provider/ProviderApplicationStatusPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import NotFoundPage from "./pages/errors/NotFoundPage";
 import ForFoundersPage from "./pages/ForFoundersPage";
 import ForProvidersPage from "./pages/ForProvidersPage";
@@ -69,13 +66,6 @@ function App() {
           <Route path="/provider/application/:status?" element={
             <RouteGuard type="protected" allowedRoles={['provider']}>
               <ProviderApplicationStatusPage />
-            </RouteGuard>
-          } />
-          
-          {/* Dynamic onboarding routes */}
-          <Route path="/onboarding/:role" element={
-            <RouteGuard type="protected" allowedRoles={['founder', 'provider']}>
-              <OnboardingPage />
             </RouteGuard>
           } />
           

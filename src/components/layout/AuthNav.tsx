@@ -31,13 +31,13 @@ export const AuthNav = () => {
     );
   }
 
-  // Not logged in - show login button that goes to founder auth
+  // Not logged in - show login button that goes to homepage
   if (!isAuthenticated) {
     return (
       <Button asChild variant="secondary" size="sm">
-        <Link to="/auth/founder">
+        <Link to="/">
           <LogIn className="h-4 w-4 mr-1" />
-          Sign In
+          Get Started
         </Link>
       </Button>
     );

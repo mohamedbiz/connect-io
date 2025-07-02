@@ -21,17 +21,17 @@ export const useProviderNavigation = () => {
       return;
     }
 
-    // If not authenticated, go to provider auth
+    // If not authenticated, go to quick registration
     if (status === 'unauthenticated' || !user) {
-      console.log('useProviderNavigation: User not authenticated, redirecting to auth');
-      navigate('/auth/provider');
+      console.log('useProviderNavigation: User not authenticated, redirecting to quick registration');
+      navigate('/quick-register/provider');
       return;
     }
 
-    // If not a provider, go to provider auth
+    // If not a provider, go to quick registration
     if (role !== 'provider') {
-      console.log('useProviderNavigation: User is not a provider, redirecting to auth');
-      navigate('/auth/provider');
+      console.log('useProviderNavigation: User is not a provider, redirecting to quick registration');
+      navigate('/quick-register/provider');
       return;
     }
 
@@ -40,14 +40,14 @@ export const useProviderNavigation = () => {
     
     if (!applicationStatus) {
       console.log('useProviderNavigation: Provider needs to complete application');
-      navigate('/provider/application');
+      navigate('/provider/application-questions');
     } else if (applicationStatus === 'submitted' || applicationStatus === 'in_review') {
       console.log('useProviderNavigation: Application submitted, showing status page');
       navigate('/provider/application/submitted');
     } else if (applicationStatus === 'approved') {
       if (!isOnboardingComplete) {
-        console.log('useProviderNavigation: Application approved, redirecting to onboarding');
-        navigate('/onboarding/provider');
+        console.log('useProviderNavigation: Application approved, but profile not complete');
+        navigate('/provider/application-questions');
       } else {
         console.log('useProviderNavigation: Provider fully onboarded, redirecting to dashboard');
         navigate('/provider/dashboard');
@@ -57,7 +57,7 @@ export const useProviderNavigation = () => {
       navigate('/provider/application/rejected');
     } else {
       console.log('useProviderNavigation: Unknown status, redirecting to application');
-      navigate('/provider/application');
+      navigate('/provider/application-questions');
     }
   };
 
