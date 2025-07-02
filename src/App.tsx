@@ -43,18 +43,6 @@ function App() {
             </RouteGuard>
           } />
           
-          {/* Unified auth pages */}
-          <Route path="/auth/founder" element={
-            <RouteGuard type="public-only">
-              <FounderAuthPage />
-            </RouteGuard>
-          } />
-          <Route path="/auth/provider" element={
-            <RouteGuard type="public-only">
-              <ProviderAuthPage />
-            </RouteGuard>
-          } />
-          
           <Route path="/auth-callback" element={<AuthCallback />} />
           
           {/* Quick Registration Flow */}
