@@ -52,11 +52,18 @@ const QuickRegistrationForm = ({ userType, onCancel }: QuickRegistrationFormProp
       );
 
       if (error) {
-        toast.error(error.message);
-        return;
+        // For MVP: if user already exists, still proceed to next step
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          toast.success('Welcome back! Continuing to next step...');
+        } else {
+          toast.error(error.message);
+          return;
+        }
+      } else {
+        toast.success('Registration successful!');
       }
 
-      // Simple MVP redirect based on user type
+      // Simple MVP redirect based on user type - always execute unless there's a non-duplicate error
       if (userType === 'founder') {
         navigate('/founder/profile-completion');
       } else {
