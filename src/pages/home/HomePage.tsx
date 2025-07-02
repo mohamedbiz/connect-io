@@ -17,14 +17,8 @@ const HomePage = () => {
   const handleRoleSelection = (role: 'founder' | 'provider') => {
     console.log('HomePage: Role selection clicked', { role });
     
-    if (role === 'founder') {
-      console.log('HomePage: Navigating to founder auth');
-      navigate('/auth/founder');
-    } else {
-      console.log('HomePage: Initiating provider navigation flow');
-      // Use smart navigation for providers
-      navigateToProviderFlow();
-    }
+    // Direct to quick registration for MVP flow
+    navigate(`/quick-register/${role}`);
   };
 
   return (

@@ -18,8 +18,8 @@ const Hero = ({ onRoleSelection }: HeroProps) => {
       console.log('Hero: Calling onRoleSelection callback');
       onRoleSelection(role);
     } else {
-      console.log('Hero: Using fallback navigation');
-      navigate(`/${role}/signin`);
+      console.log('Hero: Using direct navigation to quick registration');
+      navigate(`/quick-register/${role}`);
     }
   };
 

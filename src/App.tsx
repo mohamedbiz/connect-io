@@ -18,6 +18,9 @@ import ForFoundersPage from "./pages/ForFoundersPage";
 import ForProvidersPage from "./pages/ForProvidersPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProviderDirectoryPage from "./pages/ProviderDirectoryPage";
+import QuickRegistrationPage from "./pages/QuickRegistrationPage";
+import FounderProfileCompletionPage from "./pages/founder/FounderProfileCompletionPage";
+import ProviderApplicationQuestionsPage from "./pages/provider/ProviderApplicationQuestionsPage";
 import RouteGuard from "./components/auth/RouteGuard";
 
 // Create a client
@@ -54,6 +57,22 @@ function App() {
           
           <Route path="/auth-callback" element={<AuthCallback />} />
           
+          {/* Quick Registration Flow */}
+          <Route path="/quick-register/:userType" element={<QuickRegistrationPage />} />
+          
+          {/* Profile completion flows */}
+          <Route path="/founder/profile-completion" element={
+            <RouteGuard type="protected" allowedRoles={['founder']}>
+              <FounderProfileCompletionPage />
+            </RouteGuard>
+          } />
+          
+          <Route path="/provider/application-questions" element={
+            <RouteGuard type="protected" allowedRoles={['provider']}>
+              <ProviderApplicationQuestionsPage />
+            </RouteGuard>
+          } />
+
           {/* Profile and directory pages */}
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/providers" element={<ProviderDirectoryPage />} />
