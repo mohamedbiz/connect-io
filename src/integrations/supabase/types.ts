@@ -490,10 +490,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      calculate_application_score: {
-        Args: { application_data: Json }
-        Returns: number
-      }
       calculate_fee: {
         Args: { payment_amount: number }
         Returns: number
