@@ -90,16 +90,27 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
           toast.error(error.message || 'Registration failed. Please try again.');
         }
       } else {
-        // Registration successful - wait for auth state to update
-        if (data.user) {
-          console.log('Registration successful, user created:', data.user.id);
+        // Registration successful - ensure session is established
+        if (data.user && data.session) {
+          console.log('Registration successful with session:', data.user.id);
           toast.success('Account created successfully! Setting up your profile...');
+          setRegistrationComplete(true);
+        } else if (data.user && !data.session) {
+          console.log('Registration successful but no session, attempting sign in...');
+          // Force sign in to establish session
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password
+          });
           
-          // Wait a moment for auth context to update, then check
-          setTimeout(() => {
-            console.log('Checking auth state after registration...');
+          if (signInError) {
+            console.error('Auto sign-in error:', signInError);
+            toast.error('Registration successful but auto-login failed. Please try logging in manually.');
+          } else if (signInData.session) {
+            console.log('Auto sign-in successful with session');
+            toast.success('Account created successfully! Setting up your profile...');
             setRegistrationComplete(true);
-          }, 1000);
+          }
         }
       }
     } catch (error) {
