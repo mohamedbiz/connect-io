@@ -83,24 +83,11 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
           toast.error(error.message || 'Registration failed. Please try again.');
         }
       } else {
-        // For MVP: Skip email verification and proceed directly
+        // Registration successful - auth state change listener will handle the rest
         if (data.user) {
-          console.log('Registration successful, proceeding without email verification for MVP');
+          console.log('Registration successful, user created:', data.user.id);
           toast.success('Account created successfully! Setting up your profile...');
-          
-          // Force sign in to establish session immediately
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password
-          });
-          
-          if (signInError) {
-            console.error('Auto sign-in error:', signInError);
-            toast.error('Registration successful but auto-login failed. Please try logging in manually.');
-          } else {
-            console.log('Auto sign-in successful, setting registration complete');
-            setRegistrationComplete(true);
-          }
+          setRegistrationComplete(true);
         }
       }
     } catch (error) {
