@@ -22,16 +22,15 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
   // Handle redirection after successful registration
   useEffect(() => {
     if (user && registrationComplete && !loading) {
-      console.log('Registration complete, user authenticated. ProtectedRoute will handle redirection.');
+      console.log('Registration complete, user authenticated. Redirecting to onboarding.');
       
       // Clear the registration complete flag to prevent multiple redirections
       setRegistrationComplete(false);
       
-      // Let ProtectedRoute handle the redirection based on user role and status
-      // No manual redirection needed - ProtectedRoute will automatically redirect
-      // providers to onboarding if account_status is 'pending_application'
+      // Direct redirection to onboarding based on user type
+      window.location.href = userType === 'provider' ? '/provider/application-questions' : '/founder/profile-completion';
     }
-  }, [user, registrationComplete, loading, userType, profile]);
+  }, [user, registrationComplete, loading, userType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +83,10 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
           toast.error(error.message || 'Registration failed. Please try again.');
         }
       } else {
-        // Check if user was created or already exists
-        if (data.user && !data.user.email_confirmed_at) {
-          console.log('Registration successful, verification email sent');
-          toast.success('Account created! Please check your email and click the verification link to continue.');
-          setShowResendOption(true);
-        } else if (data.user && data.user.email_confirmed_at) {
-          console.log('User already verified, proceeding with login');
-          toast.success('Welcome back! Logging you in...');
+        // For MVP: Skip email verification and proceed directly
+        if (data.user) {
+          console.log('Registration successful, proceeding without email verification for MVP');
+          toast.success('Account created successfully! Setting up your profile...');
           setRegistrationComplete(true);
         }
       }
