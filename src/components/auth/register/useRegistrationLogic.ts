@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase, checkNetworkConnection } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,30 +14,9 @@ interface UseRegistrationLogicProps {
 export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }: UseRegistrationLogicProps) => {
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOAuthLoading] = useState(false);
-  const [registrationComplete, setRegistrationComplete] = useState(false);
   const [showResendOption, setShowResendOption] = useState(false);
   
-  const { register, user, profile } = useAuth();
-
-  // Handle redirection after successful registration
-  useEffect(() => {
-    console.log('useRegistrationLogic: Auth state check:', { 
-      user: !!user, 
-      registrationComplete, 
-      loading, 
-      userType 
-    });
-    
-    if (user && registrationComplete && !loading) {
-      console.log('Registration complete, user authenticated. Redirecting to onboarding.');
-      
-      // Clear the registration complete flag to prevent multiple redirections
-      setRegistrationComplete(false);
-      
-      // Direct redirection to onboarding based on user type
-      window.location.href = userType === 'provider' ? '/provider/application-questions' : '/founder/profile-completion';
-    }
-  }, [user, registrationComplete, loading, userType]);
+  const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,18 +39,11 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
     try {
       console.log(`Attempting registration with: ${formData.email} as ${userType}`);
       
-      // Use Supabase directly with proper email redirect configuration
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            role: userType
-          },
-          emailRedirectTo: `${window.location.origin}/auth-callback?role=${userType}`
-        }
+      // Use the simplified register function from auth context
+      const { error } = await register(formData.email, formData.password, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        role: userType
       });
 
       if (error) {
@@ -90,28 +62,8 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
           toast.error(error.message || 'Registration failed. Please try again.');
         }
       } else {
-        // Registration successful - ensure session is established
-        if (data.user && data.session) {
-          console.log('Registration successful with session:', data.user.id);
-          toast.success('Account created successfully! Setting up your profile...');
-          setRegistrationComplete(true);
-        } else if (data.user && !data.session) {
-          console.log('Registration successful but no session, attempting sign in...');
-          // Force sign in to establish session
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password
-          });
-          
-          if (signInError) {
-            console.error('Auto sign-in error:', signInError);
-            toast.error('Registration successful but auto-login failed. Please try logging in manually.');
-          } else if (signInData.session) {
-            console.log('Auto sign-in successful with session');
-            toast.success('Account created successfully! Setting up your profile...');
-            setRegistrationComplete(true);
-          }
-        }
+        console.log('Registration successful - auth context will handle navigation');
+        toast.success('Account created successfully! Redirecting...');
       }
     } catch (error) {
       console.error('Registration exception:', error);

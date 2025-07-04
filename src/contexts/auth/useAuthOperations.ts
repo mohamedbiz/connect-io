@@ -47,7 +47,7 @@ export const useAuthOperations = (
       setError(null);
       console.log('Auth operations: Attempting registration for', email, 'with role', userData.role);
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -56,6 +56,7 @@ export const useAuthOperations = (
             last_name: userData.last_name,
             role: userData.role,
           },
+          emailRedirectTo: `${window.location.origin}/auth-callback?role=${userData.role}`
         },
       });
       
@@ -65,7 +66,7 @@ export const useAuthOperations = (
         return { error };
       }
       
-      console.log('Auth operations: Registration successful');
+      console.log('Auth operations: Registration successful', data.user?.id);
       toast.success('Account created successfully!');
       return { error: null };
     } catch (err: any) {
