@@ -21,6 +21,13 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
 
   // Handle redirection after successful registration
   useEffect(() => {
+    console.log('useRegistrationLogic: Auth state check:', { 
+      user: !!user, 
+      registrationComplete, 
+      loading, 
+      userType 
+    });
+    
     if (user && registrationComplete && !loading) {
       console.log('Registration complete, user authenticated. Redirecting to onboarding.');
       
@@ -83,11 +90,16 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
           toast.error(error.message || 'Registration failed. Please try again.');
         }
       } else {
-        // Registration successful - auth state change listener will handle the rest
+        // Registration successful - wait for auth state to update
         if (data.user) {
           console.log('Registration successful, user created:', data.user.id);
           toast.success('Account created successfully! Setting up your profile...');
-          setRegistrationComplete(true);
+          
+          // Wait a moment for auth context to update, then check
+          setTimeout(() => {
+            console.log('Checking auth state after registration...');
+            setRegistrationComplete(true);
+          }, 1000);
         }
       }
     } catch (error) {
