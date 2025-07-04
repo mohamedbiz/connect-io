@@ -87,7 +87,20 @@ export const useRegistrationLogic = ({ userType, formData, setNetworkAvailable }
         if (data.user) {
           console.log('Registration successful, proceeding without email verification for MVP');
           toast.success('Account created successfully! Setting up your profile...');
-          setRegistrationComplete(true);
+          
+          // Force sign in to establish session immediately
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password
+          });
+          
+          if (signInError) {
+            console.error('Auto sign-in error:', signInError);
+            toast.error('Registration successful but auto-login failed. Please try logging in manually.');
+          } else {
+            console.log('Auto sign-in successful, setting registration complete');
+            setRegistrationComplete(true);
+          }
         }
       }
     } catch (error) {
