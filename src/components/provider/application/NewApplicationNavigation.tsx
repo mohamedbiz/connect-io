@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { useNewApplicationContext } from "./NewApplicationContext";
+import { useNewApplicationContext } from "./index";
 import { STEPS } from "./NewApplicationProgress";
 import { toast } from "sonner";
 

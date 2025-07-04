@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
-import { NewProviderApplicationData } from "../application/NewApplicationContext";
+import { NewProviderApplicationData } from "../application/index";
 
 interface BasicInformationStepProps {
   formData: NewProviderApplicationData;

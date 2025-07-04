@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
-import { NewProviderApplicationData } from "../application/NewApplicationContext";
+import { NewProviderApplicationData } from "../application/index";
 
 interface ProfessionalPresenceStepProps {
   formData: NewProviderApplicationData;

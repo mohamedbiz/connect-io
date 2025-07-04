@@ -1,5 +1,5 @@
 
-import { useNewApplicationContext } from "./NewApplicationContext";
+import { useNewApplicationContext } from "./index";
 
 export const STEPS = [
   "Basic Information",

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { NewApplicationProvider, useNewApplicationContext } from './NewApplicationContext';
+import { NewApplicationProvider, useNewApplicationContext } from './index';
 import { NewApplicationStep } from './NewApplicationStep';
 
 const ApplicationFlowContent = () => {

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, InfoIcon } from "lucide-react";
-import { NewProviderApplicationData } from "../application/NewApplicationContext";
+import { NewProviderApplicationData } from "../application/index";
 
 interface WorkStyleAgreementStepProps {
   formData: NewProviderApplicationData;

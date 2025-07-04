@@ -1,5 +1,5 @@
 
-import { useNewApplicationContext } from "./NewApplicationContext";
+import { useNewApplicationContext } from "./index";
 import { BasicInformationStep } from "../new-application-steps/BasicInformationStep";
 import { ProfessionalPresenceStep } from "../new-application-steps/ProfessionalPresenceStep";
 import { ExperienceFocusStep } from "../new-application-steps/ExperienceFocusStep";
