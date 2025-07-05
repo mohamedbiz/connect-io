@@ -28,30 +28,27 @@ export const useAuthNavigation = () => {
     if (user && !isOnPublicPath) {
       console.log('useAuthNavigation: User authenticated, checking navigation needs');
       
-      if (role === 'provider') {
-        if (!isOnboardingComplete && !location.pathname.includes('/provider/application-questions')) {
-          console.log('useAuthNavigation: Provider needs onboarding, redirecting');
-          navigate('/provider/application-questions', { replace: true });
+      // Simplified navigation logic
+      if (!isOnboardingComplete) {
+        const onboardingPath = `/${role}/profile-completion`;
+        if (role === 'provider') {
+          const providerOnboardingPath = '/provider/application-questions';
+          if (!location.pathname.includes(providerOnboardingPath)) {
+            console.log('useAuthNavigation: Provider needs onboarding, redirecting');
+            navigate(providerOnboardingPath, { replace: true });
+            return;
+          }
+        } else if (!location.pathname.includes(onboardingPath)) {
+          console.log('useAuthNavigation: User needs onboarding, redirecting');
+          navigate(onboardingPath, { replace: true });
           return;
         }
-        
-        if (isOnboardingComplete && !location.pathname.includes('/provider/dashboard')) {
-          console.log('useAuthNavigation: Provider onboarding complete, redirecting to dashboard');
-          navigate('/provider/dashboard', { replace: true });
-          return;
-        }
-      }
-      
-      if (role === 'founder') {
-        if (!isOnboardingComplete && !location.pathname.includes('/founder/profile-completion')) {
-          console.log('useAuthNavigation: Founder needs onboarding, redirecting');
-          navigate('/founder/profile-completion', { replace: true });
-          return;
-        }
-        
-        if (isOnboardingComplete && !location.pathname.includes('/founder/dashboard')) {
-          console.log('useAuthNavigation: Founder onboarding complete, redirecting to dashboard');
-          navigate('/founder/dashboard', { replace: true });
+      } else {
+        // User has completed onboarding, redirect to dashboard
+        const dashboardPath = `/${role}/dashboard`;
+        if (!location.pathname.includes(dashboardPath)) {
+          console.log('useAuthNavigation: Onboarding complete, redirecting to dashboard');
+          navigate(dashboardPath, { replace: true });
           return;
         }
       }
